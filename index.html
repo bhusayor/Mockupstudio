@@ -401,14 +401,6 @@ nav { height:48px; border-bottom:1px solid var(--border); display:flex; align-it
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       Add text
     </button>
-    <button class="add-text-btn" id="load-text-presets-btn" onclick="loadTextPresets()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4h12M6 10h12M6 16h12M6 22h12"/></svg>
-      Load curated text presets
-    </button>
-    <div id="text-presets" style="display:none; margin-top:var(--s2)">
-      <div class="sec-lbl" style="margin-bottom:8px">Curated text</div>
-      <div class="preset-grid" id="preset-grid"></div>
-    </div>
     <div class="text-ctrls" id="text-ctrls">
       <textarea id="text-content" placeholder="Type your text..." oninput="updateTextContent(this.value)"></textarea>
       <div class="slider-row" style="border:none;padding:0 0 var(--s2)">
@@ -446,8 +438,7 @@ nav { height:48px; border-bottom:1px solid var(--border); display:flex; align-it
     </div>
   </div>
 
-  <!-- Mockup sliders (temporarily removed) -->
-  <!--
+  <!-- Mockup sliders -->
   <div class="ctrl-sec">
     <div class="sec-lbl">Mockup</div>
     <div class="slider-row">
@@ -475,7 +466,6 @@ nav { height:48px; border-bottom:1px solid var(--border); display:flex; align-it
       Reset position
     </button>
   </div>
-  -->
 
   <!-- Background -->
   <div class="ctrl-sec">
@@ -576,12 +566,11 @@ nav { height:48px; border-bottom:1px solid var(--border); display:flex; align-it
   <div class="wm">mockup studio</div>
 </main>
 
-<!-- RIGHT SIDEBAR: Mockup device picker (temporarily removed) -->
-<!--
+<!-- RIGHT SIDEBAR: Mockup device picker -->
 <aside class="sidebar-r">
   <div class="sidebar-r-header">
     <div class="sidebar-r-title">Mockup</div>
-    Sticky change/upload button — always visible, no scroll needed
+    <!-- Sticky change/upload button — always visible, no scroll needed -->
     <button class="change-btn" id="change-btn" onclick="if(typeof layoutMode!=='undefined'&&layoutMode==='dual'){activeFileSlot=selectedSlot;} document.getElementById('hf').click()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
       Change image / video
@@ -610,7 +599,6 @@ nav { height:48px; border-bottom:1px solid var(--border); display:flex; align-it
     <div class="device-grid" id="device-grid"></div>
   </div>
 </aside>
--->
 
 </div>
 
@@ -2365,80 +2353,6 @@ function renderTextList(){
   });
 }
 
-let textPresetsLoaded = false;
-function loadTextPresets(){
-  if(textPresetsLoaded) return;
-  textPresetsLoaded = true;
-  const btn = document.getElementById('load-text-presets-btn');
-  if(btn) btn.textContent = 'Loading…';
-  const presets = [
-    'Launch now',
-    'Get started',
-    'New collection',
-    'Just shipped',
-    'Limited edition',
-    'Brand new',
-    'Create your look',
-    'Designed for teams',
-    'Built for creators',
-    'Made for modern work',
-    'Quick preview',
-    'Fresh ideas daily',
-    'Minimal and bold',
-    'Beautiful by default',
-    'Modern interface',
-    'High fidelity',
-    'Premium feel',
-    'Fast setup',
-    'Clean design',
-    'Smart interactions',
-    'Stand out online',
-    'Focus on what matters',
-    'Everything in one place',
-    'Work better together',
-    'Create on demand',
-    'Powerful visuals',
-    'Future-ready layouts',
-    'Responsive by design',
-    'Perfect for portfolios',
-    'Simple, smart, scalable',
-    'Elegant details',
-    'Collaborate instantly',
-    'Your brand, amplified',
-    'Crafted with care',
-    'Launch with confidence',
-    'Fast, smooth, polished',
-    'Bold, clean, modern',
-    'Designed to delight',
-    'Ready to ship',
-    'Make it yours',
-  ];
-  renderTextPresets(presets);
-  if(btn) btn.style.display = 'none';
-}
-function renderTextPresets(items){
-  const wrapper = document.getElementById('text-presets');
-  const grid = document.getElementById('preset-grid');
-  if(!wrapper || !grid) return;
-  wrapper.style.display = 'block';
-  items.forEach(text=>{
-    const item = document.createElement('button');
-    item.type = 'button';
-    item.className = 'preset-item';
-    item.textContent = text;
-    item.onclick = ()=> addTextPreset(text);
-    grid.appendChild(item);
-  });
-}
-function addTextPreset(text){
-  addText();
-  const t = texts[texts.length-1];
-  if(!t) return;
-  t.content = text;
-  renderTexts();
-  selectText(t.id);
-}
-
 function selectText(id){
   selectedTextId = id;
   const t = texts.find(x=>x.id===id);
@@ -2573,10 +2487,9 @@ function textTransformForVideo(outW, outH, frameExportW, liveFrameW){
 }
 
 /* ── INIT ── */
-buildImgGrid(); buildGradGrid(); buildSolidSws();
-/* buildDeviceGrid(); -- device selector hidden while mockup controls are removed */
+buildImgGrid(); buildGradGrid(); buildSolidSws(); buildDeviceGrid();
 enableReposition('mockup-inner', ['mockup-img','mockup-video']);
-/* enableReposition('gadget-screen', ['gadget-img','gadget-video']); -- gadget UI hidden */
+enableReposition('gadget-screen', ['gadget-img','gadget-video']);
 requestAnimationFrame(applyCanvasRatio);
 </script>
 </body>
