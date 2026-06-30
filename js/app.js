@@ -288,19 +288,22 @@ let imgScale = 1;          // 1× / 2× / 3× hi-res multiplier for image export
 let vidFmt = 'video';      // 'video' (MP4/WebM) or 'gif'
 let tiltX = 0, tiltY = 0;  // 3D tilt angles (deg); 0,0 = flat
 const TILT_PF = 2.6;       // perspective distance as a multiple of mockup width
+let mockOffX = 0, mockOffY = 0;  // whole-mockup drag offset (single mode), preview px
 
 function onTilt(axis, v){
   v=parseInt(v);
   if(axis==='x'){ tiltX=v; document.getElementById('vl-tiltx').textContent=v+'°'; }
   else { tiltY=v; document.getElementById('vl-tilty').textContent=v+'°'; }
-  applyTilt();
+  applyMockupTransform();
 }
-function applyTilt(){
+// Single source of truth for the mockup's CSS transform: drag offset + 3D tilt.
+function applyMockupTransform(){
   const el=document.getElementById('mockup-wrap'); if(!el) return;
-  if(tiltX===0 && tiltY===0){ el.style.transform=''; return; }
-  const w=el.offsetWidth||600;
-  el.style.transform='perspective('+(TILT_PF*w)+'px) rotateX('+tiltX+'deg) rotateY('+tiltY+'deg)';
+  let tf = (mockOffX||mockOffY) ? 'translate('+mockOffX+'px,'+mockOffY+'px)' : '';
+  if(tiltX!==0 || tiltY!==0){ const w=el.offsetWidth||600; tf += ' perspective('+(TILT_PF*w)+'px) rotateX('+tiltX+'deg) rotateY('+tiltY+'deg)'; }
+  el.style.transform = tf.trim();
 }
+function applyTilt(){ applyMockupTransform(); }   // back-compat alias
 // Texture-mapped triangle (affine). Main export ctx is pre-scaled by S, so
 // setTransform (which is absolute) is pre-multiplied by S to stay in device px.
 function texTri(ctx, img, S, x0,y0, x1,y1, x2,y2, d0,d1,d2){
@@ -353,7 +356,7 @@ async function buildMockupOffscreen(S){
 }
 // Warp the offscreen mockup onto ctx with the SAME perspective math CSS uses in preview.
 function drawTiltedMockup(ctx, m, cW, cH, S){
-  const w=m.w, h=m.h, cx=cW/2, cy=cH/2;
+  const w=m.w, h=m.h, cx=cW/2+mockOffX, cy=cH/2+mockOffY;
   const ax=tiltX*Math.PI/180, ay=tiltY*Math.PI/180, P=TILT_PF*w;
   const proj=(u,v)=>{
     const lx=(u-0.5)*w, ly=(v-0.5)*h;
@@ -444,8 +447,8 @@ function applyDevice() {
   if (!activeDevice) {
     plain.style.display = 'flex';
     gadgetWrap.style.display = 'none';
-    mockupCtrls.style.display = 'block';
-    radiusRow.style.display = 'flex';
+    if (mockupCtrls) mockupCtrls.style.display = 'block';
+    if (radiusRow) radiusRow.style.display = 'flex';
     // Restore audio to the plain-frame video
     if (hasMedia && isVideo) {
       const mainVid = document.getElementById('mockup-video');
@@ -461,8 +464,8 @@ function applyDevice() {
 
   plain.style.display = 'none';
   gadgetWrap.style.display = 'flex';
-  mockupCtrls.style.display = 'none';
-  radiusRow.style.display = 'none'; // device controls its own radius
+  if (mockupCtrls) mockupCtrls.style.display = 'none';
+  if (radiusRow) radiusRow.style.display = 'none'; // device controls its own radius
 
   // Render bezel (under media) and overlay (notch, over media) separately
   const dev = activeDevice;
@@ -583,7 +586,8 @@ function applyCanvasRatio() {
   if(typeof texts!=='undefined' && texts.length && prevW && prevH) repositionTextsOnResize(prevW, prevH, w, h);
   if(typeof overlays!=='undefined' && overlays.length && prevW && prevH) repositionOverlaysOnResize(prevW, prevH, w, h);
   if(typeof currentSafeZone!=='undefined' && currentSafeZone!=='none') setSafeZone(currentSafeZone);
-  if(typeof applyTilt==='function') applyTilt();
+  if((mockOffX||mockOffY) && prevW && prevH){ mockOffX=Math.round(mockOffX*w/prevW); mockOffY=Math.round(mockOffY*h/prevH); }
+  if(typeof applyMockupTransform==='function') applyMockupTransform();
 }
 
 function sizeFrameToMedia() {
@@ -798,7 +802,7 @@ function applyMediaTransform(){
   const zs=document.getElementById('sl-zoom'); if(zs && parseFloat(zs.value)!==mediaScale) zs.value=mediaScale;
 }
 
-function resetMediaTransform(){ mediaScale=1; mediaOffX=0; mediaOffY=0; applyMediaTransform(); }
+function resetMediaTransform(){ mediaScale=1; mediaOffX=0; mediaOffY=0; mockOffX=0; mockOffY=0; applyMediaTransform(); applyMockupTransform(); }
 
 function onZoom(v){
   if(layoutMode==='dual'){
@@ -1365,7 +1369,7 @@ function confirmImgExport(){
       const gfw = document.getElementById('gadget-frame-wrap');
       const dw = parseInt(gfw.style.width) || fw;
       const dh = parseInt(gfw.style.height) || fh;
-      const dx = (cW-dw)/2, dy=(cH-dh)/2;
+      const dx = (cW-dw)/2 + mockOffX, dy=(cH-dh)/2 + mockOffY;
 
       // Drop shadow under the whole device
       ctx.save();
@@ -1403,7 +1407,7 @@ function confirmImgExport(){
       finish();
     } else {
       // ── Plain frame ──
-      const fx=(cW-fw)/2,fy=(cH-fh)/2;
+      const fx=(cW-fw)/2 + mockOffX,fy=(cH-fh)/2 + mockOffY;
       const br=parseFloat(document.getElementById('mockup-frame').style.borderRadius)||14;
       ctx.shadowColor='rgba(0,0,0,0.55)';ctx.shadowBlur=80;ctx.shadowOffsetY=24;
       roundRect(ctx,fx,fy,fw,fh,br);ctx.fillStyle='#111';ctx.fill();
@@ -1822,6 +1826,7 @@ let selectedTextId = null;
 let textIdCounter = 0;
 
 function addText(){
+  histBefore();
   const wrap = document.getElementById('canvas-wrap');
   const cw = parseInt(wrap.style.width)||wrap.clientWidth||800;
   const ch = parseInt(wrap.style.height)||wrap.clientHeight||450;
@@ -2018,6 +2023,7 @@ function applyTextStyle(t){
 }
 
 function deleteText(id){
+  histBefore();
   texts = texts.filter(t=>t.id!==id);
   if(selectedTextId===id){ selectedTextId=null; document.getElementById('text-ctrls').classList.remove('active'); }
   renderTexts();
@@ -2031,6 +2037,7 @@ function bindTextEl(el, id){
     if(el.classList.contains('editing')) return;  // editing → let caret work
     selectText(id);
     const t = texts.find(x=>x.id===id);
+    histBefore();
     down=true; moved=false; sx=e.clientX; sy=e.clientY; bx=t.x; by=t.y;
     el.classList.add('dragging'); el.setPointerCapture(e.pointerId);
     e.preventDefault();
@@ -2041,22 +2048,14 @@ function bindTextEl(el, id){
     if(Math.abs(dx)>3||Math.abs(dy)>3) moved=true;
     const t = texts.find(x=>x.id===id);
     t.x=Math.round(bx+dx); t.y=Math.round(by+dy);
-    if(typeof applySnap==='function'){ const sn=applySnap(t.x,t.y,el.offsetWidth,el.offsetHeight); t.x=sn.x; t.y=sn.y; }
+    if(typeof applySnap==='function'){ const sn=applySnap(t.x,t.y,el.offsetWidth,el.offsetHeight,'text',id); t.x=sn.x; t.y=sn.y; }
     el.style.left=t.x+'px'; el.style.top=t.y+'px';
   });
   const up=e=>{ if(!down)return; down=false; el.classList.remove('dragging'); if(typeof clearSnap==='function')clearSnap(); try{el.releasePointerCapture(e.pointerId);}catch(_){} };
   el.addEventListener('pointerup', up);
   el.addEventListener('pointercancel', up);
   // double-click → edit mode
-  el.addEventListener('dblclick', e=>{
-    el.classList.add('editing');
-    el.contentEditable='true';
-    el.focus();
-    // place caret at end
-    const r=document.createRange(); r.selectNodeContents(el); r.collapse(false);
-    const sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
-    e.stopPropagation();
-  });
+  el.addEventListener('dblclick', e=>{ enterTextEdit(el, false); e.stopPropagation(); });
   el.addEventListener('blur', ()=>{
     if(!el.classList.contains('editing')) return;
     el.classList.remove('editing'); el.contentEditable='false';
@@ -2157,6 +2156,7 @@ function canvasPx(){
 
 /* ---- Add elements ---- */
 function addImageOverlay(src){
+  histBefore();
   const [cw,ch]=canvasPx();
   const img=new Image();
   img.onload=()=>{
@@ -2169,6 +2169,7 @@ function addImageOverlay(src){
   img.src=src;
 }
 function addBadge(i){
+  histBefore();
   const b=BADGES[i]; const svg=b.svg('#fff',60); const src=svgDataUrl(svg);
   const [cw,ch]=canvasPx();
   const ar=b.w/b.h;
@@ -2180,6 +2181,7 @@ function addBadge(i){
   overlays.push(o); renderOverlays(); selectOv(o.id);
 }
 function addAnnotation(kind){
+  histBefore();
   const [cw,ch]=canvasPx();
   let o={id:++ovIdCounter, kind, rot:0, color:'#f97316'};
   if(kind==='arrow'){ o.x=Math.round(cw*0.4); o.y=Math.round(ch*0.55); o.w=Math.round(cw*0.16); o.h=-Math.round(ch*0.16); o.thick=4; }
@@ -2295,7 +2297,7 @@ function updateElRot(v){ const o=curOv(); if(!o)return; o.rot=parseInt(v); docum
 function updateElColor(v){ const o=curOv(); if(!o)return; o.color=v; document.getElementById('el-color-hex').value=v; renderOverlays(); }
 function updateElColorHex(v){ if(!/^#[0-9a-fA-F]{6}$/.test(v))return; const o=curOv(); if(!o)return; o.color=v; document.getElementById('el-color').value=v; renderOverlays(); }
 function updateElThick(v){ const o=curOv(); if(!o)return; o.thick=parseInt(v); document.getElementById('el-thick-val').textContent=v+'px'; renderOverlays(); }
-function deleteOv(id){ overlays=overlays.filter(o=>o.id!==id); if(selectedOvId===id){ selectedOvId=null; if(typeof showPanel==='function') showPanel('pp-empty'); } renderOverlays(); }
+function deleteOv(id){ histBefore(); overlays=overlays.filter(o=>o.id!==id); if(selectedOvId===id){ selectedOvId=null; if(typeof showPanel==='function') showPanel('pp-empty'); } renderOverlays(); }
 function deleteSelectedEl(){ if(selectedOvId!=null) deleteOv(selectedOvId); }
 
 /* ---- Drag body + resize handle ---- */
@@ -2304,6 +2306,7 @@ function bindOvEl(el, id){
   let down=false, resizing=false, sx=0, sy=0, ox=0, oy=0, ow=0, oh=0;
   const onDown=(e, isResize)=>{
     selectOv(id); const o=overlays.find(x=>x.id===id); if(!o) return;
+    histBefore();
     down=true; resizing=isResize; sx=e.clientX; sy=e.clientY;
     ox=o.x; oy=o.y; ow=o.w; oh=o.h;
     el.classList.add('dragging'); el.setPointerCapture(e.pointerId); e.preventDefault(); e.stopPropagation();
@@ -2321,7 +2324,7 @@ function bindOvEl(el, id){
       else { const nw=Math.max(20,Math.round(ow+dx)); o.w=nw; o.h=nw; }
     } else {
       o.x=Math.round(ox+dx); o.y=Math.round(oy+dy);
-      const bb=ovBBox(o); const sn=applySnap(bb.left,bb.top,bb.w,bb.h);
+      const bb=ovBBox(o); const sn=applySnap(bb.left,bb.top,bb.w,bb.h,'ov',id);
       o.x+=Math.round(sn.x-bb.left); o.y+=Math.round(sn.y-bb.top);
     }
     renderOverlays();
@@ -2390,19 +2393,33 @@ document.getElementById('haf').addEventListener('change', e=>{
    All guides are screen-only (inside #guide-layer, never exported).
 ══════════════════════════════════════════════════════ */
 const SNAP_THRESH = 6;
-function applySnap(x, y, w, h){
+// Collect vertical (x) and horizontal (y) alignment anchors from the canvas edges/center
+// and every OTHER element's left/center/right & top/center/bottom — Figma-style smart guides.
+function snapAnchors(exKind, exId){
   const [cw,ch]=canvasPx();
+  const V=[0, cw/2, cw], H=[0, ch/2, ch];
+  if(typeof texts!=='undefined') texts.forEach(t=>{
+    if(exKind==='text' && t.id===exId) return;
+    const el=document.querySelector('#text-layer .text-block[data-id="'+t.id+'"]'); if(!el) return;
+    const w=el.offsetWidth, h=el.offsetHeight; V.push(t.x, t.x+w/2, t.x+w); H.push(t.y, t.y+h/2, t.y+h);
+  });
+  if(typeof overlays!=='undefined') overlays.forEach(o=>{
+    if(exKind==='ov' && o.id===exId) return;
+    const b=ovBBox(o); V.push(b.left, b.left+b.w/2, b.left+b.w); H.push(b.top, b.top+b.h/2, b.top+b.h);
+  });
+  return {V,H};
+}
+// Snap box (x,y,w,h) to the nearest anchors; draw guide lines; return snapped {x,y}.
+function applySnap(x, y, w, h, exKind, exId){
+  const {V,H}=snapAnchors(exKind, exId);
   const sv=document.getElementById('snap-v'), sh=document.getElementById('snap-h');
-  let snX=false, snY=false; const cx=x+w/2, cy=y+h/2;
-  if(Math.abs(cx-cw/2)<=SNAP_THRESH){ x=Math.round(cw/2-w/2); snX=true; }
-  else if(Math.abs(x)<=SNAP_THRESH){ x=0; }
-  else if(Math.abs(x+w-cw)<=SNAP_THRESH){ x=cw-w; }
-  if(Math.abs(cy-ch/2)<=SNAP_THRESH){ y=Math.round(ch/2-h/2); snY=true; }
-  else if(Math.abs(y)<=SNAP_THRESH){ y=0; }
-  else if(Math.abs(y+h-ch)<=SNAP_THRESH){ y=ch-h; }
-  if(sv){ sv.style.left=(cw/2)+'px'; sv.classList.toggle('on',snX); }
-  if(sh){ sh.style.top=(ch/2)+'px'; sh.classList.toggle('on',snY); }
-  return {x,y};
+  let bvd=Infinity, nx=x, vline=null;
+  [x, x+w/2, x+w].forEach(c=>V.forEach(t=>{ const d=Math.abs(c-t); if(d<bvd){ bvd=d; vline=t; nx=x+(t-c); } }));
+  let bhd=Infinity, ny=y, hline=null;
+  [y, y+h/2, y+h].forEach(c=>H.forEach(t=>{ const d=Math.abs(c-t); if(d<bhd){ bhd=d; hline=t; ny=y+(t-c); } }));
+  if(bvd<=SNAP_THRESH){ if(sv){ sv.style.left=vline+'px'; sv.classList.add('on'); } } else { nx=x; if(sv) sv.classList.remove('on'); }
+  if(bhd<=SNAP_THRESH){ if(sh){ sh.style.top=hline+'px'; sh.classList.add('on'); } } else { ny=y; if(sh) sh.classList.remove('on'); }
+  return {x:Math.round(nx), y:Math.round(ny)};
 }
 function clearSnap(){ const sv=document.getElementById('snap-v'),sh=document.getElementById('snap-h'); if(sv)sv.classList.remove('on'); if(sh)sh.classList.remove('on'); }
 
@@ -2602,10 +2619,18 @@ const TOOL_PANEL = {
   text:'pp-text', image:'pp-image', shapes:'pp-shapes', badges:'pp-badges',
   element:'pp-element', device:'pp-device'
 };
-let activeTool = null;   // last toolbar tool clicked (null = nothing)
+let activeTool = null;     // last toolbar tool clicked (null = nothing)
+let textPlaceMode = false; // when Text tool is armed: next canvas click drops a text box
 function showPanel(id){ document.querySelectorAll('.prop-panel').forEach(p=>p.classList.toggle('active', p.id===id)); }
 function setToolHighlight(tool){ document.querySelectorAll('#toolbar .tool').forEach(b=>b.classList.toggle('active', b.dataset.tool===tool)); }
-function selectTool(tool){ activeTool=tool; setToolHighlight(tool); showPanel(TOOL_PANEL[tool]||'pp-empty'); }
+function setTextPlace(on){
+  textPlaceMode=!!on;
+  const wa=document.getElementById('work-area'); if(wa) wa.classList.toggle('text-place', textPlaceMode);
+}
+function selectTool(tool){
+  activeTool=tool; setToolHighlight(tool); showPanel(TOOL_PANEL[tool]||'pp-empty');
+  setTextPlace(tool==='text');   // arm click-to-place when Text tool is chosen
+}
 // Selection-driven panel open (text/element/device). Text doubles as a toolbar tool.
 function openPanelForTool(key){
   if(key==='text'){ activeTool='text'; setToolHighlight('text'); showPanel('pp-text'); return; }
@@ -2614,9 +2639,130 @@ function openPanelForTool(key){
 // After deselecting an object, go back to the active toolbar tool (or empty)
 function revertPanel(){ setToolHighlight(activeTool); showPanel(activeTool ? (TOOL_PANEL[activeTool]||'pp-empty') : 'pp-empty'); }
 
+// Enter inline edit on a text block element; selectAll replaces the placeholder
+function enterTextEdit(el, selectAll){
+  if(!el) return;
+  el.classList.add('editing'); el.contentEditable='true'; el.focus();
+  const r=document.createRange(); r.selectNodeContents(el);
+  if(!selectAll) r.collapse(false);
+  const sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+}
+// Create a text box at a point in canvas-wrap coords and immediately edit it
+function addTextAt(x, y){
+  histBefore();
+  const t={ id:++textIdCounter, content:'Your text', x:Math.round(x), y:Math.round(y),
+    size:40, weight:'700', color:'#ffffff', align:'left', font:FONTS[0].css, letterSpacing:0, lineHeight:1.3 };
+  texts.push(t); renderTexts(); selectText(t.id);
+  requestAnimationFrame(()=>{ enterTextEdit(document.querySelector('#text-layer .text-block[data-id="'+t.id+'"]'), true); });
+  return t;
+}
+// Click on the canvas while the Text tool is armed → drop a text box there
+document.getElementById('work-area').addEventListener('pointerdown', e=>{
+  if(!textPlaceMode) return;
+  if(e.target.closest('.text-block')||e.target.closest('.toolbar')) return;
+  const wrap=document.getElementById('canvas-wrap'); const r=wrap.getBoundingClientRect();
+  const sc=(parseFloat(wrap.style.transform.replace(/[^0-9.]/g,''))||1); // canvas may be zoom-scaled
+  addTextAt((e.clientX-r.left)/sc - 8, (e.clientY-r.top)/sc - 24);
+  setTextPlace(false);   // one placement, then back to editing the new box
+  e.stopPropagation();
+}, true);  // capture phase: runs before the deselect/mockup-drag handlers
+
+// Move the selected text or element by (dx,dy) canvas px
+function nudgeSelected(dx, dy){
+  if(selectedOvId!=null){ const o=curOv(); if(o){ histBefore(); o.x+=dx; o.y+=dy; renderOverlays(); } return; }
+  if(selectedTextId!=null){ const t=curText(); if(t){ histBefore(); t.x+=dx; t.y+=dy; renderTexts(); } }
+}
+
+/* ══════════════════════════════════════════════════════
+   UNDO / REDO — snapshots the editable layers (texts, elements, mockup offset, tilt)
+══════════════════════════════════════════════════════ */
+let _past=[], _future=[], _histLock=false;
+function _snap(){
+  return JSON.stringify({
+    texts, overlays: overlays.map(o=>{ const c=Object.assign({},o); delete c._img; return c; }),
+    mockOffX, mockOffY, tiltX, tiltY, textIdCounter, ovIdCounter, ovBadgeNum
+  });
+}
+function histBefore(){
+  if(_histLock) return;
+  const s=_snap();
+  if(_past.length && _past[_past.length-1]===s) return;   // skip duplicate (e.g. click without move)
+  _past.push(s); if(_past.length>60) _past.shift();
+  _future.length=0;
+}
+function _restore(json){
+  const s=JSON.parse(json); _histLock=true;
+  texts = s.texts||[];
+  overlays = (s.overlays||[]).map(o=>{ if(o.kind==='image'&&o.src){ const img=new Image(); img.src=o.src; o._img=img; } return o; });
+  mockOffX=s.mockOffX||0; mockOffY=s.mockOffY||0; tiltX=s.tiltX||0; tiltY=s.tiltY||0;
+  textIdCounter=Math.max(textIdCounter,s.textIdCounter||0);
+  ovIdCounter=Math.max(ovIdCounter,s.ovIdCounter||0);
+  ovBadgeNum=Math.max(ovBadgeNum,s.ovBadgeNum||0);
+  selectedTextId=null; selectedOvId=null;
+  renderTexts(); renderOverlays(); applyMockupTransform();
+  const tx=document.getElementById('sl-tiltx'), ty=document.getElementById('sl-tilty');
+  if(tx){ tx.value=tiltX; document.getElementById('vl-tiltx').textContent=tiltX+'°'; }
+  if(ty){ ty.value=tiltY; document.getElementById('vl-tilty').textContent=tiltY+'°'; }
+  if(typeof revertPanel==='function') revertPanel();
+  _histLock=false;
+}
+function undo(){ if(!_past.length) return; _future.push(_snap()); _restore(_past.pop()); }
+function redo(){ if(!_future.length) return; _past.push(_snap()); _restore(_future.pop()); }
+function deselectAll(){
+  if(selectedTextId!=null){ selectedTextId=null; document.getElementById('text-ctrls').classList.remove('active'); renderTexts(); }
+  if(selectedOvId!=null){ selectedOvId=null; renderOverlays(); }
+  setTextPlace(false); revertPanel();
+}
+
+/* ── Keyboard shortcuts (Figma-style) ── */
+document.addEventListener('keydown', e=>{
+  const tag=(e.target.tagName||'').toLowerCase();
+  const editing = tag==='input'||tag==='textarea'||e.target.isContentEditable;
+  // Undo / redo (work everywhere except while editing text, where the browser handles it)
+  if((e.metaKey||e.ctrlKey) && (e.key==='z'||e.key==='Z')){ if(editing) return; e.preventDefault(); e.shiftKey?redo():undo(); return; }
+  if((e.metaKey||e.ctrlKey) && (e.key==='y'||e.key==='Y')){ if(editing) return; e.preventDefault(); redo(); return; }
+  if(editing) return;  // don't hijack typing
+  if(e.metaKey||e.ctrlKey||e.altKey) return;
+  switch(e.key){
+    case 't': case 'T': selectTool('text'); e.preventDefault(); break;
+    case 'b': case 'B': selectTool('background'); e.preventDefault(); break;
+    case 'f': case 'F': selectTool('frame'); e.preventDefault(); break;
+    case 'v': case 'V': case 'Escape':
+      activeTool=null; setToolHighlight(null); deselectAll(); showPanel('pp-empty'); break;
+    case 'Delete': case 'Backspace':
+      if(selectedOvId!=null){ deleteSelectedEl(); e.preventDefault(); }
+      else if(selectedTextId!=null){ deleteSelectedText(); e.preventDefault(); }
+      break;
+    case 'ArrowUp':    nudgeSelected(0, e.shiftKey?-10:-1); e.preventDefault(); break;
+    case 'ArrowDown':  nudgeSelected(0, e.shiftKey? 10: 1); e.preventDefault(); break;
+    case 'ArrowLeft':  nudgeSelected(e.shiftKey?-10:-1, 0); e.preventDefault(); break;
+    case 'ArrowRight': nudgeSelected(e.shiftKey? 10: 1, 0); e.preventDefault(); break;
+  }
+});
+
+
+/* ── Drag the whole mockup to reposition it on the canvas (single mode) ── */
+(function enableMockupDrag(){
+  const wrap=document.getElementById('mockup-wrap'); if(!wrap) return;
+  let armed=false, dragging=false, sx=0, sy=0, bx=0, by=0, pid=null;
+  wrap.addEventListener('pointerdown', e=>{
+    if(typeof layoutMode!=='undefined' && layoutMode==='dual') return; // dual uses its own instances
+    if(e.target.closest('.text-block')||e.target.closest('.ov-item')) return; // let layers handle their own
+    armed=true; dragging=false; sx=e.clientX; sy=e.clientY; bx=mockOffX; by=mockOffY; pid=e.pointerId;
+  });
+  wrap.addEventListener('pointermove', e=>{
+    if(!armed) return;
+    const dx=e.clientX-sx, dy=e.clientY-sy;
+    if(!dragging){ if(Math.abs(dx)<3 && Math.abs(dy)<3) return; dragging=true; histBefore(); wrap.setPointerCapture(pid); wrap.classList.add('dragging'); }
+    mockOffX=Math.round(bx+dx); mockOffY=Math.round(by+dy);
+    applyMockupTransform();
+  });
+  const up=e=>{ if(!armed) return; armed=false; if(dragging){ wrap.classList.remove('dragging'); try{wrap.releasePointerCapture(pid);}catch(_){} } dragging=false; };
+  wrap.addEventListener('pointerup', up);
+  wrap.addEventListener('pointercancel', up);
+})();
+
 /* ── INIT ── */
 buildImgGrid(); buildGradGrid(); buildSolidSws(); buildBadgeGrid();
 buildDeviceGrid(); buildFinishGrid(); buildFontSelect();
-enableReposition('mockup-inner', ['mockup-img','mockup-video']);
-enableReposition('gadget-screen', ['gadget-img','gadget-video']);
 requestAnimationFrame(applyCanvasRatio);
