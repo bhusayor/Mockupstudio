@@ -92,38 +92,59 @@
       </div>
     </div>
 
-    <!-- FRAME (mockup adjustments + 3D tilt) -->
+    <!-- FRAME / TILT — separated, titled sections -->
     <div class="prop-panel" id="pp-frame">
-      <div class="sec-lbl">Frame</div>
-      <div class="slider-row">
-        <span class="slider-lbl">Padding</span>
-        <input type="range" min="0" max="18" value="6" step="1" id="sl-pad" oninput="onPad(this.value)">
-        <span class="slider-val" id="vl-pad">6%</span>
+      <!-- 1. Size & zoom -->
+      <div class="fp-sec">
+        <div class="sec-lbl">Size &amp; zoom</div>
+        <div class="slider-row">
+          <span class="slider-lbl">Size</span>
+          <input type="range" min="0" max="18" value="6" step="1" id="sl-pad" oninput="onPad(this.value)">
+          <span class="slider-val" id="vl-pad">6%</span>
+        </div>
+        <div class="slider-row" id="zoom-row" style="display:none">
+          <span class="slider-lbl">Zoom</span>
+          <input type="range" min="1" max="3" value="1" step="0.01" id="sl-zoom" oninput="onZoom(this.value)">
+          <span class="slider-val" id="vl-zoom">100%</span>
+        </div>
+        <div class="slider-row" id="row-radius">
+          <span class="slider-lbl">Radius</span>
+          <input type="range" min="0" max="40" value="14" step="1" id="sl-rad" oninput="onRadius(this.value)">
+          <span class="slider-val" id="vl-rad">14px</span>
+        </div>
       </div>
-      <div class="slider-row" id="row-radius">
-        <span class="slider-lbl">Radius</span>
-        <input type="range" min="0" max="40" value="14" step="1" id="sl-rad" oninput="onRadius(this.value)">
-        <span class="slider-val" id="vl-rad">14px</span>
+      <!-- 2. Shadow -->
+      <div class="fp-sec">
+        <div class="sec-lbl">Shadow</div>
+        <div class="slider-row">
+          <span class="slider-lbl">Intensity</span>
+          <input type="range" min="0" max="100" value="60" step="1" id="sl-shad" oninput="onShadow(this.value)">
+          <span class="slider-val" id="vl-shad">60%</span>
+        </div>
+        <div class="slider-row">
+          <span class="slider-lbl">Offset X</span>
+          <input type="range" min="-60" max="60" value="0" step="1" id="sl-shadx" oninput="onShadowOff('x',this.value)">
+          <span class="slider-val" id="vl-shadx">0</span>
+        </div>
+        <div class="slider-row">
+          <span class="slider-lbl">Offset Y</span>
+          <input type="range" min="-60" max="60" value="24" step="1" id="sl-shady" oninput="onShadowOff('y',this.value)">
+          <span class="slider-val" id="vl-shady">24</span>
+        </div>
       </div>
-      <div class="slider-row">
-        <span class="slider-lbl">Shadow</span>
-        <input type="range" min="0" max="100" value="60" step="1" id="sl-shad" oninput="onShadow(this.value)">
-        <span class="slider-val" id="vl-shad">60%</span>
-      </div>
-      <div class="slider-row">
-        <span class="slider-lbl">Tilt X</span>
-        <input type="range" min="-26" max="26" value="0" step="1" id="sl-tiltx" oninput="onTilt('x',this.value)">
-        <span class="slider-val" id="vl-tiltx">0°</span>
-      </div>
-      <div class="slider-row">
-        <span class="slider-lbl">Tilt Y</span>
-        <input type="range" min="-26" max="26" value="0" step="1" id="sl-tilty" oninput="onTilt('y',this.value)">
-        <span class="slider-val" id="vl-tilty">0°</span>
-      </div>
-      <div class="slider-row" id="zoom-row" style="display:none">
-        <span class="slider-lbl">Zoom</span>
-        <input type="range" min="1" max="3" value="1" step="0.01" id="sl-zoom" oninput="onZoom(this.value)">
-        <span class="slider-val" id="vl-zoom">100%</span>
+      <!-- 3. 3D tilt -->
+      <div class="fp-sec">
+        <div class="sec-lbl">3D tilt</div>
+        <div class="slider-row">
+          <span class="slider-lbl">Tilt X</span>
+          <input type="range" min="-26" max="26" value="0" step="1" id="sl-tiltx" oninput="onTilt('x',this.value)">
+          <span class="slider-val" id="vl-tiltx">0°</span>
+        </div>
+        <div class="slider-row">
+          <span class="slider-lbl">Tilt Y</span>
+          <input type="range" min="-26" max="26" value="0" step="1" id="sl-tilty" oninput="onTilt('y',this.value)">
+          <span class="slider-val" id="vl-tilty">0°</span>
+        </div>
       </div>
       <button id="reset-pos-btn" onclick="resetMediaTransform()" style="display:none;width:100%;margin-top:var(--s2);padding:7px 0;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text-muted);font-size:11.5px;cursor:pointer;font-family:inherit;align-items:center;justify-content:center;gap:6px;transition:all .14s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--text)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>

@@ -286,15 +286,31 @@ let selectedFmt = 'png';
 let selectedQ = '1080';
 let imgScale = 1;          // 1× / 2× / 3× hi-res multiplier for image export
 let vidFmt = 'video';      // 'video' (MP4/WebM) or 'gif'
-let tiltX = 0, tiltY = 0;  // 3D tilt angles (deg); 0,0 = flat
+let tiltX = 0, tiltY = 0;  // 3D tilt angles (deg); 0,0 = flat  (single mode)
 const TILT_PF = 2.6;       // perspective distance as a multiple of mockup width
 let mockOffX = 0, mockOffY = 0;  // whole-mockup drag offset (single mode), preview px
+let shadVal = 60, shadX = 0, shadY = 24;  // shadow intensity + offset (single mode)
 
 function onTilt(axis, v){
   v=parseInt(v);
+  if(layoutMode==='dual'){
+    const s=slots[selectedSlot]; if(!s) return;
+    if(axis==='x') s.tiltX=v; else s.tiltY=v;
+    document.getElementById(axis==='x'?'vl-tiltx':'vl-tilty').textContent=v+'°';
+    const inst=document.querySelectorAll('.device-instance')[selectedSlot];
+    if(inst) applyInstanceTransform(inst, selectedSlot);
+    return;
+  }
   if(axis==='x'){ tiltX=v; document.getElementById('vl-tiltx').textContent=v+'°'; }
   else { tiltY=v; document.getElementById('vl-tilty').textContent=v+'°'; }
   applyMockupTransform();
+}
+// Per-instance transform (position + 3D tilt) for dual mode
+function applyInstanceTransform(inst, i){
+  const s=slots[i]; if(!inst) return;
+  let tf='translate(calc(-50% + '+s.posX+'px), calc(-50% + '+s.posY+'px))';
+  if(s.tiltX||s.tiltY){ const w=inst.querySelector('.inst-wrap'); const ww=(w&&w.offsetWidth)||300; tf+=' perspective('+(TILT_PF*ww)+'px) rotateX('+(s.tiltX||0)+'deg) rotateY('+(s.tiltY||0)+'deg)'; }
+  inst.style.transform=tf;
 }
 // Single source of truth for the mockup's CSS transform: drag offset + 3D tilt.
 function applyMockupTransform(){
@@ -354,10 +370,9 @@ async function buildMockupOffscreen(S){
     return {canvas:mc,w:fw0,h:fh0};
   }
 }
-// Warp the offscreen mockup onto ctx with the SAME perspective math CSS uses in preview.
-function drawTiltedMockup(ctx, m, cW, cH, S){
-  const w=m.w, h=m.h, cx=cW/2+mockOffX, cy=cH/2+mockOffY;
-  const ax=tiltX*Math.PI/180, ay=tiltY*Math.PI/180, P=TILT_PF*w;
+// Generic perspective warp of an offscreen mockup centered at (cx,cy) with tilt angles (deg).
+function warpMockup(ctx, m, cx, cy, axDeg, ayDeg, S){
+  const w=m.w, h=m.h, ax=axDeg*Math.PI/180, ay=ayDeg*Math.PI/180, P=TILT_PF*w;
   const proj=(u,v)=>{
     const lx=(u-0.5)*w, ly=(v-0.5)*h;
     const X=lx*Math.cos(ay), Z=-lx*Math.sin(ay), Y=ly;
@@ -366,14 +381,12 @@ function drawTiltedMockup(ctx, m, cW, cH, S){
     const s=P/(P-z2);
     return [cx+X*s, cy+y2*s];
   };
-  // soft shadow cast from the projected silhouette
   const c00=proj(0,0),c10=proj(1,0),c11=proj(1,1),c01=proj(0,1);
   ctx.save();
   ctx.shadowColor='rgba(0,0,0,0.5)'; ctx.shadowBlur=70; ctx.shadowOffsetY=28;
   ctx.beginPath(); ctx.moveTo(c00[0],c00[1]); ctx.lineTo(c10[0],c10[1]); ctx.lineTo(c11[0],c11[1]); ctx.lineTo(c01[0],c01[1]); ctx.closePath();
   ctx.fillStyle='rgba(0,0,0,0.001)'; ctx.fill();
   ctx.restore();
-  // mesh warp
   const N=24, src=m.canvas, sw=src.width, sh=src.height;
   for(let i=0;i<N;i++) for(let j=0;j<N;j++){
     const u0=i/N,u1=(i+1)/N,v0=j/N,v1=(j+1)/N;
@@ -382,6 +395,10 @@ function drawTiltedMockup(ctx, m, cW, cH, S){
     texTri(ctx,src,S, ax0,ay0,ax1,ay0,ax1,ay1, p00,p10,p11);
     texTri(ctx,src,S, ax0,ay0,ax1,ay1,ax0,ay1, p00,p11,p01);
   }
+}
+// Single-mockup tilt warp (uses the global tilt + drag offset).
+function drawTiltedMockup(ctx, m, cW, cH, S){
+  warpMockup(ctx, m, cW/2+mockOffX, cH/2+mockOffY, tiltX, tiltY, S);
 }
 
 /* switchTopTab removed — left/right sidebar layout replaces tabs */
@@ -643,28 +660,62 @@ function applyCustomRatio(){
 window.addEventListener('resize',applyCanvasRatio);
 
 /* ── SLIDERS ── */
-function onPad(v){padPct=parseInt(v);document.getElementById('vl-pad').textContent=v+'%';if(activeDevice)sizeGadget();else sizeFrameToMedia();}
+// Paint the accent-fill portion of a range input to its current value (reliable cross-browser).
+function paintRange(el){
+  const min=parseFloat(el.min)||0, max=parseFloat(el.max)||100, v=parseFloat(el.value);
+  const pct = (max>min && !isNaN(v)) ? Math.max(0,Math.min(100,(v-min)/(max-min)*100)) : 50;
+  el.style.setProperty('--p', pct.toFixed(1)+'%');
+}
+function repaintRanges(){ document.querySelectorAll('.slider-row input[type=range]').forEach(paintRange); }
+
+// "Size" (was Padding): higher value → smaller mockup (more breathing room)
+function onPad(v){
+  v=parseInt(v); document.getElementById('vl-pad').textContent=v+'%';
+  if(layoutMode==='dual'){
+    const s=slots[selectedSlot]; if(!s) return;
+    s.frameScale=Math.max(0.3, Math.min(1.7, 1+(6-v)*0.05));
+    const inst=document.querySelectorAll('.device-instance')[selectedSlot];
+    if(inst){ sizeInstance(inst, selectedSlot); applyInstanceTransform(inst, selectedSlot); }
+    applyShadow();
+    return;
+  }
+  padPct=v; if(activeDevice)sizeGadget();else sizeFrameToMedia();
+}
 function onRadius(v){document.getElementById('vl-rad').textContent=v+'px';document.getElementById('mockup-frame').style.borderRadius=v+'px';}
+
+// Shadow strings (intensity t in 0..1, offset ox/oy in px)
+function shadowFilterStr(t, ox, oy){
+  if(t<=0) return 'none';
+  const b1=Math.round(10+26*t), a1=(0.22+0.40*t).toFixed(2);
+  const b2=Math.round(28+72*t), a2=(0.16+0.32*t).toFixed(2);
+  return 'drop-shadow('+ox+'px '+oy+'px '+b1+'px rgba(0,0,0,'+a1+')) drop-shadow('+Math.round(ox*1.3)+'px '+Math.round(oy*1.3)+'px '+b2+'px rgba(0,0,0,'+a2+'))';
+}
+function shadowBoxStr(t, ox, oy){
+  if(t<=0) return '0 0 0 1px rgba(255,255,255,0.09)';
+  const a1=(0.45*t).toFixed(2),a2=(0.5*t).toFixed(2),a3=(0.38*t).toFixed(2);
+  const b1=Math.round(24+36*t),b2=Math.round(60+60*t),b3=Math.round(120+80*t);
+  return '0 0 0 1px rgba(255,255,255,0.09),'+ox+'px '+oy+'px '+b1+'px rgba(0,0,0,'+a1+'),'+Math.round(ox*1.2)+'px '+Math.round(oy*1.2)+'px '+b2+'px rgba(0,0,0,'+a2+'),'+Math.round(ox*1.4)+'px '+Math.round(oy*1.4)+'px '+b3+'px rgba(0,0,0,'+a3+')';
+}
+function applyShadow(){
+  if(layoutMode==='dual'){
+    const i=selectedSlot, s=slots[i]; const inst=document.querySelectorAll('.device-instance')[i];
+    if(inst){ const w=inst.querySelector('.inst-wrap'); if(w) w.style.filter=shadowFilterStr((s.shadVal||0)/100, s.shadX||0, s.shadY||0); }
+    return;
+  }
+  const t=shadVal/100;
+  const f=document.getElementById('mockup-frame'); if(f) f.style.boxShadow=shadowBoxStr(t, shadX, shadY);
+  const g=document.getElementById('gadget-frame-wrap'); if(g) g.style.filter=shadowFilterStr(t, shadX, shadY);
+}
 function onShadow(v){
-  const el=document.getElementById('vl-shad'); if(el) el.textContent=v+'%';
-  const f=document.getElementById('mockup-frame'), t=v/100;
-  // plain frame: layered box-shadow
-  if(t===0){ f.style.boxShadow='0 0 0 1px rgba(255,255,255,0.09)'; }
-  else {
-    const a1=(0.45*t).toFixed(2),a2=(0.5*t).toFixed(2),a3=(0.38*t).toFixed(2);
-    const b1=Math.round(6+18*t),b2=Math.round(24+36*t),b3=Math.round(20+40*t),b4=Math.round(60+60*t),b5=Math.round(48+72*t),b6=Math.round(120+80*t);
-    f.style.boxShadow='0 0 0 1px rgba(255,255,255,0.09),0 '+b1+'px '+b2+'px rgba(0,0,0,'+a1+'),0 '+b3+'px '+b4+'px rgba(0,0,0,'+a2+'),0 '+b5+'px '+b6+'px rgba(0,0,0,'+a3+')';
-  }
-  // device frame: drop-shadow filter (box-shadow can't follow the rounded SVG silhouette)
-  const g=document.getElementById('gadget-frame-wrap');
-  if(g){
-    if(t===0){ g.style.filter='none'; }
-    else {
-      const s1=Math.round(10+26*t), o1=Math.round(6+18*t), a4=(0.22+0.40*t).toFixed(2);
-      const s2=Math.round(28+72*t), o2=Math.round(14+34*t), a5=(0.18+0.34*t).toFixed(2);
-      g.style.filter='drop-shadow(0 '+o1+'px '+s1+'px rgba(0,0,0,'+a4+')) drop-shadow(0 '+o2+'px '+s2+'px rgba(0,0,0,'+a5+'))';
-    }
-  }
+  v=parseInt(v); const el=document.getElementById('vl-shad'); if(el) el.textContent=v+'%';
+  if(layoutMode==='dual'){ if(slots[selectedSlot]) slots[selectedSlot].shadVal=v; } else { shadVal=v; }
+  applyShadow();
+}
+function onShadowOff(axis, v){
+  v=parseInt(v); document.getElementById(axis==='x'?'vl-shadx':'vl-shady').textContent=v;
+  if(layoutMode==='dual'){ const s=slots[selectedSlot]; if(s){ if(axis==='x')s.shadX=v; else s.shadY=v; } }
+  else { if(axis==='x')shadX=v; else shadY=v; }
+  applyShadow();
 }
 
 /* ── BACKGROUND ── */
@@ -1180,7 +1231,7 @@ async function confirmVidExportDual(){
   for(const slot of slots){
     if(slot.device){
       layers.push({
-        bezel: await svgToImage(tintBezelSVG(slot.device.bezel('#000'), chassisTint), slot.device.vw, slot.device.vh),
+        bezel: await svgToImage(tintBezelSVG(slot.device.bezel('#000'), slot.tint), slot.device.vw, slot.device.vh),
         overlay: await svgToImage(slot.device.overlay(), slot.device.vw, slot.device.vh)
       });
     } else layers.push(null);
@@ -1204,12 +1255,13 @@ async function confirmVidExportDual(){
       const dev=slot.device;
       const canvas=document.getElementById('canvas-wrap');
       const cw=parseInt(canvas.style.width)||800, ch=parseInt(canvas.style.height)||500;
-      const targetH=Math.min(ch*0.62, cw*0.42*dev.vh/dev.vw);
+      const targetH=Math.min(ch*0.62, cw*0.42*dev.vh/dev.vw)*(slot.frameScale||1);
       const dh=Math.round(targetH), dw=Math.round(dh*dev.vw/dev.vh);
       const cx=cW/2+slot.posX, cy=cH/2+slot.posY;
       const dx=cx-dw/2, dy=cy-dh/2;
-      ctx.save(); ctx.shadowColor='rgba(0,0,0,0.5)';ctx.shadowBlur=70*(dw/600);ctx.shadowOffsetY=26*(dw/600);
-      ctx.fillStyle='rgba(0,0,0,0.001)';ctx.fillRect(dx+dw*0.1,dy+dh*0.1,dw*0.8,dh*0.8); ctx.restore();
+      const st=(slot.shadVal||0)/100;
+      if(st>0){ ctx.save(); ctx.shadowColor='rgba(0,0,0,'+(0.3+0.4*st).toFixed(2)+')';ctx.shadowBlur=(18+70*st)*(dw/600);ctx.shadowOffsetX=(slot.shadX||0);ctx.shadowOffsetY=(slot.shadY||24);
+        ctx.fillStyle='rgba(0,0,0,0.001)';ctx.fillRect(dx+dw*0.1,dy+dh*0.1,dw*0.8,dh*0.8); ctx.restore(); }
       if(layers[i]&&layers[i].bezel) ctx.drawImage(layers[i].bezel,dx,dy,dw,dh);
       const sx=dx+dev.screen.x/dev.vw*dw, sy=dy+dev.screen.y/dev.vh*dh;
       const sw=dev.screen.w/dev.vw*dw, sh=dev.screen.h/dev.vh*dh;
@@ -1254,38 +1306,41 @@ async function confirmVidExportDual(){
 async function compositeSlot(ctx, slot, scale, cW, cH){
   if(!slot.device || !slot.hasMedia) return;
   const dev=slot.device;
-  // Recreate the same sizing used on screen (sizeInstance), in export px
   const canvas=document.getElementById('canvas-wrap');
   const cw=parseInt(canvas.style.width)||800, ch=parseInt(canvas.style.height)||500;
-  const targetH=Math.min(ch*0.62, cw*0.42*dev.vh/dev.vw);
+  const targetH=Math.min(ch*0.62, cw*0.42*dev.vh/dev.vw)*(slot.frameScale||1);
   const dh=Math.round(targetH), dw=Math.round(dh*dev.vw/dev.vh);
-  // center of canvas + slot offset
   const cx=cW/2 + slot.posX, cy=cH/2 + slot.posY;
-  const dx=cx-dw/2, dy=cy-dh/2;
-  // shadow
-  ctx.save();
-  ctx.shadowColor='rgba(0,0,0,0.5)';ctx.shadowBlur=70*(dw/600);ctx.shadowOffsetY=26*(dw/600);
-  ctx.fillStyle='rgba(0,0,0,0.001)';ctx.fillRect(dx+dw*0.1,dy+dh*0.1,dw*0.8,dh*0.8);
-  ctx.restore();
-  const bezelImg=await svgToImage(tintBezelSVG(dev.bezel('#000'), chassisTint), dev.vw, dev.vh);
+  const S=scale;
+  // Build the flat device (bezel → media → overlay) into an offscreen, so it can be tilt-warped.
+  const mc=document.createElement('canvas'); mc.width=Math.max(1,Math.round(dw*S)); mc.height=Math.max(1,Math.round(dh*S));
+  const mx=mc.getContext('2d'); mx.scale(S,S);
+  const bezelImg=await svgToImage(tintBezelSVG(dev.bezel('#000'), slot.tint), dev.vw, dev.vh);
   const overlayImg=await svgToImage(dev.overlay(), dev.vw, dev.vh);
-  if(bezelImg) ctx.drawImage(bezelImg,dx,dy,dw,dh);
-  // screen rect
-  const sx=dx+dev.screen.x/dev.vw*dw, sy=dy+dev.screen.y/dev.vh*dh;
-  const sw=dev.screen.w/dev.vw*dw, sh=dev.screen.h/dev.vh*dh;
-  const rr=(dev.screenRR||20)/dev.vw*dw;
-  // media element (live)
+  if(bezelImg) mx.drawImage(bezelImg,0,0,dw,dh);
+  const sx=dev.screen.x/dev.vw*dw, sy=dev.screen.y/dev.vh*dh;
+  const sw=dev.screen.w/dev.vw*dw, sh=dev.screen.h/dev.vh*dh, rr=(dev.screenRR||20)/dev.vw*dw;
   const inst=document.querySelectorAll('.device-instance')[slots.indexOf(slot)];
   const mediaEl=inst ? (slot.type==='video'?inst.querySelector('video'):inst.querySelector('img')) : null;
   if(mediaEl){
-    ctx.save(); roundRect(ctx,sx,sy,sw,sh,rr); ctx.clip();
-    const base=coverSizeAR(slot.ar, sw, sh);
-    const mw=base.w*slot.scale, mh=base.h*slot.scale;
-    const mx=sx+(sw-mw)/2 + (slot.offX||0), my=sy+(sh-mh)/2 + (slot.offY||0);
-    ctx.drawImage(mediaEl, mx, my, mw, mh);
+    mx.save(); roundRect(mx,sx,sy,sw,sh,rr); mx.clip();
+    const base=coverSizeAR(slot.ar, sw, sh); const mw=base.w*slot.scale, mh=base.h*slot.scale;
+    mx.drawImage(mediaEl, sx+(sw-mw)/2+(slot.offX||0), sy+(sh-mh)/2+(slot.offY||0), mw, mh);
+    mx.restore();
+  }
+  if(overlayImg) mx.drawImage(overlayImg,0,0,dw,dh);
+  const m={canvas:mc, w:dw, h:dh};
+  // per-device shadow
+  const t=(slot.shadVal||0)/100;
+  if(t>0){
+    ctx.save();
+    ctx.shadowColor='rgba(0,0,0,'+(0.3+0.4*t).toFixed(2)+')'; ctx.shadowBlur=(18+70*t)*(dw/600);
+    ctx.shadowOffsetX=(slot.shadX||0); ctx.shadowOffsetY=(slot.shadY||24);
+    ctx.fillStyle='rgba(0,0,0,0.001)'; ctx.fillRect(cx-dw*0.4, cy-dh*0.4, dw*0.8, dh*0.8);
     ctx.restore();
   }
-  if(overlayImg) ctx.drawImage(overlayImg,dx,dy,dw,dh);
+  if(slot.tiltX||slot.tiltY) warpMockup(ctx, m, cx, cy, slot.tiltX, slot.tiltY, S);
+  else ctx.drawImage(mc, cx-dw/2, cy-dh/2, dw, dh);
 }
 
 async function confirmImgExportDual(){
@@ -1689,8 +1744,8 @@ function refitVideoFrom(el){
 let layoutMode = 'single';
 let selectedSlot = 0;
 const slots = [
-  { device:null, src:null, type:null, ar:16/9, scale:1, posX:-150, posY:0, offX:0, offY:0, hasMedia:false },
-  { device:null, src:null, type:null, ar:16/9, scale:1, posX:150,  posY:0, offX:0, offY:0, hasMedia:false },
+  { device:null, src:null, type:null, ar:16/9, scale:1, posX:-150, posY:0, offX:0, offY:0, hasMedia:false, tiltX:0, tiltY:0, tint:null, shadVal:60, shadX:0, shadY:24, frameScale:1 },
+  { device:null, src:null, type:null, ar:16/9, scale:1, posX:150,  posY:0, offX:0, offY:0, hasMedia:false, tiltX:0, tiltY:0, tint:null, shadVal:60, shadX:0, shadY:24, frameScale:1 },
 ];
 let activeFileSlot = 0;  // which slot a file upload targets
 
@@ -1728,8 +1783,25 @@ function selectSlot(i){
   if(zr) zr.style.display = slots[i].hasMedia ? 'flex' : 'none';
   const rb=document.getElementById('reset-pos-btn');
   if(rb) rb.style.display = slots[i].hasMedia ? 'flex' : 'none';
-  const zs=document.getElementById('sl-zoom'); if(zs) zs.value=slots[i].scale;
-  const zv=document.getElementById('vl-zoom'); if(zv) zv.textContent=Math.round(slots[i].scale*100)+'%';
+  syncControlsToSlot(i);
+}
+// Mirror the selected slot's per-device properties onto the panel controls
+function syncControlsToSlot(i){
+  const s=slots[i]; if(!s) return;
+  const set=(id,val,fmt)=>{ const el=document.getElementById(id); if(el){ el.value=val; if(typeof paintRange==='function') paintRange(el); const lbl=document.getElementById(id.replace('sl-','vl-')); if(lbl&&fmt) lbl.textContent=fmt; } };
+  set('sl-tiltx', s.tiltX, s.tiltX+'°');
+  set('sl-tilty', s.tiltY, s.tiltY+'°');
+  set('sl-shad', s.shadVal, s.shadVal+'%');
+  set('sl-shadx', s.shadX, ''+s.shadX);
+  set('sl-shady', s.shadY, ''+s.shadY);
+  set('sl-zoom', s.scale, Math.round(s.scale*100)+'%');
+  const sizeV=Math.max(0,Math.min(18,Math.round(6-((s.frameScale||1)-1)*20)));
+  set('sl-pad', sizeV, sizeV+'%');
+  const fi=FINISHES.findIndex(f=>f.tint===s.tint);
+  document.querySelectorAll('#finish-grid .finish-sw').forEach((el,idx)=>{
+    if(el.classList.contains('custom')) el.classList.toggle('active', fi<0 && s.tint!=null);
+    else el.classList.toggle('active', idx===fi);
+  });
 }
 
 function slotDeviceLabel(i){ return slots[i].device ? slots[i].device.name : 'None'; }
@@ -1742,10 +1814,10 @@ function renderDualStage(){
     const inst = document.createElement('div');
     inst.className='device-instance'+(i===selectedSlot?' selected':'');
     inst.dataset.slot=i;
-    inst.style.transform='translate(calc(-50% + '+slot.posX+'px), calc(-50% + '+slot.posY+'px))';
 
     if(!slot.device){
       // placeholder prompt to pick a device
+      inst.style.transform='translate(calc(-50% + '+slot.posX+'px), calc(-50% + '+slot.posY+'px))';
       inst.innerHTML='<div style="width:150px;height:300px;border:1.5px dashed rgba(255,255,255,0.18);border-radius:24px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--text-dim);font-size:11px;padding:12px;background:rgba(255,255,255,0.02)">Device '+(i+1)+'<br>pick a frame</div>';
       stage.appendChild(inst);
       bindInstanceDrag(inst,i);
@@ -1755,13 +1827,16 @@ function renderDualStage(){
     const dev=slot.device;
     const wrap=document.createElement('div'); wrap.className='inst-wrap';
     wrap.innerHTML =
-      '<svg class="inst-bezel" viewBox="0 0 '+dev.vw+' '+dev.vh+'">'+tintBezelSVG(dev.bezel('#000'), chassisTint)+'</svg>'+
+      '<svg class="inst-bezel" viewBox="0 0 '+dev.vw+' '+dev.vh+'">'+tintBezelSVG(dev.bezel('#000'), slot.tint)+'</svg>'+
       '<div class="inst-screen"><img alt=""><video autoplay loop playsinline></video></div>'+
       '<svg class="inst-overlay" viewBox="0 0 '+dev.vw+' '+dev.vh+'">'+dev.overlay()+'</svg>'+
       '<div class="inst-drop"><div class="dz-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9l4-4 5 5 4-4 5 5"/><circle cx="8.5" cy="8.5" r="1.5"/></svg></div><div class="dz-title">Upload</div><div class="dz-sub">image / video</div></div>';
     inst.appendChild(wrap);
     stage.appendChild(inst);
     sizeInstance(inst,i);
+    applyInstanceTransform(inst,i);                       // position + per-device 3D tilt
+    wrap.style.filter=shadowFilterStr((slot.shadVal||0)/100, slot.shadX||0, slot.shadY||0);  // per-device shadow
+    if(slot._imgEdit){ const scr=inst.querySelector('.inst-screen'); if(scr) scr.classList.add('img-editing'); }
     bindInstanceDrag(inst,i);
   });
 }
@@ -1774,7 +1849,7 @@ function sizeInstance(inst,i){
   const canvas=document.getElementById('canvas-wrap');
   const cw=parseInt(canvas.style.width)||800, ch=parseInt(canvas.style.height)||500;
   // target: device fits ~ 42% of canvas min dimension (so two fit side by side)
-  const targetH = Math.min(ch*0.62, cw*0.42*dev.vh/dev.vw);
+  const targetH = Math.min(ch*0.62, cw*0.42*dev.vh/dev.vw) * (slot.frameScale||1);
   const dh = Math.round(targetH);
   const dw = Math.round(dh*dev.vw/dev.vh);
   wrap.style.width=dw+'px'; wrap.style.height=dh+'px';
@@ -1835,16 +1910,22 @@ function bindInstanceDrag(inst,i){
     const dx=e.clientX-sx, dy=e.clientY-sy;
     if(Math.abs(dx)>4||Math.abs(dy)>4) moved=true;
     if(panning){
-      slots[i].offX=bx+dx; slots[i].offY=by+dy;
       const scr=inst.querySelector('.inst-screen');
-      if(scr) scr.querySelectorAll('img,video').forEach(el=>{
-        const w=parseFloat(el.style.width), h=parseFloat(el.style.height);
+      if(scr){
         const sw=scr.offsetWidth, sh=scr.offsetHeight;
-        el.style.left=((sw-w)/2 + slots[i].offX)+'px'; el.style.top=((sh-h)/2 + slots[i].offY)+'px';
-      });
+        const el0=scr.querySelector(slots[i].type==='video'?'video':'img');
+        const w=parseFloat(el0.style.width)||sw, h=parseFloat(el0.style.height)||sh;
+        const maxX=Math.max(0,(w-sw)/2), maxY=Math.max(0,(h-sh)/2);   // clamp so no black edges
+        slots[i].offX=Math.max(-maxX, Math.min(maxX, bx+dx));
+        slots[i].offY=Math.max(-maxY, Math.min(maxY, by+dy));
+        scr.querySelectorAll('img,video').forEach(el=>{
+          const ww=parseFloat(el.style.width), hh=parseFloat(el.style.height);
+          el.style.left=((sw-ww)/2 + slots[i].offX)+'px'; el.style.top=((sh-hh)/2 + slots[i].offY)+'px';
+        });
+      }
     } else {
       slots[i].posX=bx+dx; slots[i].posY=by+dy;
-      inst.style.transform='translate(calc(-50% + '+slots[i].posX+'px), calc(-50% + '+slots[i].posY+'px))';
+      applyInstanceTransform(inst, i);
     }
   });
   const up=e=>{
@@ -2341,6 +2422,7 @@ function selectOv(id){
   if(isImg){ document.getElementById('el-rot').value=o.rot||0; document.getElementById('el-rot-val').textContent=(o.rot||0)+'°'; }
   if(o.color){ document.getElementById('el-color').value=o.color; document.getElementById('el-color-hex').value=o.color; }
   if(o.thick){ document.getElementById('el-thick').value=o.thick; document.getElementById('el-thick-val').textContent=o.thick+'px'; }
+  if(typeof repaintRanges==='function') repaintRanges();
   renderOvList();
 }
 function updateElSize(v){ const o=curOv(); if(!o)return; v=parseInt(v); document.getElementById('el-size-val').textContent=v+'px';
@@ -2655,16 +2737,18 @@ function buildFinishGrid(){
   grid.appendChild(cw);
 }
 function applyChassisTint(){
+  if(layoutMode==='dual'){ renderDualStage(); return; }
   if(activeDevice){ const bz=document.getElementById('device-bezel'); if(bz) bz.innerHTML=tintBezelSVG(activeDevice.bezel('#000'), chassisTint); }
-  if(typeof renderDualStage==='function' && layoutMode==='dual') renderDualStage();
 }
 function setFinish(i){
-  chassisTint=FINISHES[i].tint;
+  if(layoutMode==='dual'){ if(slots[selectedSlot]) slots[selectedSlot].tint=FINISHES[i].tint; }
+  else chassisTint=FINISHES[i].tint;
   document.querySelectorAll('#finish-grid .finish-sw').forEach((el,idx)=>el.classList.toggle('active',idx===i));
   applyChassisTint();
 }
 function setFinishCustom(hex){
-  chassisTint=hex;
+  if(layoutMode==='dual'){ if(slots[selectedSlot]) slots[selectedSlot].tint=hex; }
+  else chassisTint=hex;
   document.querySelectorAll('#finish-grid .finish-sw').forEach(el=>el.classList.toggle('active', el.classList.contains('custom')));
   applyChassisTint();
 }
@@ -2772,6 +2856,7 @@ function _restore(json){
   if(tx){ tx.value=tiltX; document.getElementById('vl-tiltx').textContent=tiltX+'°'; }
   if(ty){ ty.value=tiltY; document.getElementById('vl-tilty').textContent=tiltY+'°'; }
   if(typeof revertPanel==='function') revertPanel();
+  if(typeof repaintRanges==='function') repaintRanges();
   _histLock=false;
 }
 function undo(){ if(!_past.length) return; _future.push(_snap()); _restore(_past.pop()); }
@@ -2849,7 +2934,17 @@ function setImgEdit(on){
   wrap.addEventListener('pointercancel', up);
 })();
 
+// Tapping the empty canvas (outside the mockup) commits/exits image-adjust mode (like Esc)
+document.getElementById('work-area').addEventListener('pointerdown', e=>{
+  if(e.target.closest('#mockup-wrap')||e.target.closest('#dual-stage')||e.target.closest('.toolbar')||e.target.closest('.text-block')||e.target.closest('.ov-item')) return;
+  setImgEdit(false); if(typeof setSlotImgEdit==='function') setSlotImgEdit(-1,false);
+});
+
+// Keep the slider fill in sync as the user drags any range input
+document.addEventListener('input', e=>{ if(e.target && e.target.matches && e.target.matches('.slider-row input[type=range]')) paintRange(e.target); });
+
 /* ── INIT ── */
 buildImgGrid(); buildGradGrid(); buildSolidSws(); buildBadgeGrid();
 buildDeviceGrid(); buildFinishGrid(); buildFontSelect();
 requestAnimationFrame(applyCanvasRatio);
+requestAnimationFrame(repaintRanges);

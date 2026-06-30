@@ -445,17 +445,19 @@ nav { height:48px; border-bottom:1px solid var(--border); display:flex; align-it
 
 /* (13) Nicer sliders — filled accent track + white knob (Figma/iOS style) */
 .slider-row input[type=range]{
-  -webkit-appearance:none; appearance:none; flex:1; height:6px; border-radius:6px;
-  background:var(--surface3); overflow:hidden; outline:none; cursor:pointer; accent-color:auto;
+  -webkit-appearance:none; appearance:none; flex:1; height:6px; border-radius:6px; outline:none; cursor:pointer;
+  background:linear-gradient(to right, var(--accent) 0%, var(--accent) var(--p,50%), var(--surface3) var(--p,50%), var(--surface3) 100%);
 }
 .slider-row input[type=range]::-webkit-slider-thumb{
-  -webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:#fff;
-  box-shadow:-200px 0 0 195px var(--accent), 0 1px 3px rgba(0,0,0,.45); cursor:pointer; transition:transform .1s;
+  -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#fff;
+  box-shadow:0 1px 4px rgba(0,0,0,.5); cursor:pointer; transition:transform .1s; border:1px solid rgba(0,0,0,.1);
 }
 .slider-row input[type=range]::-webkit-slider-thumb:hover{ transform:scale(1.18); }
-.slider-row input[type=range]::-moz-range-track{ height:6px; border-radius:6px; background:var(--surface3); }
-.slider-row input[type=range]::-moz-range-progress{ height:6px; border-radius:6px; background:var(--accent); }
-.slider-row input[type=range]::-moz-range-thumb{ width:14px; height:14px; border:none; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.45); cursor:pointer; }
+.slider-row input[type=range]::-webkit-slider-thumb:active{ transform:scale(1.05); }
+.slider-row input[type=range]::-moz-range-thumb{ width:15px; height:15px; border:none; border-radius:50%; background:#fff; box-shadow:0 1px 4px rgba(0,0,0,.5); cursor:pointer; }
+/* Frame-panel titled sub-sections */
+.fp-sec{ padding-bottom:var(--s2); margin-bottom:var(--s2); border-bottom:1px solid var(--border); }
+.fp-sec:last-of-type{ border-bottom:none; padding-bottom:0; margin-bottom:0; }
 
 /* (8) Device custom-color swatch */
 .finish-sw.custom { position:relative; overflow:hidden; background:conic-gradient(#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00); }
@@ -470,3 +472,6 @@ nav { height:48px; border-bottom:1px solid var(--border); display:flex; align-it
 }
 .gadget-screen.img-editing.dragging, .mockup-inner.img-editing.dragging, .inst-screen.img-editing.dragging { cursor:grabbing; }
 .mockup-img, .mockup-video, .gadget-media, .inst-screen img, .inst-screen video { -webkit-user-drag:none; user-select:none; }
+
+/* Hide the native file inputs (triggered programmatically) */
+input[type=file]{ position:absolute; width:1px; height:1px; opacity:0; overflow:hidden; pointer-events:none; left:-9999px; }
