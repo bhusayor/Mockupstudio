@@ -49,7 +49,7 @@
       <button class="align-btn" onclick="alignSelected('right')" title="Align right"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="20" y1="4" x2="20" y2="20"/><rect x="6" y="7" width="10" height="4" rx="1"/><rect x="10" y="14" width="6" height="4" rx="1"/></svg></button>
       <button class="align-btn" onclick="alignSelected('top')" title="Align top"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="4" x2="20" y2="4"/><rect x="7" y="8" width="4" height="10" rx="1"/><rect x="14" y="8" width="4" height="6" rx="1"/></svg></button>
       <button class="align-btn" onclick="alignSelected('centerV')" title="Center vertically"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="12" x2="20" y2="12"/><rect x="7" y="6" width="4" height="12" rx="1"/><rect x="14" y="8" width="4" height="8" rx="1"/></svg></button>
-      <button class="align-btn" onclick="alignSelected('center')" title="Center on canvas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg></button>
+      <button class="align-btn" onclick="alignSelected('bottom')" title="Align bottom"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="20" x2="20" y2="20"/><rect x="7" y="6" width="4" height="10" rx="1"/><rect x="14" y="10" width="4" height="6" rx="1"/></svg></button>
     </div>
   </div>
 
@@ -181,6 +181,24 @@
         </div>
         <div class="bg-panel" id="panel-gradient">
           <div class="grad-grid" id="grad-grid"></div>
+          <button class="upload-btn" onclick="toggleGradMaker()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Create your own gradient
+          </button>
+          <div id="grad-maker" style="display:none;margin-top:var(--s2);padding-top:var(--s2);border-top:1px solid var(--border)">
+            <div class="fig-grid2">
+              <div class="fig-field"><label>Color 1</label>
+                <div class="text-font-color"><div class="color-pick-wrap"><input type="color" id="grad-c1" value="#7c3aed" oninput="onGradMaker()"></div></div>
+              </div>
+              <div class="fig-field"><label>Color 2</label>
+                <div class="text-font-color"><div class="color-pick-wrap"><input type="color" id="grad-c2" value="#2563eb" oninput="onGradMaker()"></div></div>
+              </div>
+            </div>
+            <div class="slider-row"><span class="slider-lbl">Angle</span>
+              <input type="range" min="0" max="360" value="135" step="1" id="grad-angle" oninput="onGradMaker()">
+              <span class="slider-val" id="vl-grad-angle">135°</span>
+            </div>
+          </div>
         </div>
         <div class="bg-panel" id="panel-color">
           <div class="color-row">

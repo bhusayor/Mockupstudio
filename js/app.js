@@ -281,6 +281,7 @@ let mediaScale = 1;        // zoom multiplier, 1 = cover-fit
 let mediaOffX = 0;         // horizontal offset in px (screen space), + = move image right
 let mediaOffY = 0;         // vertical offset in px
 let activeDevice = null; // null = plain frame, else device object
+let singleDevice = null; // remembers the single-mode device while in dual mode
 let currentCat = 'all';
 let selectedFmt = 'png';
 let selectedQ = '1080';
@@ -722,6 +723,8 @@ function onShadowOff(axis, v){
 let transparentBg = false;
 let bgType = 'image';   // 'image' | 'gradient' | 'color' | 'none'
 let bgValue = '';       // url for image, css gradient string, or color hex
+// remember each tab's last choice so switching tabs re-applies it immediately
+let bgImgVal='', bgGradVal='', bgColorVal='#0a0f1e';
 function switchBgTab(tab,panel){
   document.querySelectorAll('.bg-tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.bg-panel').forEach(p=>p.classList.remove('active'));
@@ -733,21 +736,35 @@ function switchBgTab(tab,panel){
     const el=document.getElementById('canvas-bg');
     el.style.background='transparent';el.style.backgroundImage='none';
     document.getElementById('canvas-bg-clip').style.background='repeating-conic-gradient(#1e1e1e 0% 25%, #151515 0% 50%) 0 0 / 20px 20px';
-  } else {
-    document.getElementById('canvas-bg-clip').style.background='';
+    return;
   }
+  document.getElementById('canvas-bg-clip').style.background='';
+  // re-apply this tab's current selection so a background shows right away
+  if(panel==='images'){ applyBgImg(bgImgVal || ('https://images.unsplash.com/'+PHOTOS[0].id+'?w=2000&q=88&auto=format&fit=crop')); }
+  else if(panel==='gradient'){ applyBgSolid(bgGradVal || GRADIENTS[0].g); }
+  else if(panel==='color'){ applyBgSolid(bgColorVal || '#0a0f1e'); }
 }
 function applyBgImg(url){
   const el=document.getElementById('canvas-bg');
   el.style.background='';el.style.backgroundImage='url('+url+')';
   el.style.backgroundSize='cover';el.style.backgroundPosition='center';el.style.backgroundRepeat='no-repeat';
-  bgType='image'; bgValue=url; transparentBg=false;
+  bgType='image'; bgValue=url; bgImgVal=url; transparentBg=false;
 }
 function applyBgSolid(val){
   const el=document.getElementById('canvas-bg');
   el.style.backgroundImage='';el.style.background=val;
-  bgType = /gradient/i.test(val) ? 'gradient' : 'color';
+  const isGrad=/gradient/i.test(val);
+  bgType = isGrad ? 'gradient' : 'color';
   bgValue = val; transparentBg=false;
+  if(isGrad) bgGradVal=val; else bgColorVal=val;
+}
+// Custom gradient maker
+function toggleGradMaker(){ const m=document.getElementById('grad-maker'); if(m){ const show=m.style.display==='none'; m.style.display=show?'block':'none'; if(show) onGradMaker(); } }
+function onGradMaker(){
+  const c1=document.getElementById('grad-c1').value, c2=document.getElementById('grad-c2').value, a=document.getElementById('grad-angle').value;
+  document.getElementById('vl-grad-angle').textContent=a+'°';
+  document.querySelectorAll('.grad-sw').forEach(s=>s.classList.remove('active'));
+  applyBgSolid('linear-gradient('+a+'deg, '+c1+', '+c2+')');
 }
 function onBlur(v){document.getElementById('vl-blur').textContent=v+'px';document.getElementById('canvas-bg').style.filter=v>0?'blur('+v+'px)':'';}
 function onBgSize(v){
@@ -1442,12 +1459,15 @@ function confirmImgExport(){
       const dh = parseInt(gfw.style.height) || fh;
       const dx = (cW-dw)/2 + mockOffX, dy=(cH-dh)/2 + mockOffY;
 
-      // Drop shadow under the whole device
-      ctx.save();
-      ctx.shadowColor='rgba(0,0,0,0.5)';ctx.shadowBlur=70;ctx.shadowOffsetY=26;
-      ctx.fillStyle='rgba(0,0,0,0.001)';
-      ctx.fillRect(dx+dw*0.1, dy+dh*0.1, dw*0.8, dh*0.8);
-      ctx.restore();
+      // Drop shadow under the whole device (reflects the Shadow slider + offsets)
+      const _st=shadVal/100;
+      if(_st>0){
+        ctx.save();
+        ctx.shadowColor='rgba(0,0,0,'+(0.3+0.4*_st).toFixed(2)+')';ctx.shadowBlur=(18+70*_st);ctx.shadowOffsetX=shadX;ctx.shadowOffsetY=shadY;
+        ctx.fillStyle='rgba(0,0,0,0.001)';
+        ctx.fillRect(dx+dw*0.1, dy+dh*0.1, dw*0.8, dh*0.8);
+        ctx.restore();
+      }
 
       const bezelImg = await svgToImage(tintBezelSVG(dev.bezel('#000'), chassisTint), dev.vw, dev.vh);
       const overlayImg = await svgToImage(dev.overlay(), dev.vw, dev.vh);
@@ -1480,9 +1500,10 @@ function confirmImgExport(){
       // ── Plain frame ──
       const fx=(cW-fw)/2 + mockOffX,fy=(cH-fh)/2 + mockOffY;
       const br=parseFloat(document.getElementById('mockup-frame').style.borderRadius)||14;
-      ctx.shadowColor='rgba(0,0,0,0.55)';ctx.shadowBlur=80;ctx.shadowOffsetY=24;
+      const _pt=shadVal/100;
+      if(_pt>0){ ctx.shadowColor='rgba(0,0,0,'+(0.35+0.4*_pt).toFixed(2)+')';ctx.shadowBlur=(20+80*_pt);ctx.shadowOffsetX=shadX;ctx.shadowOffsetY=shadY; }
       roundRect(ctx,fx,fy,fw,fh,br);ctx.fillStyle='#111';ctx.fill();
-      ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetY=0;
+      ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;
       const src=document.getElementById('mockup-img');
       ctx.save();roundRect(ctx,fx,fy,fw,fh,br);ctx.clip();
       const liveScreenW = parseFloat(document.getElementById('mockup-frame').style.width)||fw;
@@ -1758,15 +1779,32 @@ function setLayout(mode){
   const stage = document.getElementById('dual-stage');
   const single = document.getElementById('mockup-wrap');
   if(mode==='dual'){
+    singleDevice = activeDevice;        // remember single-mode device
     stage.classList.add('active');
     single.style.display='none';
+    document.getElementById('row-radius').style.display='none';  // radius is plain-frame only
     selectedSlot = 0;
     selectSlot(0);
     renderDualStage();
   } else {
     stage.classList.remove('active');
     single.style.display='flex';
+    activeDevice = singleDevice;         // restore single-mode device
+    buildDeviceGrid();
+    applyDevice();                       // ensures only plain OR gadget shows + radius visibility
+    syncControlsToSingle();
   }
+}
+// Mirror single-mode globals onto the panel controls
+function syncControlsToSingle(){
+  const set=(id,val,fmt)=>{ const el=document.getElementById(id); if(el){ el.value=val; if(typeof paintRange==='function') paintRange(el); const lbl=document.getElementById(id.replace('sl-','vl-')); if(lbl&&fmt!=null) lbl.textContent=fmt; } };
+  set('sl-pad', padPct, padPct+'%');
+  set('sl-shad', shadVal, shadVal+'%');
+  set('sl-shadx', shadX, ''+shadX);
+  set('sl-shady', shadY, ''+shadY);
+  set('sl-tiltx', tiltX, tiltX+'°');
+  set('sl-tilty', tiltY, tiltY+'°');
+  set('sl-zoom', mediaScale, Math.round(mediaScale*100)+'%');
 }
 
 function selectSlot(i){
