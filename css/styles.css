@@ -437,3 +437,26 @@ nav { height:48px; border-bottom:1px solid var(--border); display:flex; align-it
 
 /* Toolbar drag handle + text placement cursor */
 .work-area.text-place, .work-area.text-place .mockup-wrap, .work-area.text-place .canvas-wrap { cursor:text; }
+
+/* ════════ Round 4 polish ════════ */
+/* (10) Equal padding for every contextual right-panel section */
+.prop-panel.active { display:block; padding:var(--s3) var(--s2); }
+#sec-position { padding:var(--s3) var(--s2); }
+
+/* (13) Nicer sliders — filled accent track + white knob (Figma/iOS style) */
+.slider-row input[type=range]{
+  -webkit-appearance:none; appearance:none; flex:1; height:6px; border-radius:6px;
+  background:var(--surface3); overflow:hidden; outline:none; cursor:pointer; accent-color:auto;
+}
+.slider-row input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:#fff;
+  box-shadow:-200px 0 0 195px var(--accent), 0 1px 3px rgba(0,0,0,.45); cursor:pointer; transition:transform .1s;
+}
+.slider-row input[type=range]::-webkit-slider-thumb:hover{ transform:scale(1.18); }
+.slider-row input[type=range]::-moz-range-track{ height:6px; border-radius:6px; background:var(--surface3); }
+.slider-row input[type=range]::-moz-range-progress{ height:6px; border-radius:6px; background:var(--accent); }
+.slider-row input[type=range]::-moz-range-thumb{ width:14px; height:14px; border:none; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.45); cursor:pointer; }
+
+/* (8) Device custom-color swatch */
+.finish-sw.custom { position:relative; overflow:hidden; background:conic-gradient(#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00); }
+.finish-sw.custom input[type=color]{ position:absolute; inset:-4px; width:calc(100% + 8px); height:calc(100% + 8px); opacity:0; cursor:pointer; border:none; padding:0; }

@@ -475,6 +475,7 @@ function applyDevice() {
   bezelEl.innerHTML = tintBezelSVG(dev.bezel('#000'), chassisTint);         // screen area filled black (under media)
   overlayEl.setAttribute('viewBox', '0 0 '+dev.vw+' '+dev.vh);
   overlayEl.innerHTML = dev.overlay();           // notch / island / camera
+  const _ss=document.getElementById('sl-shad'); if(_ss) onShadow(_ss.value);  // sync shadow to the device
 
   // Transfer already-loaded media to gadget elements
   if (hasMedia) {
@@ -645,12 +646,25 @@ window.addEventListener('resize',applyCanvasRatio);
 function onPad(v){padPct=parseInt(v);document.getElementById('vl-pad').textContent=v+'%';if(activeDevice)sizeGadget();else sizeFrameToMedia();}
 function onRadius(v){document.getElementById('vl-rad').textContent=v+'px';document.getElementById('mockup-frame').style.borderRadius=v+'px';}
 function onShadow(v){
-  document.getElementById('vl-shad').textContent=v+'%';
-  const f=document.getElementById('mockup-frame'),t=v/100;
-  if(t===0){f.style.boxShadow='0 0 0 1px rgba(255,255,255,0.09)';return;}
-  const a1=(0.45*t).toFixed(2),a2=(0.5*t).toFixed(2),a3=(0.38*t).toFixed(2);
-  const b1=Math.round(6+18*t),b2=Math.round(24+36*t),b3=Math.round(20+40*t),b4=Math.round(60+60*t),b5=Math.round(48+72*t),b6=Math.round(120+80*t);
-  f.style.boxShadow='0 0 0 1px rgba(255,255,255,0.09),0 '+b1+'px '+b2+'px rgba(0,0,0,'+a1+'),0 '+b3+'px '+b4+'px rgba(0,0,0,'+a2+'),0 '+b5+'px '+b6+'px rgba(0,0,0,'+a3+')';
+  const el=document.getElementById('vl-shad'); if(el) el.textContent=v+'%';
+  const f=document.getElementById('mockup-frame'), t=v/100;
+  // plain frame: layered box-shadow
+  if(t===0){ f.style.boxShadow='0 0 0 1px rgba(255,255,255,0.09)'; }
+  else {
+    const a1=(0.45*t).toFixed(2),a2=(0.5*t).toFixed(2),a3=(0.38*t).toFixed(2);
+    const b1=Math.round(6+18*t),b2=Math.round(24+36*t),b3=Math.round(20+40*t),b4=Math.round(60+60*t),b5=Math.round(48+72*t),b6=Math.round(120+80*t);
+    f.style.boxShadow='0 0 0 1px rgba(255,255,255,0.09),0 '+b1+'px '+b2+'px rgba(0,0,0,'+a1+'),0 '+b3+'px '+b4+'px rgba(0,0,0,'+a2+'),0 '+b5+'px '+b6+'px rgba(0,0,0,'+a3+')';
+  }
+  // device frame: drop-shadow filter (box-shadow can't follow the rounded SVG silhouette)
+  const g=document.getElementById('gadget-frame-wrap');
+  if(g){
+    if(t===0){ g.style.filter='none'; }
+    else {
+      const s1=Math.round(10+26*t), o1=Math.round(6+18*t), a4=(0.22+0.40*t).toFixed(2);
+      const s2=Math.round(28+72*t), o2=Math.round(14+34*t), a5=(0.18+0.34*t).toFixed(2);
+      g.style.filter='drop-shadow(0 '+o1+'px '+s1+'px rgba(0,0,0,'+a4+')) drop-shadow(0 '+o2+'px '+s2+'px rgba(0,0,0,'+a5+'))';
+    }
+  }
 }
 
 /* ── BACKGROUND ── */
@@ -1152,11 +1166,13 @@ async function confirmVidExportDual(){
   const wrap=document.getElementById('canvas-wrap');
   const cW=parseInt(wrap.style.width)||wrap.clientWidth;
   const cH=parseInt(wrap.style.height)||wrap.clientHeight;
-  // Output at 2x for crispness
-  const scale=2;
-  const outW=cW*scale, outH=cH*scale;
+  // Scale so the longest edge hits the chosen tier (720/1080/2K/4K)
+  const TARGET_LONG={'720':1280,'1080':1920,'1440':2560,'4k':3840}[selectedQ]||1920;
+  const QMBPS={'720':10,'1080':22,'1440':45,'4k':90}[selectedQ]||22;
+  const scale=Math.min(Math.max(TARGET_LONG/Math.max(cW,cH), 1), 6);
+  const outW=Math.round(cW*scale), outH=Math.round(cH*scale);
   const cvs=document.createElement('canvas'); cvs.width=outW; cvs.height=outH;
-  const ctx=cvs.getContext('2d');
+  const ctx=cvs.getContext('2d'); ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high';
   const blurPx=parseFloat(document.getElementById('sl-blur').value)||0;
 
   // Pre-rasterize each slot's bezel/overlay
@@ -1204,7 +1220,7 @@ async function confirmVidExportDual(){
         ctx.save(); roundRect(ctx,sx,sy,sw,sh,rr); ctx.clip();
         const base=coverSizeAR(slot.ar, sw, sh);
         const mw=base.w*slot.scale, mh=base.h*slot.scale;
-        ctx.drawImage(mediaEl, sx+(sw-mw)/2, sy+(sh-mh)/2, mw, mh);
+        ctx.drawImage(mediaEl, sx+(sw-mw)/2+(slot.offX||0), sy+(sh-mh)/2+(slot.offY||0), mw, mh);
         ctx.restore();
       }
       if(layers[i]&&layers[i].overlay) ctx.drawImage(layers[i].overlay,dx,dy,dw,dh);
@@ -1221,7 +1237,7 @@ async function confirmVidExportDual(){
   }
   const types=['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
   const mtype=types.find(t=>MediaRecorder.isTypeSupported(t))||'video/webm';
-  const rec=new MediaRecorder(stream,{mimeType:mtype,videoBitsPerSecond:16000000});
+  const rec=new MediaRecorder(stream,{mimeType:mtype,videoBitsPerSecond:QMBPS*1000000});
   const chunks=[]; rec.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
   rec.onstop=()=>{ const blob=new Blob(chunks,{type:mtype}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='mockup-dual.mp4'; a.click(); URL.revokeObjectURL(url); showExportDone('Video downloaded'); };
 
@@ -1265,7 +1281,7 @@ async function compositeSlot(ctx, slot, scale, cW, cH){
     ctx.save(); roundRect(ctx,sx,sy,sw,sh,rr); ctx.clip();
     const base=coverSizeAR(slot.ar, sw, sh);
     const mw=base.w*slot.scale, mh=base.h*slot.scale;
-    const mx=sx+(sw-mw)/2, my=sy+(sh-mh)/2;
+    const mx=sx+(sw-mw)/2 + (slot.offX||0), my=sy+(sh-mh)/2 + (slot.offY||0);
     ctx.drawImage(mediaEl, mx, my, mw, mh);
     ctx.restore();
   }
@@ -1441,9 +1457,9 @@ async function confirmVidExport(){
   const bgEl=document.getElementById('canvas-bg');
   const bgUrl=bgEl.style.backgroundImage.replace(/url\(["']?|["']?\)/g,'');
   const blurPx=parseFloat(document.getElementById('sl-blur').value)||0;
-  const pixels=nativeW*nativeH;
-  const bpp={'720':0.1,'1080':0.15,'1440':0.2,'4k':0.25}[selectedQ]||0.15;
-  const cappedMbps=Math.min(Math.max(Math.round(pixels*bpp/1000000*60/8),8),80);
+  // Resolution tier (longest edge) + a generous bitrate so the export is genuinely sharp
+  const TARGET_LONG={'720':1280,'1080':1920,'1440':2560,'4k':3840}[selectedQ]||1920;
+  const QMBPS={'720':10,'1080':22,'1440':45,'4k':90}[selectedQ]||22;
 
   // Output canvas dimensions depend on whether a device frame is used
   let outW, outH, cvs, ctx;
@@ -1479,8 +1495,12 @@ async function confirmVidExport(){
     br=(parseFloat(document.getElementById('mockup-frame').style.borderRadius)||14)*(nativeW/600);
   }
 
-  cvs=document.createElement('canvas');cvs.width=outW;cvs.height=outH;
-  ctx=cvs.getContext('2d');
+  // Scale the whole composition so its longest edge hits the chosen tier (720/1080/2K/4K)
+  const qf=Math.min(Math.max(TARGET_LONG/Math.max(outW,outH), 0.5), 6);
+  cvs=document.createElement('canvas');
+  cvs.width=Math.round(outW*qf); cvs.height=Math.round(outH*qf);
+  ctx=cvs.getContext('2d'); ctx.scale(qf,qf);
+  ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high';
 
   function drawFrame(bgImg){
     ctx.clearRect(0,0,outW,outH);
@@ -1538,12 +1558,12 @@ async function confirmVidExport(){
     } catch(e) { /* silent export if audio capture unsupported */ }
     const types=['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm;codecs=vp9','video/webm'];
     const mtype=types.find(t=>MediaRecorder.isTypeSupported(t))||'video/webm';
-    const rec=new MediaRecorder(stream,{mimeType:mtype,videoBitsPerSecond:cappedMbps*1000000});
+    const rec=new MediaRecorder(stream,{mimeType:mtype,videoBitsPerSecond:QMBPS*1000000});
     const chunks=[];
     rec.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
     rec.onstop=()=>{
       const blob=new Blob(chunks,{type:mtype});const url=URL.createObjectURL(blob);
-      const a=document.createElement('a');a.href=url;a.download='mockup-'+outW+'x'+outH+'.mp4';a.click();URL.revokeObjectURL(url);
+      const a=document.createElement('a');a.href=url;a.download='mockup-'+cvs.width+'x'+cvs.height+'.mp4';a.click();URL.revokeObjectURL(url);
       showExportDone('Video downloaded');
     };
     const duration=vid.duration||5;vid.currentTime=0;
@@ -1669,8 +1689,8 @@ function refitVideoFrom(el){
 let layoutMode = 'single';
 let selectedSlot = 0;
 const slots = [
-  { device:null, src:null, type:null, ar:16/9, scale:1, posX:-150, posY:0, hasMedia:false },
-  { device:null, src:null, type:null, ar:16/9, scale:1, posX:150,  posY:0, hasMedia:false },
+  { device:null, src:null, type:null, ar:16/9, scale:1, posX:-150, posY:0, offX:0, offY:0, hasMedia:false },
+  { device:null, src:null, type:null, ar:16/9, scale:1, posX:150,  posY:0, offX:0, offY:0, hasMedia:false },
 ];
 let activeFileSlot = 0;  // which slot a file upload targets
 
@@ -1774,7 +1794,7 @@ function sizeInstance(inst,i){
     const base=coverSizeAR(slot.ar, sw, sh);
     const mw=base.w*slot.scale, mh=base.h*slot.scale;
     el.style.position='absolute';
-    el.style.left=((sw-mw)/2)+'px'; el.style.top=((sh-mh)/2)+'px';
+    el.style.left=((sw-mw)/2 + (slot.offX||0))+'px'; el.style.top=((sh-mh)/2 + (slot.offY||0))+'px';
     el.style.width=mw+'px'; el.style.height=mh+'px'; el.style.objectFit='fill';
   });
   if(slot.hasMedia){
@@ -1790,21 +1810,34 @@ function coverSizeAR(ar, screenW, screenH){
   return {w,h};
 }
 
-// Drag to move an instance; click (no drag) on empty screen → upload
+// Drag the FRAME to move an instance; drag the SCREEN to pan its image; click empty screen → upload
 function bindInstanceDrag(inst,i){
-  let down=false, moved=false, sx=0, sy=0, bx=0, by=0;
+  let down=false, moved=false, panning=false, sx=0, sy=0, bx=0, by=0;
   inst.addEventListener('pointerdown', e=>{
     selectSlot(i);
     document.querySelectorAll('.device-instance').forEach((el,idx)=>el.classList.toggle('selected', idx===i));
-    down=true; moved=false; sx=e.clientX; sy=e.clientY; bx=slots[i].posX; by=slots[i].posY;
+    // grabbing the screen of a device that has media → pan the image; else → move the instance
+    panning = !!(slots[i].hasMedia && e.target.closest('.inst-screen'));
+    down=true; moved=false; sx=e.clientX; sy=e.clientY;
+    if(panning){ bx=slots[i].offX||0; by=slots[i].offY||0; } else { bx=slots[i].posX; by=slots[i].posY; }
     inst.classList.add('dragging'); inst.setPointerCapture(e.pointerId);
   });
   inst.addEventListener('pointermove', e=>{
     if(!down) return;
     const dx=e.clientX-sx, dy=e.clientY-sy;
     if(Math.abs(dx)>4||Math.abs(dy)>4) moved=true;
-    slots[i].posX=bx+dx; slots[i].posY=by+dy;
-    inst.style.transform='translate(calc(-50% + '+slots[i].posX+'px), calc(-50% + '+slots[i].posY+'px))';
+    if(panning){
+      slots[i].offX=bx+dx; slots[i].offY=by+dy;
+      const scr=inst.querySelector('.inst-screen');
+      if(scr) scr.querySelectorAll('img,video').forEach(el=>{
+        const w=parseFloat(el.style.width), h=parseFloat(el.style.height);
+        const sw=scr.offsetWidth, sh=scr.offsetHeight;
+        el.style.left=((sw-w)/2 + slots[i].offX)+'px'; el.style.top=((sh-h)/2 + slots[i].offY)+'px';
+      });
+    } else {
+      slots[i].posX=bx+dx; slots[i].posY=by+dy;
+      inst.style.transform='translate(calc(-50% + '+slots[i].posX+'px), calc(-50% + '+slots[i].posY+'px))';
+    }
   });
   const up=e=>{
     if(!down) return; down=false; inst.classList.remove('dragging');
@@ -1840,6 +1873,7 @@ function addText(){
     color: '#ffffff',
     align: 'left',
     font: FONTS[0].css,
+    italic: false,
     letterSpacing: 0,
     lineHeight: 1.3,
   };
@@ -1848,17 +1882,28 @@ function addText(){
   selectText(t.id);
 }
 
-// Web-safe font stacks (no network load → exports render identically).
+// Web-safe / system font stacks (no network load → exports render identically).
 const FONTS = [
   {name:'Inter / System', css:"-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif"},
   {name:'Arial', css:"Arial, 'Helvetica Neue', Helvetica, sans-serif"},
   {name:'Helvetica Neue', css:"'Helvetica Neue', Helvetica, Arial, sans-serif"},
+  {name:'Avenir', css:"'Avenir Next', Avenir, 'Segoe UI', sans-serif"},
+  {name:'Futura', css:"Futura, 'Trebuchet MS', sans-serif"},
+  {name:'Gill Sans', css:"'Gill Sans', 'Gill Sans MT', Calibri, sans-serif"},
+  {name:'Optima', css:"Optima, Segoe, 'Segoe UI', sans-serif"},
   {name:'Verdana', css:"Verdana, Geneva, sans-serif"},
   {name:'Tahoma', css:"Tahoma, Geneva, sans-serif"},
   {name:'Trebuchet MS', css:"'Trebuchet MS', Helvetica, sans-serif"},
+  {name:'Calibri', css:"Calibri, 'Segoe UI', sans-serif"},
   {name:'Georgia', css:"Georgia, 'Times New Roman', serif"},
   {name:'Times New Roman', css:"'Times New Roman', Times, serif"},
+  {name:'Palatino', css:"'Palatino Linotype', Palatino, 'Book Antiqua', serif"},
+  {name:'Garamond', css:"Garamond, 'Hoefler Text', Georgia, serif"},
+  {name:'Baskerville', css:"Baskerville, 'Baskerville Old Face', Georgia, serif"},
   {name:'Courier New', css:"'Courier New', Courier, monospace"},
+  {name:'Menlo / Mono', css:"Menlo, Consolas, 'Courier New', monospace"},
+  {name:'Impact', css:"Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif"},
+  {name:'Brush Script', css:"'Brush Script MT', 'Segoe Script', cursive"},
 ];
 function buildFontSelect(){
   const sel=document.getElementById('text-font'); if(!sel) return;
@@ -1881,6 +1926,7 @@ function renderTexts(){
     el.style.color = t.color;
     el.style.textAlign = t.align;
     el.style.fontFamily = t.font || FONTS[0].css;
+    el.style.fontStyle = t.italic ? 'italic' : 'normal';
     el.style.letterSpacing = (t.letterSpacing||0) + 'px';
     el.style.lineHeight = (t.lineHeight||1.3);
     layer.appendChild(el);
@@ -1891,6 +1937,7 @@ function renderTexts(){
 
 function renderTextList(){
   const list = document.getElementById('text-list');
+  if(!list) return;
   list.innerHTML = '';
   texts.forEach(t=>{
     const item = document.createElement('div');
@@ -1992,7 +2039,7 @@ function selectText(id){
   document.getElementById('text-content').value = t.content;
   document.getElementById('text-size').value = t.size;
   document.getElementById('text-font').value = t.font || FONTS[0].css;
-  document.getElementById('text-weight').value = t.weight;
+  document.getElementById('text-weight').value = t.weight + (t.italic ? 'i' : '');
   document.getElementById('text-lh').value = (t.lineHeight!=null? t.lineHeight : 1.3);
   document.getElementById('text-ls').value = (t.letterSpacing||0);
   document.getElementById('text-color').value = t.color;
@@ -2005,7 +2052,7 @@ function curText(){ return texts.find(x=>x.id===selectedTextId); }
 
 function updateTextContent(v){ const t=curText(); if(!t)return; t.content=v; renderTexts(); }
 function updateTextSize(v){ const t=curText(); if(!t)return; t.size=parseInt(v)||t.size; applyTextStyle(t); }
-function updateTextWeight(w){ const t=curText(); if(!t)return; t.weight=w; applyTextStyle(t); }
+function updateTextWeight(w){ const t=curText(); if(!t)return; t.italic=/i$/.test(w); t.weight=w.replace('i',''); applyTextStyle(t); }
 function updateTextFont(css){ const t=curText(); if(!t)return; t.font=css; applyTextStyle(t); }
 function updateTextLH(v){ const t=curText(); if(!t)return; t.lineHeight=parseFloat(v)||1.3; applyTextStyle(t); }
 function updateTextLS(v){ const t=curText(); if(!t)return; t.letterSpacing=parseFloat(v)||0; applyTextStyle(t); }
@@ -2018,7 +2065,7 @@ function applyTextStyle(t){
   const el = document.querySelector('#text-layer .text-block[data-id="'+t.id+'"]');
   if(!el) return;
   el.style.fontSize=t.size+'px'; el.style.fontWeight=t.weight; el.style.color=t.color; el.style.textAlign=t.align;
-  el.style.fontFamily=t.font||FONTS[0].css; el.style.letterSpacing=(t.letterSpacing||0)+'px'; el.style.lineHeight=(t.lineHeight||1.3);
+  el.style.fontFamily=t.font||FONTS[0].css; el.style.fontStyle=t.italic?'italic':'normal'; el.style.letterSpacing=(t.letterSpacing||0)+'px'; el.style.lineHeight=(t.lineHeight||1.3);
   renderTextList();
 }
 
@@ -2086,7 +2133,7 @@ function drawTextsOnCanvas(ctx, ox, oy, k){
     const lines = (t.content||'').split('\n');
     ctx.save();
     const size = t.size*k;
-    ctx.font = t.weight + ' ' + size + 'px ' + (t.font || "-apple-system,BlinkMacSystemFont,Inter,'Segoe UI',sans-serif");
+    ctx.font = (t.italic?'italic ':'') + t.weight + ' ' + size + 'px ' + (t.font || "-apple-system,BlinkMacSystemFont,Inter,'Segoe UI',sans-serif");
     try { ctx.letterSpacing = ((t.letterSpacing||0)*k) + 'px'; } catch(_){}
     ctx.fillStyle = t.color;
     ctx.textBaseline = 'top';
@@ -2593,12 +2640,25 @@ function buildFinishGrid(){
     sw.onclick=()=>setFinish(i);
     grid.appendChild(sw);
   });
+  // custom color swatch (rainbow chip with a hidden native color picker)
+  const cw=document.createElement('label');
+  cw.className='finish-sw custom'; cw.title='Custom color';
+  cw.innerHTML='<input type="color" value="#5b6cff" oninput="setFinishCustom(this.value)">';
+  grid.appendChild(cw);
+}
+function applyChassisTint(){
+  if(activeDevice){ const bz=document.getElementById('device-bezel'); if(bz) bz.innerHTML=tintBezelSVG(activeDevice.bezel('#000'), chassisTint); }
+  if(typeof renderDualStage==='function' && layoutMode==='dual') renderDualStage();
 }
 function setFinish(i){
   chassisTint=FINISHES[i].tint;
   document.querySelectorAll('#finish-grid .finish-sw').forEach((el,idx)=>el.classList.toggle('active',idx===i));
-  if(activeDevice){ const bz=document.getElementById('device-bezel'); if(bz) bz.innerHTML=tintBezelSVG(activeDevice.bezel('#000'), chassisTint); }
-  if(typeof renderDual==='function' && layoutMode==='dual') renderDual();
+  applyChassisTint();
+}
+function setFinishCustom(hex){
+  chassisTint=hex;
+  document.querySelectorAll('#finish-grid .finish-sw').forEach(el=>el.classList.toggle('active', el.classList.contains('custom')));
+  applyChassisTint();
 }
 function toggleGlare(on){ glareOn=!!on; document.querySelectorAll('.screen-glare').forEach(el=>el.classList.toggle('on', glareOn)); }
 // Draw a soft diagonal sheen inside the current screen clip (export paths).
@@ -2748,6 +2808,8 @@ document.addEventListener('keydown', e=>{
   wrap.addEventListener('pointerdown', e=>{
     if(typeof layoutMode!=='undefined' && layoutMode==='dual') return; // dual uses its own instances
     if(e.target.closest('.text-block')||e.target.closest('.ov-item')) return; // let layers handle their own
+    // On a device, the screen pans the image (see enableReposition) — only the FRAME moves the mockup
+    if(activeDevice && e.target.closest('#gadget-screen')) return;
     armed=true; dragging=false; sx=e.clientX; sy=e.clientY; bx=mockOffX; by=mockOffY; pid=e.pointerId;
   });
   wrap.addEventListener('pointermove', e=>{
@@ -2765,4 +2827,5 @@ document.addEventListener('keydown', e=>{
 /* ── INIT ── */
 buildImgGrid(); buildGradGrid(); buildSolidSws(); buildBadgeGrid();
 buildDeviceGrid(); buildFinishGrid(); buildFontSelect();
+enableReposition('gadget-screen', ['gadget-img','gadget-video']);  // drag image inside a device to pan/fit it
 requestAnimationFrame(applyCanvasRatio);

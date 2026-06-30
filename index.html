@@ -180,8 +180,7 @@
     <!-- TEXT -->
     <div class="prop-panel" id="pp-text">
       <div class="sec-lbl">Text</div>
-      <p class="prop-note" id="text-place-hint" style="margin-top:0">Click anywhere on the canvas to place text, then type.</p>
-      <div class="text-list" id="text-list"></div>
+      <p class="prop-note" id="text-place-hint" style="margin-top:0">Click anywhere on the canvas to place text, then type. Double-click an existing text to edit it.</p>
       <div class="text-ctrls" id="text-ctrls">
         <textarea id="text-content" placeholder="Type your text..." oninput="updateTextContent(this.value)"></textarea>
         <div class="fig-field">
@@ -193,11 +192,16 @@
             <label>Weight</label>
             <select class="fig-select" id="text-weight" onchange="updateTextWeight(this.value)">
               <option value="300">Light</option>
+              <option value="300i">Light Italic</option>
               <option value="400">Regular</option>
+              <option value="400i">Italic</option>
               <option value="500">Medium</option>
+              <option value="500i">Medium Italic</option>
               <option value="600">Semibold</option>
               <option value="700" selected>Bold</option>
+              <option value="700i">Bold Italic</option>
               <option value="800">Extrabold</option>
+              <option value="800i">Extrabold Italic</option>
             </select>
           </div>
           <div class="fig-field">
