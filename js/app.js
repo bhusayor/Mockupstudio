@@ -1,667 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mockup Studio</title>
-<style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --bg: #0c0c0d; --surface: #141416; --surface2: #1c1c1f; --surface3: #242428;
-  --border: rgba(255,255,255,0.07); --border-h: rgba(255,255,255,0.18);
-  --text: #f0f0f0; --text-muted: #878797; --text-dim: #42424e;
-  --accent: #f97316; --accent-h: #fb923c; --accent-dim: rgba(249,115,22,0.12);
-  --panel-width: 288px;
-  --s1:8px; --s2:16px; --s3:24px; --s4:32px; --s5:40px; --s6:48px;
-}
-body { font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif; background:var(--bg); color:var(--text); height:100vh; display:flex; flex-direction:column; overflow:hidden; }
-
-/* NAV */
-nav { height:48px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 var(--s3); flex-shrink:0; background:var(--bg); z-index:10; }
-.logo { font-size:13px; font-weight:700; letter-spacing:-.3px; display:flex; align-items:center; gap:var(--s1); }
-.logo-dot { width:8px; height:8px; border-radius:50%; background:var(--accent); }
-.nav-r { display:flex; gap:var(--s1); align-items:center; }
-.btn { display:inline-flex; align-items:center; gap:6px; padding:7px var(--s2); border-radius:8px; font-size:12px; font-weight:500; cursor:pointer; border:none; transition:all .14s; font-family:inherit; line-height:1; white-space:nowrap; }
-.btn svg { width:13px; height:13px; flex-shrink:0; }
-.btn-ghost { background:transparent; color:var(--text-muted); border:1px solid var(--border); }
-.btn-ghost:hover { background:var(--surface); color:var(--text); border-color:var(--border-h); }
-.btn-primary { background:var(--accent); color:#fff; }
-.btn-primary:hover { background:var(--accent-h); }
-.btn-primary:disabled { opacity:.3; cursor:not-allowed; }
-
-/* LAYOUT */
-.app-body { display:flex; flex:1; overflow:hidden; }
-
-/* LEFT SIDEBAR */
-.sidebar { width:var(--panel-width); border-left:1px solid var(--border); border-right:none; overflow-y:auto; flex-shrink:0; background:var(--bg); display:flex; flex-direction:column; order:3; }
-.sidebar::-webkit-scrollbar { width:3px; }
-.sidebar::-webkit-scrollbar-thumb { background:var(--surface3); border-radius:3px; }
-
-/* RIGHT SIDEBAR — Mockup / device picker */
-.sidebar-r { width:var(--panel-width); border-right:1px solid var(--border); border-left:none; overflow-y:auto; flex-shrink:0; background:var(--bg); display:flex; flex-direction:column; order:1; }
-.sidebar-r::-webkit-scrollbar { width:3px; }
-.sidebar-r::-webkit-scrollbar-thumb { background:var(--surface3); border-radius:3px; }
-.sidebar-r-header { padding:var(--s2); border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--bg); z-index:5; }
-.layout-toggle { margin-bottom:var(--s1); }
-.slot-tabs { margin-bottom:var(--s1); }
-.sidebar-r-title { font-size:13px; font-weight:700; color:var(--text); margin-bottom:var(--s2); }
-
-/* (old top tabs — not used in new layout) */
-.top-tabs { display:flex; border-bottom:1px solid var(--border); flex-shrink:0; }
-.top-tab { flex:1; padding:12px 0; text-align:center; font-size:12px; font-weight:600; color:var(--text-dim); cursor:pointer; border:none; background:transparent; font-family:inherit; border-bottom:2px solid transparent; margin-bottom:-1px; transition:all .14s; }
-.top-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
-.top-tab:hover:not(.active) { color:var(--text-muted); }
-.tab-panel { display:none; flex-direction:column; }
-.tab-panel.active { display:flex; }
-
-/* CTRL SECTIONS */
-.ctrl-sec { padding:var(--s3) var(--s2); border-bottom:1px solid var(--border); }
-.ctrl-sec:last-child { border-bottom:none; }
-.sec-lbl { font-size:9px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--text-dim); margin-bottom:var(--s2); }
-
-/* GADGET CATEGORY PILLS */
-.cat-pills { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:var(--s2); }
-.cat-pill { padding:5px 10px; border-radius:20px; border:1px solid var(--border); background:var(--surface); font-size:11px; font-weight:500; color:var(--text-muted); cursor:pointer; transition:all .14s; font-family:inherit; }
-.cat-pill:hover { border-color:var(--border-h); color:var(--text); }
-.cat-pill.active { border-color:var(--accent); background:var(--accent-dim); color:var(--text); }
-
-/* DEVICE GRID */
-.device-grid { display:grid; grid-template-columns:1fr 1fr; gap:var(--s1); }
-.device-card { border:1.5px solid var(--border); background:var(--surface); border-radius:10px; padding:12px 8px 10px; cursor:pointer; text-align:center; transition:all .14s; }
-.device-card:hover { border-color:var(--border-h); background:var(--surface2); }
-.device-card.active { border-color:var(--accent); background:var(--accent-dim); }
-.device-preview { display:flex; align-items:center; justify-content:center; height:52px; margin-bottom:7px; }
-.device-preview svg { max-width:100%; max-height:100%; }
-.device-name { font-size:10.5px; font-weight:600; color:var(--text); }
-.device-sub { font-size:9px; color:var(--text-dim); margin-top:2px; }
-
-/* Change media btn */
-.change-btn { display:none; width:100%; padding:9px 0; border:1px solid var(--accent); border-radius:8px; background:var(--accent-dim); color:var(--accent); font-size:12px; font-weight:600; cursor:pointer; transition:all .14s; font-family:inherit; align-items:center; justify-content:center; gap:7px; }
-.change-btn:hover { background:var(--accent); color:#fff; }
-
-/* RATIO */
-.ratio-grid { display:grid; grid-template-columns:1fr 1fr; gap:var(--s1); }
-.ratio-btn { border:1px solid var(--border); background:var(--surface); border-radius:8px; padding:var(--s1) 6px; cursor:pointer; text-align:center; transition:all .14s; color:var(--text-muted); font-family:inherit; }
-.ratio-btn:hover { border-color:var(--border-h); color:var(--text); }
-.ratio-btn.active { border-color:var(--accent); background:var(--accent-dim); color:var(--text); }
-.ratio-preview { display:flex; align-items:center; justify-content:center; height:24px; margin-bottom:6px; }
-.ratio-box { border:1.5px solid currentColor; border-radius:2px; opacity:.65; }
-.ratio-lbl { font-size:11px; font-weight:600; }
-.ratio-sub { font-size:9px; color:var(--text-dim); margin-top:2px; }
-
-/* SLIDERS */
-.slider-row { display:flex; align-items:center; gap:var(--s1); padding:var(--s2) 0; border-bottom:1px solid var(--border); }
-.slider-row:last-child { border-bottom:none; padding-bottom:0; }
-.slider-row:first-of-type { padding-top:0; }
-.slider-lbl { font-size:11px; color:var(--text-muted); white-space:nowrap; min-width:48px; }
-.slider-row input[type=range] { flex:1; height:3px; accent-color:var(--accent); background:var(--surface2); border-radius:3px; outline:none; cursor:pointer; }
-.slider-val { font-size:11px; color:var(--text-muted); min-width:34px; text-align:right; font-variant-numeric:tabular-nums; }
-
-/* BG TABS */
-.bg-tabs { display:flex; gap:2px; background:var(--surface2); border-radius:8px; padding:3px; margin-bottom:var(--s2); }
-.bg-tab { flex:1; padding:6px 4px; text-align:center; font-size:11px; font-weight:500; border-radius:6px; cursor:pointer; color:var(--text-dim); transition:all .14s; border:none; background:transparent; font-family:inherit; }
-.bg-tab.active { background:var(--surface3); color:var(--text); }
-.bg-tab:hover:not(.active) { color:var(--text-muted); }
-.bg-panel { display:none; } .bg-panel.active { display:block; }
-
-/* IMAGE GRID */
-.img-grid { display:grid; grid-template-columns:1fr 1fr; gap:var(--s1); margin-bottom:var(--s1); max-height:400px; overflow-y:auto; padding-right:2px; }
-.img-grid::-webkit-scrollbar { width:3px; }
-.img-grid::-webkit-scrollbar-thumb { background:var(--surface3); border-radius:3px; }
-.img-thumb { aspect-ratio:3/2; border-radius:6px; cursor:pointer; overflow:hidden; border:2px solid transparent; transition:all .14s; position:relative; background:var(--surface2); }
-.img-thumb:hover { border-color:var(--border-h); transform:scale(1.02); }
-.img-thumb.active { border-color:var(--accent); }
-.img-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
-.img-thumb .chk { position:absolute; top:var(--s1); right:var(--s1); width:16px; height:16px; border-radius:50%; background:var(--accent); display:none; align-items:center; justify-content:center; }
-.img-thumb.active .chk { display:flex; }
-.img-thumb .chk svg { width:9px; height:9px; }
-.img-thumb .tlbl { position:absolute; bottom:0; left:0; right:0; background:linear-gradient(transparent,rgba(0,0,0,.75)); color:#fff; font-size:9px; padding:10px 5px 4px; opacity:0; transition:opacity .14s; }
-.img-thumb:hover .tlbl { opacity:1; }
-.upload-btn { width:100%; padding:var(--s1) 0; border:1px dashed rgba(255,255,255,.13); border-radius:8px; background:transparent; color:var(--text-muted); font-size:11.5px; cursor:pointer; transition:all .14s; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:6px; margin-top:var(--s1); }
-.upload-btn:hover { border-color:var(--accent); color:var(--text); background:var(--accent-dim); }
-
-/* GRADIENTS */
-.grad-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:var(--s1); }
-.grad-sw { aspect-ratio:3/2; border-radius:8px; cursor:pointer; border:2px solid transparent; transition:all .14s; }
-.grad-sw:hover { transform:scale(1.04); }
-.grad-sw.active { border-color:rgba(255,255,255,.9); }
-
-/* COLOR */
-.color-row { display:flex; gap:var(--s1); align-items:center; margin-bottom:var(--s2); }
-.color-pick-wrap { position:relative; width:40px; height:40px; border-radius:8px; overflow:hidden; border:1px solid var(--border-h); flex-shrink:0; }
-.color-pick-wrap input[type="color"] { position:absolute; inset:-5px; width:calc(100% + 10px); height:calc(100% + 10px); border:none; cursor:pointer; padding:0; }
-.hex-in { flex:1; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:0 var(--s1); height:40px; color:var(--text); font-size:12px; font-family:'SF Mono','Menlo',monospace; outline:none; transition:border-color .14s; }
-.hex-in:focus { border-color:var(--accent); }
-.solid-sws { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
-.solid-sw { aspect-ratio:1; border-radius:6px; cursor:pointer; border:2px solid transparent; transition:all .14s; }
-.solid-sw:hover { transform:scale(1.12); }
-.solid-sw.active { border-color:#fff; }
-
-/* WORK AREA */
-.work-area { flex:1; position:relative; overflow:hidden; order:2; background-color:#080809; background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(rgba(255,255,255,.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.015) 1px,transparent 1px); background-size:80px 80px,80px 80px,16px 16px,16px 16px; background-position:-1px -1px,-1px -1px,-1px -1px,-1px -1px; }
-.work-area::before { content:''; position:absolute; inset:0; pointer-events:none; z-index:1; background:radial-gradient(ellipse 70% 65% at 50% 50%,transparent 30%,rgba(8,8,9,.78) 100%); }
-
-/* CANVAS WRAP */
-.canvas-wrap { position:absolute; z-index:2; border-radius:16px; overflow:visible; display:flex; align-items:center; justify-content:center; transition:width .35s cubic-bezier(.4,0,.2,1),height .35s cubic-bezier(.4,0,.2,1),left .35s cubic-bezier(.4,0,.2,1),top .35s cubic-bezier(.4,0,.2,1); }
-#canvas-bg-clip { position:absolute; inset:0; border-radius:16px; overflow:hidden; z-index:0; pointer-events:none; }
-#canvas-bg { position:absolute; inset:-12px; background:#1a1a2e; background-size:cover; background-position:center; background-repeat:no-repeat; transition:filter .2s; }
-.canvas-ov { position:absolute; inset:0; background:rgba(0,0,0,.06); z-index:1; pointer-events:none; }
-
-/* MOCKUP WRAP */
-.mockup-wrap { position:relative; z-index:3; display:flex; align-items:center; justify-content:center; }
-
-/* PLAIN MOCKUP FRAME (used when no gadget selected) */
-.mockup-frame { position:relative; border-radius:14px; overflow:hidden; background:#111; box-shadow:0 0 0 1px rgba(255,255,255,.09),0 6px 24px rgba(0,0,0,.45),0 20px 60px rgba(0,0,0,.5),0 48px 120px rgba(0,0,0,.38); transition:border-radius .2s ease,box-shadow .2s ease; }
-.mockup-inner { width:100%; height:100%; position:relative; display:flex; align-items:center; justify-content:center; }
-
-/* GADGET FRAME WRAPPER */
-.gadget-frame-wrap {
-  position:relative;      /* ← critical: screen positions relative to this */
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  filter:drop-shadow(0 24px 60px rgba(0,0,0,.55)) drop-shadow(0 8px 24px rgba(0,0,0,.45));
-}
-.gadget-frame-wrap svg.device-svg {
-  display:block;          /* ← removes inline baseline gap */
-  position:relative;
-  z-index:2;
-  pointer-events:none;
-}
-/* Screen sits absolutely inside the wrap, behind the SVG bezel */
-.gadget-screen {
-  position:absolute;
-  z-index:1;
-  overflow:hidden;
-  background:#000;
-  /* left/top/width/height set by JS */
-}
-.gadget-screen img,
-.gadget-screen video,
-.gadget-media {
-  position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  display:none;           /* hidden by default, shown by JS */
-  transform-origin:center center;
-  will-change:transform;
-}
-.gadget-screen.repositionable { cursor:grab; }
-.gadget-screen.repositionable:active { cursor:grabbing; }
-.gadget-screen.dragging { cursor:grabbing; }
-
-/* DROP ZONE — plain frame */
-.drop-zone { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:var(--s1); cursor:pointer; transition:background .14s; z-index:5; }
-.drop-zone.drag-over { background:var(--accent-dim); }
-.dz-icon { width:56px; height:56px; border-radius:14px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.1); display:flex; align-items:center; justify-content:center; color:rgba(255,255,255,.3); }
-.dz-icon svg { width:26px; height:26px; }
-.dz-title { font-size:13px; font-weight:500; color:rgba(255,255,255,.45); }
-.dz-sub { font-size:11px; color:rgba(255,255,255,.25); }
-
-/* GADGET DROP OVERLAY — sits above the device SVG, covers full gadget-frame-wrap */
-.gadget-drop-overlay {
-  position:absolute; inset:0; z-index:10;
-  display:flex; flex-direction:column;
-  align-items:center; justify-content:center; gap:var(--s1);
-  cursor:pointer;
-  background:rgba(0,0,0,0.55);
-  backdrop-filter:blur(2px);
-  border-radius:inherit;
-  transition:background .14s;
-}
-.gadget-drop-overlay.drag-over { background:rgba(249,115,22,0.25); }
-.gadget-drop-overlay .dz-icon { width:56px; height:56px; border-radius:14px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); display:flex; align-items:center; justify-content:center; color:rgba(255,255,255,.7); }
-.gadget-drop-overlay .dz-icon svg { width:26px; height:26px; }
-.gadget-drop-overlay .dz-title { font-size:13px; font-weight:600; color:rgba(255,255,255,.9); text-align:center; }
-.gadget-drop-overlay .dz-sub { font-size:11px; color:rgba(255,255,255,.5); text-align:center; }
-
-.mockup-img { width:100%; height:100%; object-fit:cover; display:none; transform-origin:center center; will-change:transform; }
-.mockup-video { width:100%; height:100%; object-fit:cover; display:none; transform-origin:center center; will-change:transform; }
-.mockup-inner.repositionable { cursor:grab; }
-.mockup-inner.dragging { cursor:grabbing; }
-#hf { display:none; } #hbf { display:none; }
-.wm { position:absolute; bottom:var(--s2); right:var(--s3); z-index:4; font-size:10px; color:rgba(255,255,255,.16); pointer-events:none; letter-spacing:.06em; }
-
-/* EXPORT MODAL */
-.modal-backdrop { display:none; position:fixed; inset:0; z-index:100; background:rgba(0,0,0,.72); align-items:center; justify-content:center; }
-.modal-backdrop.open { display:flex; }
-.modal { background:#18181b; border:1px solid rgba(255,255,255,.1); border-radius:20px; padding:var(--s4) var(--s3); width:420px; max-width:calc(100vw - 32px); }
-.modal-title { font-size:20px; font-weight:700; color:var(--text); margin-bottom:var(--s4); }
-.modal-close { position:absolute; top:var(--s2); right:var(--s2); background:transparent; border:none; cursor:pointer; color:var(--text-muted); padding:var(--s1); border-radius:8px; transition:all .14s; }
-.modal-close:hover { background:rgba(255,255,255,.06); color:var(--text); }
-.modal-inner { position:relative; }
-.qual-option { display:flex; align-items:center; justify-content:space-between; padding:var(--s2); border:1px solid rgba(255,255,255,.08); border-radius:12px; margin-bottom:var(--s1); cursor:pointer; transition:all .14s; }
-.qual-option:last-of-type { margin-bottom:0; }
-.qual-option:hover { border-color:rgba(255,255,255,.18); background:rgba(255,255,255,.03); }
-.qual-option.selected { border-color:var(--accent); background:var(--accent-dim); }
-.qual-left { display:flex; flex-direction:column; gap:3px; }
-.qual-name { font-size:16px; font-weight:600; color:var(--text); display:flex; align-items:center; gap:8px; }
-.qual-desc { font-size:13px; color:var(--text-muted); }
-.qual-radio { width:22px; height:22px; border-radius:50%; border:2px solid rgba(255,255,255,.25); flex-shrink:0; transition:all .14s; display:flex; align-items:center; justify-content:center; }
-.qual-option.selected .qual-radio { border-color:var(--accent); background:var(--accent); }
-.qual-option.selected .qual-radio::after { content:''; width:8px; height:8px; border-radius:50%; background:#fff; }
-.modal-note { font-size:12px; color:var(--text-dim); margin-top:var(--s3); text-align:center; }
-.modal-actions { display:flex; gap:var(--s1); margin-top:var(--s3); }
-.modal-actions .btn { flex:1; justify-content:center; height:48px; font-size:14px; }
-.btn-cancel { background:rgba(255,255,255,.06); color:var(--text); border:1px solid rgba(255,255,255,.1); }
-.btn-cancel:hover { background:rgba(255,255,255,.1); }
-.btn-start { background:#fff; color:#000; font-weight:700; }
-.btn-start:hover { background:#e5e5e5; }
-
-/* ── DUAL STAGE ── */
-#dual-stage { position:absolute; inset:0; z-index:3; display:none; }
-#dual-stage.active { display:block; }
-.device-instance { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); cursor:grab; transition:filter .15s; touch-action:none; }
-.device-instance.dragging { cursor:grabbing; z-index:20 !important; }
-.device-instance.selected { filter:drop-shadow(0 0 0 2px var(--accent)); }
-.device-instance .inst-wrap { position:relative; filter:drop-shadow(0 24px 60px rgba(0,0,0,.55)) drop-shadow(0 8px 24px rgba(0,0,0,.45)); }
-.device-instance svg.inst-bezel { position:absolute; inset:0; z-index:1; pointer-events:none; display:block; }
-.device-instance .inst-screen { position:absolute; z-index:2; overflow:hidden; background:#000; }
-.device-instance .inst-screen img, .device-instance .inst-screen video { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:none; }
-.device-instance svg.inst-overlay { position:absolute; inset:0; z-index:3; pointer-events:none; display:block; }
-.device-instance .inst-drop { position:absolute; z-index:4; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; cursor:pointer; background:rgba(0,0,0,.5); backdrop-filter:blur(2px); }
-.device-instance .inst-drop .dz-icon { width:44px; height:44px; }
-.device-instance .inst-drop .dz-title { font-size:11px; }
-.device-instance .inst-drop .dz-sub { font-size:9px; }
-
-/* Layout toggle + slot tabs */
-.layout-toggle { display:flex; gap:2px; background:var(--surface2); border-radius:8px; padding:3px; margin-bottom:var(--s2); }
-.layout-opt { flex:1; padding:7px 4px; text-align:center; font-size:11px; font-weight:500; border-radius:6px; cursor:pointer; color:var(--text-dim); border:none; background:transparent; font-family:inherit; transition:all .14s; }
-.layout-opt.active { background:var(--surface3); color:var(--text); }
-.layout-opt:hover:not(.active) { color:var(--text-muted); }
-.slot-tabs { display:flex; gap:6px; margin-bottom:var(--s2); }
-.slot-tab { flex:1; padding:8px 4px; text-align:center; font-size:11px; font-weight:600; border-radius:8px; cursor:pointer; color:var(--text-muted); border:1px solid var(--border); background:var(--surface); font-family:inherit; transition:all .14s; }
-.slot-tab.active { border-color:var(--accent); background:var(--accent-dim); color:var(--text); }
-.slot-tab .st-dev { font-size:9px; color:var(--text-dim); margin-top:2px; font-weight:400; }
-
-/* ── TEXT LAYER ── */
-#text-layer { position:absolute; inset:0; z-index:7; pointer-events:none; }
-#text-layer .text-block {
-  position:absolute; pointer-events:auto; cursor:grab;
-  white-space:pre; line-height:1.3; user-select:none;
-  padding:2px 6px; border:1.5px solid transparent; border-radius:5px;
-  font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif;
-  max-width:90%; word-break:normal;
-}
-#text-layer .text-block.selected { border-color:var(--accent); }
-#text-layer .text-block.editing { cursor:text; user-select:text; border-color:var(--accent); background:rgba(0,0,0,0.15); }
-#text-layer .text-block.dragging { cursor:grabbing; }
-/* Text controls in sidebar */
-.text-list { display:flex; flex-direction:column; gap:6px; margin-bottom:var(--s2); }
-.text-list-item { display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid var(--border); border-radius:8px; cursor:pointer; transition:all .14s; background:var(--surface); }
-.text-list-item:hover { border-color:var(--border-h); }
-.text-list-item.active { border-color:var(--accent); background:var(--accent-dim); }
-.text-list-item .tli-text { flex:1; font-size:11.5px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.text-list-item .tli-del { color:var(--text-dim); flex-shrink:0; padding:2px; border-radius:4px; }
-.text-list-item .tli-del:hover { color:#ef4444; background:rgba(239,68,68,0.1); }
-.add-text-btn { width:100%; padding:9px 0; border:1px dashed rgba(255,255,255,0.16); border-radius:8px; background:transparent; color:var(--text-muted); font-size:12px; font-weight:500; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:7px; transition:all .14s; }
-.add-text-btn:hover { border-color:var(--accent); color:var(--text); background:var(--accent-dim); }
-.text-ctrls { margin-top:var(--s2); padding-top:var(--s2); border-top:1px solid var(--border); display:none; }
-.text-ctrls.active { display:block; }
-.text-ctrls textarea { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:8px 10px; color:var(--text); font-size:12px; font-family:inherit; outline:none; resize:vertical; min-height:50px; margin-bottom:var(--s2); transition:border-color .14s; }
-.text-ctrls textarea:focus { border-color:var(--accent); }
-.weight-toggle, .align-toggle { display:flex; gap:4px; }
-.wt-opt, .al-opt { flex:1; padding:7px 0; text-align:center; font-size:11px; border:1px solid var(--border); border-radius:6px; cursor:pointer; color:var(--text-muted); background:var(--surface); font-family:inherit; transition:all .14s; }
-.wt-opt:hover, .al-opt:hover { border-color:var(--border-h); color:var(--text); }
-.wt-opt.active, .al-opt.active { border-color:var(--accent); background:var(--accent-dim); color:var(--text); }
-.text-font-color { display:flex; gap:var(--s1); align-items:center; }
-.text-font-color .color-pick-wrap { width:36px; height:36px; }
-</style>
-</head>
-<body>
-  <!-- MOBILE GATE: shown on small screens, hides the app -->
-  <div id="mobile-gate" style="display:none;position:fixed;inset:0;z-index:9999;background:#0a0a0b;flex-direction:column;align-items:center;justify-content:center;padding:40px 32px;text-align:center;font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif;">
-    <div style="width:64px;height:64px;background:#18181b;border-radius:18px;display:flex;align-items:center;justify-content:center;margin-bottom:28px;border:1px solid rgba(255,255,255,0.08)">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.6"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-    </div>
-    <h1 style="color:#f0f0f0;font-size:22px;font-weight:700;margin:0 0 12px;line-height:1.3">mockup studio works<br>best on desktop</h1>
-    <p style="color:rgba(255,255,255,0.45);font-size:14px;line-height:1.6;margin:0;max-width:280px">Open this link on your Mac or PC to get started. The tool needs a bigger screen to work well.</p>
-    <div style="margin-top:36px;width:44px;height:2px;background:rgba(249,115,22,0.6);border-radius:2px"></div>
-  </div>
-
-  <script>
-    // Show mobile gate if screen is narrower than 900px (covers all phones and most tablets)
-    (function(){
-      function check(){
-        const gate = document.getElementById('mobile-gate');
-        if(!gate) return;
-        if(window.innerWidth < 900){
-          gate.style.display='flex';
-          document.body.style.overflow='hidden';
-        } else {
-          gate.style.display='none';
-          document.body.style.overflow='';
-        }
-      }
-      check();
-      window.addEventListener('resize', check);
-    })();
-  </script>
-
-<input type="file" id="hf" accept="image/*,video/*">
-<input type="file" id="hbf" accept="image/*">
-
-<nav>
-  <div class="logo"><div class="logo-dot"></div>mockup studio</div>
-  <div class="nav-r">
-    <button class="btn btn-ghost" id="clear-btn" style="display:none" onclick="clearMedia()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 6L6 18M6 6l12 12"/></svg>Clear
-    </button>
-    <button class="btn btn-primary" id="dl-btn" disabled onclick="doExport()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export
-    </button>
-  </div>
-</nav>
-
-<div class="app-body">
-
-<!-- LEFT SIDEBAR: Aspect ratio + Mockup sliders + Background -->
-<aside class="sidebar">
-
-  <!-- Aspect ratio -->
-  <div class="ctrl-sec">
-    <div class="sec-lbl">Aspect ratio</div>
-    <div class="ratio-grid">
-      <button class="ratio-btn active" onclick="setRatio(this,'16:9')">
-        <div class="ratio-preview"><div class="ratio-box" style="width:30px;height:17px"></div></div>
-        <div class="ratio-lbl">16:9</div><div class="ratio-sub">1920 × 1080</div>
-      </button>
-      <button class="ratio-btn" onclick="setRatio(this,'4:3')">
-        <div class="ratio-preview"><div class="ratio-box" style="width:26px;height:20px"></div></div>
-        <div class="ratio-lbl">4:3</div><div class="ratio-sub">1440 × 1080</div>
-      </button>
-      <button class="ratio-btn" onclick="setRatio(this,'9:16')">
-        <div class="ratio-preview"><div class="ratio-box" style="width:17px;height:30px"></div></div>
-        <div class="ratio-lbl">9:16</div><div class="ratio-sub">1080 × 1920</div>
-      </button>
-      <button class="ratio-btn" id="ratio-custom-btn" onclick="toggleCustomRatio(this)">
-        <div class="ratio-preview"><div class="ratio-box" style="width:26px;height:18px;border-style:dashed"></div></div>
-        <div class="ratio-lbl">Custom</div><div class="ratio-sub">Set size</div>
-      </button>
-    </div>
-    <!-- Custom ratio inputs (hidden until Custom is chosen) -->
-    <div id="custom-ratio-row" style="display:none;align-items:center;gap:8px;margin-top:var(--s2)">
-      <input type="number" id="custom-w" min="1" max="9999" value="1920" placeholder="W"
-        oninput="applyCustomRatio()"
-        style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;text-align:center;">
-      <span style="color:var(--text-dim);font-size:13px;flex-shrink:0">×</span>
-      <input type="number" id="custom-h" min="1" max="9999" value="1080" placeholder="H"
-        oninput="applyCustomRatio()"
-        style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;text-align:center;">
-    </div>
-  </div>
-
-  <!-- TEXT -->
-  <div class="ctrl-sec">
-    <div class="sec-lbl">Text</div>
-    <div class="text-list" id="text-list"></div>
-    <button class="add-text-btn" onclick="addText()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      Add text
-    </button>
-    <button class="add-text-btn" id="load-text-presets-btn" onclick="loadTextPresets()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4h12M6 10h12M6 16h12M6 22h12"/></svg>
-      Load curated text presets
-    </button>
-    <div id="text-presets" style="display:none; margin-top:var(--s2)">
-      <div class="sec-lbl" style="margin-bottom:8px">Curated text</div>
-      <div class="preset-grid" id="preset-grid"></div>
-    </div>
-    <div class="text-ctrls" id="text-ctrls">
-      <textarea id="text-content" placeholder="Type your text..." oninput="updateTextContent(this.value)"></textarea>
-      <div class="slider-row" style="border:none;padding:0 0 var(--s2)">
-        <span class="slider-lbl">Size</span>
-        <input type="range" min="12" max="120" value="40" step="1" id="text-size" oninput="updateTextSize(this.value)">
-        <span class="slider-val" id="text-size-val">40px</span>
-      </div>
-      <div style="margin-bottom:var(--s2)">
-        <div class="sec-lbl" style="margin-bottom:6px">Weight</div>
-        <div class="weight-toggle">
-          <button class="wt-opt" data-w="400" onclick="updateTextWeight('400')">Regular</button>
-          <button class="wt-opt" data-w="600" onclick="updateTextWeight('600')">Medium</button>
-          <button class="wt-opt active" data-w="700" onclick="updateTextWeight('700')">Bold</button>
-        </div>
-      </div>
-      <div style="margin-bottom:var(--s2)">
-        <div class="sec-lbl" style="margin-bottom:6px">Align</div>
-        <div class="align-toggle">
-          <button class="al-opt active" data-a="left" onclick="updateTextAlign('left')">Left</button>
-          <button class="al-opt" data-a="center" onclick="updateTextAlign('center')">Center</button>
-          <button class="al-opt" data-a="right" onclick="updateTextAlign('right')">Right</button>
-        </div>
-      </div>
-      <div style="margin-bottom:var(--s2)">
-        <div class="sec-lbl" style="margin-bottom:6px">Color</div>
-        <div class="text-font-color">
-          <div class="color-pick-wrap"><input type="color" id="text-color" value="#ffffff" oninput="updateTextColor(this.value)"></div>
-          <input class="hex-in" type="text" id="text-color-hex" value="#ffffff" maxlength="7" oninput="updateTextColorHex(this.value)">
-        </div>
-      </div>
-      <button class="add-text-btn" style="border-style:solid;border-color:rgba(239,68,68,0.3);color:#ef4444" onclick="deleteSelectedText()">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-        Delete text
-      </button>
-    </div>
-  </div>
-
-  <div class="ctrl-sec" id="mockup-ctrls">
-    <div class="sec-lbl">Mockup</div>
-    <div class="slider-row">
-      <span class="slider-lbl">Padding</span>
-      <input type="range" min="0" max="18" value="6" step="1" id="sl-pad" oninput="onPad(this.value)">
-      <span class="slider-val" id="vl-pad">6%</span>
-    </div>
-    <div class="slider-row" id="row-radius">
-      <span class="slider-lbl">Radius</span>
-      <input type="range" min="0" max="40" value="14" step="1" id="sl-rad" oninput="onRadius(this.value)">
-      <span class="slider-val" id="vl-rad">14px</span>
-    </div>
-    <div class="slider-row">
-      <span class="slider-lbl">Shadow</span>
-      <input type="range" min="0" max="100" value="60" step="1" id="sl-shad" oninput="onShadow(this.value)">
-      <span class="slider-val" id="vl-shad">60%</span>
-    </div>
-    <div class="slider-row" id="zoom-row" style="display:none">
-      <span class="slider-lbl">Zoom</span>
-      <input type="range" min="1" max="3" value="1" step="0.01" id="sl-zoom" oninput="onZoom(this.value)">
-      <span class="slider-val" id="vl-zoom">100%</span>
-    </div>
-    <button id="reset-pos-btn" onclick="resetMediaTransform()" style="display:none;width:100%;margin-top:var(--s2);padding:7px 0;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text-muted);font-size:11.5px;cursor:pointer;font-family:inherit;align-items:center;justify-content:center;gap:6px;transition:all .14s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--text)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-      Reset position
-    </button>
-  </div>
-
-  <!-- Background -->
-  <div class="ctrl-sec">
-    <div class="sec-lbl">Background</div>
-    <div class="slider-row">
-      <span class="slider-lbl">Blur</span>
-      <input type="range" min="0" max="40" value="0" step="1" id="sl-blur" oninput="onBlur(this.value)">
-      <span class="slider-val" id="vl-blur">0px</span>
-    </div>
-    <div class="slider-row">
-      <span class="slider-lbl">Size</span>
-      <input type="range" min="40" max="100" value="100" step="1" id="sl-bgz" oninput="onBgSize(this.value)">
-      <span class="slider-val" id="vl-bgz">100%</span>
-    </div>
-    <div style="margin-top:var(--s3)">
-      <div class="bg-tabs">
-        <button class="bg-tab active" onclick="switchBgTab(this,'images')">Image</button>
-        <button class="bg-tab" onclick="switchBgTab(this,'gradient')">Gradient</button>
-        <button class="bg-tab" onclick="switchBgTab(this,'color')">Color</button>
-        <button class="bg-tab" onclick="switchBgTab(this,'none')">None</button>
-      </div>
-      <div class="bg-panel active" id="panel-images">
-        <div class="img-grid" id="img-grid"></div>
-        <button class="upload-btn" onclick="document.getElementById('hbf').click()">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          Upload your own
-        </button>
-      </div>
-      <div class="bg-panel" id="panel-gradient">
-        <div class="grad-grid" id="grad-grid"></div>
-      </div>
-      <div class="bg-panel" id="panel-color">
-        <div class="color-row">
-          <div class="color-pick-wrap"><input type="color" id="color-pick" value="#0a0f1e" oninput="onColorPick(this.value)"></div>
-          <input class="hex-in" type="text" id="hex-in" value="#0a0f1e" maxlength="7" placeholder="#000000" oninput="onHex(this.value)">
-        </div>
-        <div class="solid-sws" id="solid-sws"></div>
-      </div>
-      <div class="bg-panel" id="panel-none">
-        <div style="padding:var(--s2) 0; text-align:center;">
-          <div style="width:100%;aspect-ratio:16/9;border-radius:8px;border:1px dashed rgba(255,255,255,0.15);background:repeating-conic-gradient(#2a2a2a 0% 25%, #1a1a1a 0% 50%) 0 0 / 16px 16px;margin-bottom:var(--s2);"></div>
-          <p style="font-size:11px;color:var(--text-muted);line-height:1.5">Background is transparent.<br>Export as PNG to preserve transparency.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-</aside>
-
-<!-- WORK AREA -->
-<main class="work-area" id="work-area">
-  <div class="canvas-wrap" id="canvas-wrap">
-    <div id="canvas-bg-clip">
-      <div id="canvas-bg"></div>
-      <div class="canvas-ov"></div>
-    </div>
-    <div class="mockup-wrap" id="mockup-wrap">
-      <!-- plain frame (no gadget) -->
-      <div class="mockup-frame" id="mockup-frame" style="display:flex">
-        <div class="mockup-inner" id="mockup-inner">
-          <div class="drop-zone" id="drop-zone" onclick="document.getElementById('hf').click()">
-            <div class="dz-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9l4-4 5 5 4-4 5 5"/><circle cx="8.5" cy="8.5" r="1.5"/></svg>
-            </div>
-            <div class="dz-title">Drop image or video</div>
-            <div class="dz-sub">PNG · JPG · WebP · MP4 · MOV · WebM</div>
-          </div>
-          <img class="mockup-img" id="mockup-img" alt="">
-          <video class="mockup-video" id="mockup-video" autoplay loop playsinline></video>
-        </div>
-      </div>
-      <!-- gadget frame (shown when device selected) -->
-      <div class="gadget-frame-wrap" id="gadget-frame-wrap" style="display:none">
-        <!-- Layer 1: bezel SVG (frame body) — UNDER the media -->
-        <svg class="device-svg" id="device-bezel" viewBox="0 0 0 0"></svg>
-        <!-- Layer 2: screen content -->
-        <div class="gadget-screen" id="gadget-screen">
-          <img class="gadget-media" id="gadget-img" alt="">
-          <video class="gadget-media" id="gadget-video" autoplay loop playsinline></video>
-        </div>
-        <!-- Layer 3: overlay SVG (notch / island / camera) — OVER the media -->
-        <svg class="device-svg" id="device-overlay" viewBox="0 0 0 0"></svg>
-        <!-- Layer 4: drop overlay — shown when no media -->
-        <div class="gadget-drop-overlay" id="drop-zone-g" onclick="document.getElementById('hf').click()">
-          <div class="dz-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9l4-4 5 5 4-4 5 5"/><circle cx="8.5" cy="8.5" r="1.5"/></svg>
-          </div>
-          <div class="dz-title">Drop image or video</div>
-          <div class="dz-sub">PNG · JPG · WebP · MP4 · MOV · WebM</div>
-        </div>
-      </div>
-    </div>
-    <!-- DUAL STAGE: free-positioned device instances -->
-    <div id="dual-stage"></div>
-    <!-- TEXT LAYER: draggable text blocks -->
-    <div id="text-layer"></div>
-  </div>
-  <div class="wm">mockup studio</div>
-</main>
-
-<!-- RIGHT SIDEBAR: Mockup device picker (temporarily removed) -->
-<!--
-<aside class="sidebar-r">
-  <div class="sidebar-r-header">
-    <div class="sidebar-r-title">Mockup</div>
-    Sticky change/upload button — always visible, no scroll needed
-    <button class="change-btn" id="change-btn" onclick="if(typeof layoutMode!=='undefined'&&layoutMode==='dual'){activeFileSlot=selectedSlot;} document.getElementById('hf').click()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-      Change image / video
-    </button>
-    <!-- Layout controls live in the sticky header so they stay visible while scrolling devices -->
-    <div class="sec-lbl" style="margin-top:var(--s2)">Layout</div>
-    <div class="layout-toggle">
-      <button class="layout-opt active" id="lo-single" onclick="setLayout('single')">Single</button>
-      <button class="layout-opt" id="lo-dual" onclick="setLayout('dual')">Two devices</button>
-    </div>
-    <div class="slot-tabs" id="slot-tabs" style="display:none">
-      <button class="slot-tab active" id="slot-tab-0" onclick="selectSlot(0)">Device 1<div class="st-dev" id="st-dev-0">None</div></button>
-      <button class="slot-tab" id="slot-tab-1" onclick="selectSlot(1)">Device 2<div class="st-dev" id="st-dev-1">None</div></button>
-    </div>
-    <p id="dual-hint" style="display:none;font-size:10px;color:var(--text-dim);line-height:1.45;margin:0">Drag each device in the canvas to position it. Tap a device to select, then pick its frame below.</p>
-  </div>
-  <div class="ctrl-sec">
-    <div class="sec-lbl">Device</div>
-    <div class="cat-pills">
-      <button class="cat-pill active" onclick="filterCat(this,'all')">All</button>
-      <button class="cat-pill" onclick="filterCat(this,'phone')">Phones</button>
-      <button class="cat-pill" onclick="filterCat(this,'tablet')">Tablets</button>
-      <button class="cat-pill" onclick="filterCat(this,'laptop')">Laptops</button>
-      <button class="cat-pill" onclick="filterCat(this,'desktop')">Desktop</button>
-    </div>
-    <div class="device-grid" id="device-grid"></div>
-  </div>
-</aside>
--->
-
-</div>
-
-<!-- IMAGE EXPORT MODAL -->
-<div class="modal-backdrop" id="img-modal">
-  <div class="modal modal-inner">
-    <button class="modal-close" onclick="closeModal('img-modal')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
-    <div class="modal-title">Export Image</div>
-    <div class="qual-option selected" id="fmt-png" onclick="selectFmt('png')">
-      <div class="qual-left"><div class="qual-name">PNG</div><div class="qual-desc">Full quality · no compression loss · ideal for design work</div></div>
-      <div class="qual-radio"></div>
-    </div>
-    <div class="qual-option" id="fmt-jpg" onclick="selectFmt('jpg')">
-      <div class="qual-left"><div class="qual-name">JPG</div><div class="qual-desc">Smaller file · best for sharing</div></div>
-      <div class="qual-radio"></div>
-    </div>
-    <div class="qual-option" id="fmt-webp" onclick="selectFmt('webp')">
-      <div class="qual-left"><div class="qual-name">WebP</div><div class="qual-desc">Modern format · great compression</div></div>
-      <div class="qual-radio"></div>
-    </div>
-    <p class="modal-note">All processing happens in your browser · nothing is uploaded.</p>
-    <div class="modal-actions">
-      <button class="btn btn-cancel" onclick="closeModal('img-modal')">Cancel</button>
-      <button class="btn btn-start" onclick="confirmImgExport()">Start Export</button>
-    </div>
-  </div>
-</div>
-
-<!-- VIDEO EXPORT MODAL -->
-<div class="modal-backdrop" id="vid-modal">
-  <div class="modal modal-inner">
-    <button class="modal-close" onclick="closeModal('vid-modal')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
-    <div class="modal-title">Export Video</div>
-    <div class="qual-option" id="q-720" onclick="selectQ('720')">
-      <div class="qual-left"><div class="qual-name">720p</div><div class="qual-desc">Fast export · smaller file</div></div><div class="qual-radio"></div>
-    </div>
-    <div class="qual-option selected" id="q-1080" onclick="selectQ('1080')">
-      <div class="qual-left"><div class="qual-name">1080p <span style="font-size:11px;background:rgba(255,255,255,.12);color:var(--text-muted);padding:2px 8px;border-radius:20px;font-weight:500;vertical-align:middle">POPULAR</span></div><div class="qual-desc">Balanced quality · recommended</div></div><div class="qual-radio"></div>
-    </div>
-    <div class="qual-option" id="q-1440" onclick="selectQ('1440')">
-      <div class="qual-left"><div class="qual-name">2K</div><div class="qual-desc">Crystal clear · 2560×1440</div></div><div class="qual-radio"></div>
-    </div>
-    <div class="qual-option" id="q-4k" onclick="selectQ('4k')">
-      <div class="qual-left"><div class="qual-name">4K</div><div class="qual-desc">Maximum quality · 3840×2160</div></div><div class="qual-radio"></div>
-    </div>
-    <p class="modal-note">All processing happens in your browser · nothing is uploaded.</p>
-    <div class="modal-actions">
-      <button class="btn btn-cancel" onclick="closeModal('vid-modal')">Cancel</button>
-      <button class="btn btn-start" onclick="confirmVidExport()">Start Export</button>
-    </div>
-  </div>
-</div>
-
-<script>
 /* ══════════════════════════════════════════════════════
    DEVICE DEFINITIONS
    Each device has: id, name, sub, cat, ar (w/h of screen),
@@ -948,6 +284,102 @@ let activeDevice = null; // null = plain frame, else device object
 let currentCat = 'all';
 let selectedFmt = 'png';
 let selectedQ = '1080';
+let imgScale = 1;          // 1× / 2× / 3× hi-res multiplier for image export
+let vidFmt = 'video';      // 'video' (MP4/WebM) or 'gif'
+let tiltX = 0, tiltY = 0;  // 3D tilt angles (deg); 0,0 = flat
+const TILT_PF = 2.6;       // perspective distance as a multiple of mockup width
+
+function onTilt(axis, v){
+  v=parseInt(v);
+  if(axis==='x'){ tiltX=v; document.getElementById('vl-tiltx').textContent=v+'°'; }
+  else { tiltY=v; document.getElementById('vl-tilty').textContent=v+'°'; }
+  applyTilt();
+}
+function applyTilt(){
+  const el=document.getElementById('mockup-wrap'); if(!el) return;
+  if(tiltX===0 && tiltY===0){ el.style.transform=''; return; }
+  const w=el.offsetWidth||600;
+  el.style.transform='perspective('+(TILT_PF*w)+'px) rotateX('+tiltX+'deg) rotateY('+tiltY+'deg)';
+}
+// Texture-mapped triangle (affine). Main export ctx is pre-scaled by S, so
+// setTransform (which is absolute) is pre-multiplied by S to stay in device px.
+function texTri(ctx, img, S, x0,y0, x1,y1, x2,y2, d0,d1,d2){
+  ctx.save();
+  ctx.beginPath(); ctx.moveTo(d0[0],d0[1]); ctx.lineTo(d1[0],d1[1]); ctx.lineTo(d2[0],d2[1]); ctx.closePath(); ctx.clip();
+  const denom=x0*(y2-y1)-x1*(y2-y0)+x2*(y1-y0);
+  if(Math.abs(denom)<1e-6){ ctx.restore(); return; }
+  const a=(d0[0]*(y2-y1)-d1[0]*(y2-y0)+d2[0]*(y1-y0))/denom;
+  const b=(-d0[0]*(x2-x1)+d1[0]*(x2-x0)-d2[0]*(x1-x0))/denom;
+  const c=(d0[1]*(y2-y1)-d1[1]*(y2-y0)+d2[1]*(y1-y0))/denom;
+  const d=(-d0[1]*(x2-x1)+d1[1]*(x2-x0)-d2[1]*(x1-x0))/denom;
+  const e=d0[0]-a*x0-b*y0, f=d0[1]-c*x0-d*y0;
+  ctx.setTransform(a*S,c*S,b*S,d*S,e*S,f*S);
+  ctx.drawImage(img,0,0);
+  ctx.restore();
+}
+// Build the flat mockup (device or plain frame) into its own canvas at S resolution.
+async function buildMockupOffscreen(S){
+  if(activeDevice){
+    const dev=activeDevice;
+    const gfw=document.getElementById('gadget-frame-wrap');
+    const cf=calcFrame();
+    const dw=parseInt(gfw.style.width)||cf.w, dh=parseInt(gfw.style.height)||cf.h;
+    const mc=document.createElement('canvas'); mc.width=Math.max(1,Math.round(dw*S)); mc.height=Math.max(1,Math.round(dh*S));
+    const mx=mc.getContext('2d'); mx.scale(S,S);
+    const bezelImg=await svgToImage(tintBezelSVG(dev.bezel('#000'), chassisTint),dev.vw,dev.vh);
+    const overlayImg=await svgToImage(dev.overlay(),dev.vw,dev.vh);
+    if(bezelImg) mx.drawImage(bezelImg,0,0,dw,dh);
+    const sx=dev.screen.x/dev.vw*dw, sy=dev.screen.y/dev.vh*dh, sw=dev.screen.w/dev.vw*dw, sh=dev.screen.h/dev.vh*dh;
+    const srr=(dev.screenRR||20)/dev.vw*dw;
+    const media=document.getElementById('gadget-img');
+    mx.save(); roundRect(mx,sx,sy,sw,sh,srr); mx.clip();
+    const liveScreenW=parseFloat(document.getElementById('gadget-screen').style.width)||sw;
+    const dr=coverDrawRect(sx,sy,sw,sh,liveScreenW); mx.drawImage(media,dr.mx,dr.my,dr.mw,dr.mh); drawGlare(mx,sx,sy,sw,sh); mx.restore();
+    if(overlayImg) mx.drawImage(overlayImg,0,0,dw,dh);
+    return {canvas:mc,w:dw,h:dh};
+  } else {
+    const cf=calcFrame(); const fw0=cf.w, fh0=cf.h;
+    const br=parseFloat(document.getElementById('mockup-frame').style.borderRadius)||14;
+    const mc=document.createElement('canvas'); mc.width=Math.max(1,Math.round(fw0*S)); mc.height=Math.max(1,Math.round(fh0*S));
+    const mx=mc.getContext('2d'); mx.scale(S,S);
+    roundRect(mx,0,0,fw0,fh0,br); mx.fillStyle='#111'; mx.fill();
+    const src=document.getElementById('mockup-img');
+    mx.save(); roundRect(mx,0,0,fw0,fh0,br); mx.clip();
+    const liveScreenW=parseFloat(document.getElementById('mockup-frame').style.width)||fw0;
+    const dr=coverDrawRect(0,0,fw0,fh0,liveScreenW); mx.drawImage(src,dr.mx,dr.my,dr.mw,dr.mh); drawGlare(mx,0,0,fw0,fh0); mx.restore();
+    mx.save(); roundRect(mx,0,0,fw0,fh0,br); mx.strokeStyle='rgba(255,255,255,0.09)'; mx.lineWidth=1; mx.stroke(); mx.restore();
+    return {canvas:mc,w:fw0,h:fh0};
+  }
+}
+// Warp the offscreen mockup onto ctx with the SAME perspective math CSS uses in preview.
+function drawTiltedMockup(ctx, m, cW, cH, S){
+  const w=m.w, h=m.h, cx=cW/2, cy=cH/2;
+  const ax=tiltX*Math.PI/180, ay=tiltY*Math.PI/180, P=TILT_PF*w;
+  const proj=(u,v)=>{
+    const lx=(u-0.5)*w, ly=(v-0.5)*h;
+    const X=lx*Math.cos(ay), Z=-lx*Math.sin(ay), Y=ly;
+    const y2=Y*Math.cos(ax)-Z*Math.sin(ax);
+    const z2=Y*Math.sin(ax)+Z*Math.cos(ax);
+    const s=P/(P-z2);
+    return [cx+X*s, cy+y2*s];
+  };
+  // soft shadow cast from the projected silhouette
+  const c00=proj(0,0),c10=proj(1,0),c11=proj(1,1),c01=proj(0,1);
+  ctx.save();
+  ctx.shadowColor='rgba(0,0,0,0.5)'; ctx.shadowBlur=70; ctx.shadowOffsetY=28;
+  ctx.beginPath(); ctx.moveTo(c00[0],c00[1]); ctx.lineTo(c10[0],c10[1]); ctx.lineTo(c11[0],c11[1]); ctx.lineTo(c01[0],c01[1]); ctx.closePath();
+  ctx.fillStyle='rgba(0,0,0,0.001)'; ctx.fill();
+  ctx.restore();
+  // mesh warp
+  const N=24, src=m.canvas, sw=src.width, sh=src.height;
+  for(let i=0;i<N;i++) for(let j=0;j<N;j++){
+    const u0=i/N,u1=(i+1)/N,v0=j/N,v1=(j+1)/N;
+    const p00=proj(u0,v0),p10=proj(u1,v0),p11=proj(u1,v1),p01=proj(u0,v1);
+    const ax0=u0*sw,ax1=u1*sw,ay0=v0*sh,ay1=v1*sh;
+    texTri(ctx,src,S, ax0,ay0,ax1,ay0,ax1,ay1, p00,p10,p11);
+    texTri(ctx,src,S, ax0,ay0,ax1,ay1,ax0,ay1, p00,p11,p01);
+  }
+}
 
 /* switchTopTab removed — left/right sidebar layout replaces tabs */
 
@@ -1036,7 +468,7 @@ function applyDevice() {
   const bezelEl = document.getElementById('device-bezel');
   const overlayEl = document.getElementById('device-overlay');
   bezelEl.setAttribute('viewBox', '0 0 '+dev.vw+' '+dev.vh);
-  bezelEl.innerHTML = dev.bezel('#000');         // screen area filled black (under media)
+  bezelEl.innerHTML = tintBezelSVG(dev.bezel('#000'), chassisTint);         // screen area filled black (under media)
   overlayEl.setAttribute('viewBox', '0 0 '+dev.vw+' '+dev.vh);
   overlayEl.innerHTML = dev.overlay();           // notch / island / camera
 
@@ -1148,6 +580,9 @@ function applyCanvasRatio() {
   wrap.style.top=Math.round((area.clientHeight-h)/2)+'px';
   if(activeDevice) sizeGadget(); else sizeFrameToMedia();
   if(typeof texts!=='undefined' && texts.length && prevW && prevH) repositionTextsOnResize(prevW, prevH, w, h);
+  if(typeof overlays!=='undefined' && overlays.length && prevW && prevH) repositionOverlaysOnResize(prevW, prevH, w, h);
+  if(typeof currentSafeZone!=='undefined' && currentSafeZone!=='none') setSafeZone(currentSafeZone);
+  if(typeof applyTilt==='function') applyTilt();
 }
 
 function sizeFrameToMedia() {
@@ -1484,7 +919,7 @@ function showMedia(file){
   hasMedia=true;
   document.getElementById('dl-btn').disabled=false;
   document.getElementById('clear-btn').style.display='flex';
-  document.getElementById('change-btn').style.display='flex';
+  { const _cb=document.getElementById('change-btn'); if(_cb) _cb.style.display='flex'; }
   const zr=document.getElementById('zoom-row'); if(zr) zr.style.display='flex';
   const rb=document.getElementById('reset-pos-btn'); if(rb) rb.style.display='flex';
   // enable drag/zoom on whichever frame is active
@@ -1521,7 +956,7 @@ function showMediaDual(file, i){
     r.readAsDataURL(file);
   }
   document.getElementById('clear-btn').style.display='flex';
-  document.getElementById('change-btn').style.display='flex';
+  { const _cb=document.getElementById('change-btn'); if(_cb) _cb.style.display='flex'; }
 }
 
 function clearMedia(){
@@ -1552,7 +987,7 @@ function clearMedia(){
   if(activeDevice) sizeGadget();
   document.getElementById('dl-btn').disabled=true;
   document.getElementById('clear-btn').style.display='none';
-  document.getElementById('change-btn').style.display='none';
+  { const _cb=document.getElementById('change-btn'); if(_cb) _cb.style.display='none'; }
   document.getElementById('hf').value='';
 }
 
@@ -1587,17 +1022,34 @@ document.getElementById('hbf').addEventListener('change',function(e){
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 function selectFmt(fmt){selectedFmt=fmt;['png','jpg','webp'].forEach(f=>document.getElementById('fmt-'+f).classList.toggle('selected',f===fmt));}
+function selectImgScale(s){
+  imgScale=s;
+  document.querySelectorAll('#scale-toggle .wt-opt').forEach(b=>b.classList.toggle('active', parseInt(b.dataset.s)===s));
+  refreshScaleDim();
+}
+function refreshScaleDim(){
+  const el=document.getElementById('scale-dim'); if(!el) return;
+  const [w,h]=getTargetSize();
+  el.textContent='Exports at '+(w*imgScale)+' × '+(h*imgScale)+' px';
+}
 function selectQ(q){selectedQ=q;['720','1080','1440','4k'].forEach(x=>document.getElementById('q-'+x).classList.toggle('selected',x===q));}
+function selectVidFmt(f){
+  vidFmt=f;
+  document.querySelectorAll('#vidfmt-toggle .wt-opt').forEach(b=>b.classList.toggle('active', b.dataset.vf===f));
+  document.getElementById('vid-qual-block').style.display = (f==='gif') ? 'none' : 'block';
+  document.getElementById('vid-gif-note').style.display = (f==='gif') ? 'block' : 'none';
+}
 function doExport(){
   if(layoutMode==='dual'){
     const any = slots.some(s=>s.hasMedia);
     if(!any) return;
     const anyVid = slots.some(s=>s.hasMedia && s.type==='video');
-    if(anyVid) openModal('vid-modal'); else openModal('img-modal');
+    if(anyVid) openModal('vid-modal'); else { openModal('img-modal'); refreshScaleDim(); }
     return;
   }
   if(!hasMedia)return;
-  if(isVideo)openModal('vid-modal');else openModal('img-modal');
+  if(isVideo){ openModal('vid-modal'); const tn=document.getElementById('vid-tilt-note'); if(tn) tn.style.display=(tiltX!==0||tiltY!==0)?'block':'none'; }
+  else { openModal('img-modal'); refreshScaleDim(); }
 }
 
 /* ── DOWNLOAD NOTICE (toast) ── */
@@ -1707,7 +1159,7 @@ async function confirmVidExportDual(){
   for(const slot of slots){
     if(slot.device){
       layers.push({
-        bezel: await svgToImage(slot.device.bezel('#000'), slot.device.vw, slot.device.vh),
+        bezel: await svgToImage(tintBezelSVG(slot.device.bezel('#000'), chassisTint), slot.device.vw, slot.device.vh),
         overlay: await svgToImage(slot.device.overlay(), slot.device.vw, slot.device.vh)
       });
     } else layers.push(null);
@@ -1752,7 +1204,7 @@ async function confirmVidExportDual(){
       }
       if(layers[i]&&layers[i].overlay) ctx.drawImage(layers[i].overlay,dx,dy,dw,dh);
     });
-    drawTextsOnCanvas(ctx);
+    drawOverlaysOnCanvas(ctx); drawTextsOnCanvas(ctx);
     ctx.restore();
   }
 
@@ -1794,7 +1246,7 @@ async function compositeSlot(ctx, slot, scale, cW, cH){
   ctx.shadowColor='rgba(0,0,0,0.5)';ctx.shadowBlur=70*(dw/600);ctx.shadowOffsetY=26*(dw/600);
   ctx.fillStyle='rgba(0,0,0,0.001)';ctx.fillRect(dx+dw*0.1,dy+dh*0.1,dw*0.8,dh*0.8);
   ctx.restore();
-  const bezelImg=await svgToImage(dev.bezel('#000'), dev.vw, dev.vh);
+  const bezelImg=await svgToImage(tintBezelSVG(dev.bezel('#000'), chassisTint), dev.vw, dev.vh);
   const overlayImg=await svgToImage(dev.overlay(), dev.vw, dev.vh);
   if(bezelImg) ctx.drawImage(bezelImg,dx,dy,dw,dh);
   // screen rect
@@ -1820,7 +1272,7 @@ async function confirmImgExportDual(){
   const wrap=document.getElementById('canvas-wrap');
   const cW=parseInt(wrap.style.width)||wrap.clientWidth;
   const cH=parseInt(wrap.style.height)||wrap.clientHeight;
-  const [tgtW,tgtH]=getTargetSize();
+  const [btW,btH]=getTargetSize(); const tgtW=btW*imgScale, tgtH=btH*imgScale;
   const scale=Math.min(Math.max(tgtW/cW, 1), 14);
   const cvs=document.createElement('canvas'); cvs.width=Math.round(cW*scale); cvs.height=Math.round(cW*scale*tgtH/tgtW);
   const ctx=cvs.getContext('2d'); ctx.scale(scale,scale);
@@ -1830,7 +1282,7 @@ async function confirmImgExportDual(){
     paintExportBackground(ctx, cW, cH, blurPx, bgImg);
     // draw both slots in order (slot 0 first, slot 1 on top — drag z handled visually)
     for(const slot of slots){ await compositeSlot(ctx, slot, scale, cW, cH); }
-    drawTextsOnCanvas(ctx);
+    drawOverlaysOnCanvas(ctx); drawTextsOnCanvas(ctx);
     try{
       const fmtMap={png:'image/png',jpg:'image/jpeg',webp:'image/webp'};
       const link=document.createElement('a');
@@ -1869,7 +1321,7 @@ function confirmImgExport(){
   const cW=parseInt(wrap.style.width)||wrap.clientWidth;
   const cH=parseInt(wrap.style.height)||wrap.clientHeight;
   // Export at the exact chosen pixel size (scale derived from target width)
-  const [tgtW,tgtH]=getTargetSize();
+  const [btW,btH]=getTargetSize(); const tgtW=btW*imgScale, tgtH=btH*imgScale;
   const scale=Math.min(Math.max(tgtW/cW, 1), 14);   // clamp to avoid extreme canvases
   const cvs=document.createElement('canvas');
   cvs.width=Math.round(cW*scale);cvs.height=Math.round(cW*scale*tgtH/tgtW);
@@ -1883,7 +1335,7 @@ function confirmImgExport(){
     try{
       const fmtMap={png:'image/png',jpg:'image/jpeg',webp:'image/webp'};
       const link=document.createElement('a');
-      link.download='mockup-'+getTargetSize().join('x')+'.'+selectedFmt;
+      link.download='mockup-'+Math.round(tgtW)+'x'+Math.round(tgtH)+(imgScale>1?'@'+imgScale+'x':'')+'.'+selectedFmt;
       link.href=cvs.toDataURL(fmtMap[selectedFmt]||'image/png',0.95);link.click();
       showExportDone('Image downloaded');
     }catch(err){
@@ -1895,6 +1347,15 @@ function confirmImgExport(){
 
   async function draw(bgImg){
     paintExportBackground(ctx, cW, cH, blurPx, bgImg);
+
+    if(tiltX!==0 || tiltY!==0){
+      // ── 3D tilt: render the flat mockup offscreen, then perspective-warp it ──
+      const m = await buildMockupOffscreen(scale);
+      drawTiltedMockup(ctx, m, cW, cH, scale);
+      drawOverlaysOnCanvas(ctx); drawTextsOnCanvas(ctx);
+      finish();
+      return;
+    }
 
     if(activeDevice){
       // ── Composite the full device: bezel → media (clipped to screen) → overlay ──
@@ -1912,7 +1373,7 @@ function confirmImgExport(){
       ctx.fillRect(dx+dw*0.1, dy+dh*0.1, dw*0.8, dh*0.8);
       ctx.restore();
 
-      const bezelImg = await svgToImage(dev.bezel('#000'), dev.vw, dev.vh);
+      const bezelImg = await svgToImage(tintBezelSVG(dev.bezel('#000'), chassisTint), dev.vw, dev.vh);
       const overlayImg = await svgToImage(dev.overlay(), dev.vw, dev.vh);
 
       // 1. bezel under
@@ -1931,12 +1392,13 @@ function confirmImgExport(){
       const liveScreenW = parseFloat(document.getElementById('gadget-screen').style.width)||sw;
       const dr = coverDrawRect(sx, sy, sw, sh, liveScreenW);
       ctx.drawImage(media, dr.mx, dr.my, dr.mw, dr.mh);
+      drawGlare(ctx, sx, sy, sw, sh);
       ctx.restore();
 
       // 3. overlay (notch) on top
       if(overlayImg) ctx.drawImage(overlayImg, dx, dy, dw, dh);
 
-      drawTextsOnCanvas(ctx);
+      drawOverlaysOnCanvas(ctx); drawTextsOnCanvas(ctx);
       finish();
     } else {
       // ── Plain frame ──
@@ -1950,9 +1412,10 @@ function confirmImgExport(){
       const liveScreenW = parseFloat(document.getElementById('mockup-frame').style.width)||fw;
       const dr = coverDrawRect(fx, fy, fw, fh, liveScreenW);
       ctx.drawImage(src, dr.mx, dr.my, dr.mw, dr.mh);
+      drawGlare(ctx, fx, fy, fw, fh);
       ctx.restore();
       ctx.save();roundRect(ctx,fx,fy,fw,fh,br);ctx.strokeStyle='rgba(255,255,255,0.09)';ctx.lineWidth=1;ctx.stroke();ctx.restore();
-      drawTextsOnCanvas(ctx);
+      drawOverlaysOnCanvas(ctx); drawTextsOnCanvas(ctx);
       finish();
     }
   }
@@ -2001,7 +1464,7 @@ async function confirmVidExport(){
     sh = dev.screen.h/dev.vh*dh;
     srr = (dev.screenRR||20)/dev.vw*dw;
     // Pre-rasterize bezel + overlay
-    bezelImg   = await svgToImage(dev.bezel('#000'), dev.vw, dev.vh);
+    bezelImg   = await svgToImage(tintBezelSVG(dev.bezel('#000'), chassisTint), dev.vw, dev.vh);
     overlayImg = await svgToImage(dev.overlay(), dev.vw, dev.vh);
   } else {
     const padFraction=padPct/100;
@@ -2032,7 +1495,7 @@ async function confirmVidExport(){
       ctx.save();roundRect(ctx,sx,sy,sw,sh,srr);ctx.clip();
       const liveScreenW=parseFloat(document.getElementById('gadget-screen').style.width)||sw;
       const dr=coverDrawRect(sx,sy,sw,sh,liveScreenW);
-      ctx.drawImage(vid,dr.mx,dr.my,dr.mw,dr.mh);ctx.restore();
+      ctx.drawImage(vid,dr.mx,dr.my,dr.mw,dr.mh);drawGlare(ctx,sx,sy,sw,sh);ctx.restore();
       // overlay notch
       if(overlayImg) ctx.drawImage(overlayImg,dx,dy,dw,dh);
     } else {
@@ -2043,7 +1506,7 @@ async function confirmVidExport(){
       ctx.save();roundRect(ctx,vx,vy,nativeW,nativeH,br);ctx.clip();
       const liveScreenW=parseFloat(document.getElementById('mockup-frame').style.width)||nativeW;
       const dr=coverDrawRect(vx,vy,nativeW,nativeH,liveScreenW);
-      ctx.drawImage(vid,dr.mx,dr.my,dr.mw,dr.mh);ctx.restore();
+      ctx.drawImage(vid,dr.mx,dr.my,dr.mw,dr.mh);drawGlare(ctx,vx,vy,nativeW,nativeH);ctx.restore();
       ctx.save();roundRect(ctx,vx,vy,nativeW,nativeH,br);ctx.strokeStyle='rgba(255,255,255,0.09)';ctx.lineWidth=1;ctx.stroke();ctx.restore();
     }
     // Text overlays (transformed to video-export space, anchored on device/frame center)
@@ -2053,6 +1516,7 @@ async function confirmVidExport(){
         : (parseFloat(document.getElementById('mockup-frame').style.width)||nativeW);
       const frameExportW = activeDevice ? dw : nativeW;
       const tt = textTransformForVideo(outW, outH, frameExportW, liveFrameW);
+      drawOverlaysOnCanvas(ctx, tt.ox, tt.oy, tt.k);
       drawTextsOnCanvas(ctx, tt.ox, tt.oy, tt.k);
     }
   }
@@ -2094,10 +1558,57 @@ async function confirmVidExport(){
     }).catch(()=>{ vid.muted=true; vid.play(); });
   }
 
+  // ── GIF capture: seek to discrete timestamps, draw each frame, quantize + encode ──
+  function startGif(bgImg){
+    const fps=12;
+    const duration=Math.min(vid.duration||4, 6);          // cap GIF length for sane file size
+    const totalFrames=Math.max(2, Math.round(duration*fps));
+    const delayCs=Math.round(100/fps);
+    const maxEdge=720;
+    let gw=outW, gh=outH;
+    if(Math.max(gw,gh)>maxEdge){ const r=maxEdge/Math.max(gw,gh); gw=Math.round(gw*r); gh=Math.round(gh*r); }
+    gw-=gw%2; gh-=gh%2;
+    const gcvs=document.createElement('canvas'); gcvs.width=gw; gcvs.height=gh;
+    const gctx=gcvs.getContext('2d');
+    const transparent = (bgType==='none');
+    const frames=[]; let i=0;
+    vid.pause(); vid.muted=true;
+    const grab=()=>{
+      if(i>=totalFrames){ encode(); return; }
+      const t=Math.min(duration, i/fps);
+      const onSeek=()=>{
+        vid.removeEventListener('seeked', onSeek);
+        drawFrame(bgImg);
+        gctx.clearRect(0,0,gw,gh);
+        if(transparent){ gctx.fillStyle='#0a0a0b'; gctx.fillRect(0,0,gw,gh); } // GIF can't hold alpha well
+        gctx.drawImage(cvs,0,0,gw,gh);
+        frames.push(gctx.getImageData(0,0,gw,gh));
+        updateExportNotice('Rendering GIF '+Math.round((i+1)/totalFrames*100)+'%');
+        i++; grab();
+      };
+      vid.addEventListener('seeked', onSeek);
+      vid.currentTime=t;
+    };
+    const encode=()=>{
+      updateExportNotice('Encoding GIF...');
+      setTimeout(()=>{
+        try{
+          const bytes=encodeAnimatedGif(frames, gw, gh, delayCs);
+          const blob=new Blob([bytes],{type:'image/gif'});
+          const url=URL.createObjectURL(blob);
+          const a=document.createElement('a'); a.href=url; a.download='mockup-'+gw+'x'+gh+'.gif'; a.click();
+          URL.revokeObjectURL(url); showExportDone('GIF downloaded');
+        }catch(err){ console.error('GIF export failed:',err); updateExportNotice('GIF export failed.'); setTimeout(hideExportNotice,2500); }
+      }, 60);
+    };
+    grab();
+  }
+
+  const launch = (bg)=> (vidFmt==='gif' ? startGif(bg) : startRec(bg));
   if(bgType==='image' && bgValue){
     const bi=new Image(); bi.crossOrigin='anonymous';
-    bi.onload=()=>startRec(bi); bi.onerror=()=>startRec(null); bi.src=bgValue;
-  } else { startRec(null); }
+    bi.onload=()=>launch(bi); bi.onerror=()=>launch(null); bi.src=bgValue;
+  } else { launch(null); }
 }
 
 // Compute media draw rect inside a screen, honoring cover-fit + mediaScale + offsets.
@@ -2219,7 +1730,7 @@ function renderDualStage(){
     const dev=slot.device;
     const wrap=document.createElement('div'); wrap.className='inst-wrap';
     wrap.innerHTML =
-      '<svg class="inst-bezel" viewBox="0 0 '+dev.vw+' '+dev.vh+'">'+dev.bezel('#000')+'</svg>'+
+      '<svg class="inst-bezel" viewBox="0 0 '+dev.vw+' '+dev.vh+'">'+tintBezelSVG(dev.bezel('#000'), chassisTint)+'</svg>'+
       '<div class="inst-screen"><img alt=""><video autoplay loop playsinline></video></div>'+
       '<svg class="inst-overlay" viewBox="0 0 '+dev.vw+' '+dev.vh+'">'+dev.overlay()+'</svg>'+
       '<div class="inst-drop"><div class="dz-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9l4-4 5 5 4-4 5 5"/><circle cx="8.5" cy="8.5" r="1.5"/></svg></div><div class="dz-title">Upload</div><div class="dz-sub">image / video</div></div>';
@@ -2497,9 +2008,10 @@ function bindTextEl(el, id){
     if(Math.abs(dx)>3||Math.abs(dy)>3) moved=true;
     const t = texts.find(x=>x.id===id);
     t.x=Math.round(bx+dx); t.y=Math.round(by+dy);
+    if(typeof applySnap==='function'){ const sn=applySnap(t.x,t.y,el.offsetWidth,el.offsetHeight); t.x=sn.x; t.y=sn.y; }
     el.style.left=t.x+'px'; el.style.top=t.y+'px';
   });
-  const up=e=>{ if(!down)return; down=false; el.classList.remove('dragging'); try{el.releasePointerCapture(e.pointerId);}catch(_){} };
+  const up=e=>{ if(!down)return; down=false; el.classList.remove('dragging'); if(typeof clearSnap==='function')clearSnap(); try{el.releasePointerCapture(e.pointerId);}catch(_){} };
   el.addEventListener('pointerup', up);
   el.addEventListener('pointercancel', up);
   // double-click → edit mode
@@ -2572,12 +2084,488 @@ function textTransformForVideo(outW, outH, frameExportW, liveFrameW){
   return {ox,oy,k};
 }
 
+/* ══════════════════════════════════════════════════════
+   ELEMENTS — floating logos, badges, stickers & annotations.
+   Mirrors the text-layer pattern: state array → renderOverlays()
+   (DOM) → drag/resize → drawOverlaysOnCanvas() (both export paths).
+   Positions are in preview canvas-wrap px, exactly like texts.
+══════════════════════════════════════════════════════ */
+let overlays = [];            // {id, kind, x, y, w, h, rot, color, thick, num, src, _img}
+let selectedOvId = null;
+let ovIdCounter = 0;
+let ovBadgeNum = 0;           // running counter for numbered badges
+
+function curOv(){ return overlays.find(o=>o.id===selectedOvId); }
+
+/* ---- Marketing badge library (stylised, render as SVG → image) ---- */
+const BADGES = [
+  { name:'App Store', w:200, h:60, svg:(c,h)=>`<svg xmlns="http://www.w3.org/2000/svg" width="200" height="60" viewBox="0 0 200 60"><rect x="1" y="1" width="198" height="58" rx="12" fill="#000" stroke="#fff" stroke-width="1"/><path d="M44 22.5c-1.6 0-3 1-3.9 1-1 0-2.2-.9-3.6-.9-1.9 0-3.6 1.1-4.6 2.8-2 3.4-.5 8.5 1.4 11.3.9 1.3 2 2.8 3.4 2.8 1.4-.1 1.9-.9 3.5-.9 1.6 0 2.1.9 3.6.9 1.5 0 2.4-1.4 3.3-2.7.6-.9.9-1.4 1.4-2.4-3.6-1.4-4.2-6.5-.6-8.5-1.1-1.4-2.6-2.2-4.3-2.2zm-.2-4c.9-1.1 1.5-2.6 1.3-4.1-1.3.1-2.8.9-3.7 1.9-.8.9-1.5 2.4-1.3 3.8 1.4.1 2.8-.7 3.7-1.6z" fill="#fff"/><text x="60" y="26" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#fff">Download on the</text><text x="60" y="44" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="20" font-weight="600" fill="#fff">App Store</text></svg>` },
+  { name:'Google Play', w:210, h:60, svg:()=>`<svg xmlns="http://www.w3.org/2000/svg" width="210" height="60" viewBox="0 0 210 60"><rect x="1" y="1" width="208" height="58" rx="12" fill="#000" stroke="#fff" stroke-width="1"/><g transform="translate(20 16)"><path d="M0 0v28l15-14z" fill="#00d3ff"/><path d="M0 0l19 11 4-4z" fill="#00f076"/><path d="M0 28l19-11 4 4z" fill="#fd5"/><path d="M19 11l8 5-4 4-4-4 4-4z" fill="#f44"/><path d="M19 11l8 5-4 4z" fill="#f44"/><path d="M19 17l8-1-4 4z" fill="#e33"/></g><text x="60" y="26" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#fff">GET IT ON</text><text x="60" y="44" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="20" font-weight="600" fill="#fff">Google Play</text></svg>` },
+  { name:'Product Hunt', w:210, h:60, svg:()=>`<svg xmlns="http://www.w3.org/2000/svg" width="210" height="60" viewBox="0 0 210 60"><rect x="1" y="1" width="208" height="58" rx="12" fill="#da552f"/><circle cx="30" cy="30" r="16" fill="#fff"/><path d="M26 21h8a6 6 0 0 1 0 12h-4v6h-4zm4 4v4h4a2 2 0 0 0 0-4z" fill="#da552f"/><text x="56" y="26" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10" fill="#fff" opacity=".85">FEATURED ON</text><text x="56" y="44" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="18" font-weight="700" fill="#fff">Product Hunt</text></svg>` },
+  { name:'NEW pill', w:96, h:42, svg:()=>`<svg xmlns="http://www.w3.org/2000/svg" width="96" height="42" viewBox="0 0 96 42"><rect x="1" y="1" width="94" height="40" rx="20" fill="#f97316"/><text x="48" y="28" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="18" font-weight="800" fill="#fff" text-anchor="middle" letter-spacing="1">NEW</text></svg>` },
+  { name:'Coming Soon', w:150, h:42, svg:()=>`<svg xmlns="http://www.w3.org/2000/svg" width="150" height="42" viewBox="0 0 150 42"><rect x="1" y="1" width="148" height="40" rx="20" fill="none" stroke="#fff" stroke-width="2"/><text x="75" y="27" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="14" font-weight="700" fill="#fff" text-anchor="middle" letter-spacing="1">COMING SOON</text></svg>` },
+];
+function svgDataUrl(svg){ return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg); }
+function buildBadgeGrid(){
+  const grid=document.getElementById('badge-grid'); if(!grid) return;
+  BADGES.forEach((b,i)=>{
+    const btn=document.createElement('button');
+    btn.type='button'; btn.className='badge-btn';
+    btn.innerHTML=b.svg('#fff',60);
+    btn.onclick=()=>addBadge(i);
+    grid.appendChild(btn);
+  });
+}
+
+function canvasPx(){
+  const wrap=document.getElementById('canvas-wrap');
+  return [parseFloat(wrap.style.width)||wrap.clientWidth||800, parseFloat(wrap.style.height)||wrap.clientHeight||450];
+}
+
+/* ---- Add elements ---- */
+function addImageOverlay(src){
+  const [cw,ch]=canvasPx();
+  const img=new Image();
+  img.onload=()=>{
+    const ar=img.naturalWidth/img.naturalHeight || 1;
+    const w=Math.min(cw*0.32, 200), h=w/ar;
+    const o={id:++ovIdCounter, kind:'image', x:Math.round(cw/2-w/2), y:Math.round(ch/2-h/2), w:Math.round(w), h:Math.round(h), rot:0, src, _img:img};
+    overlays.push(o); renderOverlays(); selectOv(o.id);
+  };
+  img.onerror=()=>{ showExportNotice('Could not load that image.'); setTimeout(hideExportNotice,2000); };
+  img.src=src;
+}
+function addBadge(i){
+  const b=BADGES[i]; const svg=b.svg('#fff',60); const src=svgDataUrl(svg);
+  const [cw,ch]=canvasPx();
+  const ar=b.w/b.h;
+  const w=Math.min(cw*0.3, b.w*1.4), h=w/ar;
+  const img=new Image();
+  img.onload=()=>{ renderOverlays(); };
+  img.src=src;
+  const o={id:++ovIdCounter, kind:'image', x:Math.round(cw/2-w/2), y:Math.round(ch*0.7), w:Math.round(w), h:Math.round(h), rot:0, src, _img:img};
+  overlays.push(o); renderOverlays(); selectOv(o.id);
+}
+function addAnnotation(kind){
+  const [cw,ch]=canvasPx();
+  let o={id:++ovIdCounter, kind, rot:0, color:'#f97316'};
+  if(kind==='arrow'){ o.x=Math.round(cw*0.4); o.y=Math.round(ch*0.55); o.w=Math.round(cw*0.16); o.h=-Math.round(ch*0.16); o.thick=4; }
+  else if(kind==='circle'){ const d=Math.round(Math.min(cw,ch)*0.22); o.x=Math.round(cw/2-d/2); o.y=Math.round(ch/2-d/2); o.w=d; o.h=Math.round(d*0.75); o.thick=4; }
+  else if(kind==='badge'){ const d=44; o.x=Math.round(cw/2-d/2); o.y=Math.round(ch*0.35); o.w=d; o.h=d; o.num=++ovBadgeNum; }
+  overlays.push(o); renderOverlays(); selectOv(o.id);
+}
+
+/* ---- Geometry helper shared by preview + export ---- */
+function arrowGeo(x0,y0,x1,y1,thick){
+  const ang=Math.atan2(y1-y0,x1-x0);
+  const hl=thick*3.2+9, hw=thick*1.6+5;
+  // shorten the shaft so it ends at the base of the head
+  const bx=x1-Math.cos(ang)*hl, by=y1-Math.sin(ang)*hl;
+  const lx=x1-Math.cos(ang)*hl-Math.sin(ang)*hw, ly=y1-Math.sin(ang)*hl+Math.cos(ang)*hw;
+  const rx=x1-Math.cos(ang)*hl+Math.sin(ang)*hw, ry=y1-Math.sin(ang)*hl-Math.cos(ang)*hw;
+  return {shaft:[x0,y0,bx,by], head:[x1,y1,lx,ly,rx,ry]};
+}
+
+/* ---- Render to DOM ---- */
+function ovBBox(o){
+  if(o.kind==='arrow'){
+    const pad=(o.thick||4)*3.2+14;
+    const left=Math.min(o.x,o.x+o.w)-pad, top=Math.min(o.y,o.y+o.h)-pad;
+    return {left, top, w:Math.abs(o.w)+pad*2, h:Math.abs(o.h)+pad*2};
+  }
+  return {left:o.x, top:o.y, w:o.w, h:o.h};
+}
+function ovInnerSVG(o, bb){
+  if(o.kind==='image') return '<img src="'+o.src+'" alt="">';
+  if(o.kind==='circle'){
+    const sw=o.thick||4;
+    return '<svg viewBox="0 0 '+o.w+' '+o.h+'" preserveAspectRatio="none"><ellipse cx="'+(o.w/2)+'" cy="'+(o.h/2)+'" rx="'+(o.w/2-sw)+'" ry="'+(o.h/2-sw)+'" fill="none" stroke="'+o.color+'" stroke-width="'+sw+'"/></svg>';
+  }
+  if(o.kind==='badge'){
+    return '<svg viewBox="0 0 '+o.w+' '+o.h+'"><circle cx="'+(o.w/2)+'" cy="'+(o.h/2)+'" r="'+(o.w/2-1)+'" fill="'+o.color+'"/><text x="'+(o.w/2)+'" y="'+(o.h/2)+'" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="'+(o.w*0.55)+'" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">'+o.num+'</text></svg>';
+  }
+  if(o.kind==='arrow'){
+    const g=arrowGeo(o.x-bb.left, o.y-bb.top, o.x+o.w-bb.left, o.y+o.h-bb.top, o.thick||4);
+    return '<svg viewBox="0 0 '+bb.w+' '+bb.h+'">'
+      +'<line x1="'+g.shaft[0]+'" y1="'+g.shaft[1]+'" x2="'+g.shaft[2]+'" y2="'+g.shaft[3]+'" stroke="'+o.color+'" stroke-width="'+(o.thick||4)+'" stroke-linecap="round"/>'
+      +'<polygon points="'+g.head[0]+','+g.head[1]+' '+g.head[2]+','+g.head[3]+' '+g.head[4]+','+g.head[5]+'" fill="'+o.color+'"/></svg>';
+  }
+  return '';
+}
+function renderOverlays(){
+  const layer=document.getElementById('overlay-layer');
+  layer.innerHTML='';
+  overlays.forEach(o=>{
+    const bb=ovBBox(o);
+    const el=document.createElement('div');
+    el.className='ov-item kind-'+o.kind+(o.id===selectedOvId?' selected':'');
+    el.dataset.id=o.id;
+    el.style.left=bb.left+'px'; el.style.top=bb.top+'px';
+    el.style.width=bb.w+'px'; el.style.height=bb.h+'px';
+    if(o.rot) el.style.transform='rotate('+o.rot+'deg)';
+    el.innerHTML=ovInnerSVG(o,bb)+'<div class="ov-handle"></div>';
+    // position resize handle at the arrow tip
+    if(o.kind==='arrow'){
+      const hx=o.x+o.w-bb.left, hy=o.y+o.h-bb.top;
+      const hd=el.querySelector('.ov-handle');
+      hd.style.left=(hx-6.5)+'px'; hd.style.top=(hy-6.5)+'px'; hd.style.right='auto'; hd.style.bottom='auto';
+    }
+    layer.appendChild(el);
+    bindOvEl(el, o.id);
+  });
+  renderOvList();
+}
+function ovLabel(o){
+  if(o.kind==='image') return 'Logo / image';
+  if(o.kind==='arrow') return 'Arrow';
+  if(o.kind==='circle') return 'Accent circle';
+  if(o.kind==='badge') return 'Badge '+o.num;
+  return 'Element';
+}
+function renderOvList(){
+  const list=document.getElementById('el-list'); if(!list) return;
+  list.innerHTML='';
+  overlays.forEach(o=>{
+    const item=document.createElement('div');
+    item.className='el-list-item'+(o.id===selectedOvId?' active':'');
+    item.innerHTML='<span class="eli-text">'+ovLabel(o)+'</span>'
+      +'<span class="eli-del"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/></svg></span>';
+    item.onclick=(e)=>{ if(e.target.closest('.eli-del')){ deleteOv(o.id); e.stopPropagation(); return; } selectOv(o.id); };
+    list.appendChild(item);
+  });
+}
+
+/* ---- Selection + inspector ---- */
+function selectOv(id){
+  selectedOvId=id;
+  document.querySelectorAll('#overlay-layer .ov-item').forEach(el=>el.classList.toggle('selected', parseInt(el.dataset.id)===id));
+  const o=curOv();
+  const insp=document.getElementById('el-inspect');
+  if(!o){ insp.classList.remove('active'); renderOvList(); return; }
+  insp.classList.add('active');
+  const isImg=o.kind==='image', isArrow=o.kind==='arrow', isShape=(o.kind==='circle'||o.kind==='arrow');
+  document.getElementById('el-inspect-size').style.display = isArrow ? 'none':'block';
+  document.getElementById('el-inspect-rot').style.display = isImg ? 'block':'none';
+  document.getElementById('el-inspect-color').style.display = (o.kind==='image') ? 'none':'block';
+  document.getElementById('el-inspect-thick').style.display = isShape ? 'block':'none';
+  if(!isArrow){ document.getElementById('el-size').value=o.w; document.getElementById('el-size-val').textContent=Math.round(o.w)+'px'; }
+  if(isImg){ document.getElementById('el-rot').value=o.rot||0; document.getElementById('el-rot-val').textContent=(o.rot||0)+'°'; }
+  if(o.color){ document.getElementById('el-color').value=o.color; document.getElementById('el-color-hex').value=o.color; }
+  if(o.thick){ document.getElementById('el-thick').value=o.thick; document.getElementById('el-thick-val').textContent=o.thick+'px'; }
+  renderOvList();
+}
+function updateElSize(v){ const o=curOv(); if(!o)return; v=parseInt(v); document.getElementById('el-size-val').textContent=v+'px';
+  if(o.kind==='image'){ const ar=(o._img&&o._img.naturalWidth)?o._img.naturalWidth/o._img.naturalHeight:o.w/o.h; o.h=Math.round(v/ar); }
+  else if(o.kind==='circle'){ const ar=o.w/o.h; o.h=Math.round(v/ar); }
+  else if(o.kind==='badge'){ o.h=v; }
+  o.w=v; renderOverlays(); }
+function updateElRot(v){ const o=curOv(); if(!o)return; o.rot=parseInt(v); document.getElementById('el-rot-val').textContent=v+'°'; renderOverlays(); }
+function updateElColor(v){ const o=curOv(); if(!o)return; o.color=v; document.getElementById('el-color-hex').value=v; renderOverlays(); }
+function updateElColorHex(v){ if(!/^#[0-9a-fA-F]{6}$/.test(v))return; const o=curOv(); if(!o)return; o.color=v; document.getElementById('el-color').value=v; renderOverlays(); }
+function updateElThick(v){ const o=curOv(); if(!o)return; o.thick=parseInt(v); document.getElementById('el-thick-val').textContent=v+'px'; renderOverlays(); }
+function deleteOv(id){ overlays=overlays.filter(o=>o.id!==id); if(selectedOvId===id){ selectedOvId=null; document.getElementById('el-inspect').classList.remove('active'); } renderOverlays(); }
+function deleteSelectedEl(){ if(selectedOvId!=null) deleteOv(selectedOvId); }
+
+/* ---- Drag body + resize handle ---- */
+function bindOvEl(el, id){
+  const handle=el.querySelector('.ov-handle');
+  let down=false, resizing=false, sx=0, sy=0, ox=0, oy=0, ow=0, oh=0;
+  const onDown=(e, isResize)=>{
+    selectOv(id); const o=overlays.find(x=>x.id===id); if(!o) return;
+    down=true; resizing=isResize; sx=e.clientX; sy=e.clientY;
+    ox=o.x; oy=o.y; ow=o.w; oh=o.h;
+    el.classList.add('dragging'); el.setPointerCapture(e.pointerId); e.preventDefault(); e.stopPropagation();
+  };
+  el.addEventListener('pointerdown', e=>onDown(e,false));
+  handle.addEventListener('pointerdown', e=>onDown(e,true));
+  el.addEventListener('pointermove', e=>{
+    if(!down) return;
+    const o=overlays.find(x=>x.id===id); if(!o) return;
+    const dx=e.clientX-sx, dy=e.clientY-sy;
+    if(resizing){
+      if(o.kind==='arrow'){ o.w=Math.round(ow+dx); o.h=Math.round(oh+dy); }
+      else if(o.kind==='image'){ const ar=(o._img&&o._img.naturalWidth)?o._img.naturalWidth/o._img.naturalHeight:ow/oh; let nw=Math.max(20,Math.round(ow+dx)); o.w=nw; o.h=Math.round(nw/ar); }
+      else if(o.kind==='circle'){ o.w=Math.max(20,Math.round(ow+dx)); o.h=Math.max(15,Math.round(oh+dy)); }
+      else { const nw=Math.max(20,Math.round(ow+dx)); o.w=nw; o.h=nw; }
+    } else {
+      o.x=Math.round(ox+dx); o.y=Math.round(oy+dy);
+      const bb=ovBBox(o); const sn=applySnap(bb.left,bb.top,bb.w,bb.h);
+      o.x+=Math.round(sn.x-bb.left); o.y+=Math.round(sn.y-bb.top);
+    }
+    renderOverlays();
+  });
+  const up=e=>{ if(!down)return; down=false; resizing=false; el.classList.remove('dragging'); clearSnap(); try{el.releasePointerCapture(e.pointerId);}catch(_){}
+    if(selectedOvId===id) selectOv(id); };
+  el.addEventListener('pointerup', up);
+  el.addEventListener('pointercancel', up);
+}
+
+/* Click empty canvas → deselect element */
+document.getElementById('work-area').addEventListener('pointerdown', e=>{
+  if(e.target.closest('.ov-item')||e.target.closest('.text-block')) return;
+  if(selectedOvId!=null){ selectedOvId=null; document.getElementById('el-inspect').classList.remove('active'); renderOverlays(); }
+});
+
+/* Keep elements proportional when the canvas resizes */
+function repositionOverlaysOnResize(prevW, prevH, newW, newH){
+  if(!prevW||!prevH) return;
+  const fx=newW/prevW, fy=newH/prevH, fs=Math.min(fx,fy);
+  overlays.forEach(o=>{ o.x=Math.round(o.x*fx); o.y=Math.round(o.y*fy); o.w=Math.round(o.w*fs); o.h=Math.round(o.h*fs); });
+  renderOverlays();
+}
+
+/* ---- Draw all elements onto an export canvas (called in both paths) ---- */
+function drawOverlaysOnCanvas(ctx, ox, oy, k){
+  ox=ox||0; oy=oy||0; k=k||1;
+  overlays.forEach(o=>{
+    ctx.save();
+    if(o.kind==='image'){
+      const img=o._img; if(!img||!img.complete||!img.naturalWidth){ ctx.restore(); return; }
+      const x=ox+o.x*k, y=oy+o.y*k, w=o.w*k, h=o.h*k;
+      if(o.rot){ ctx.translate(x+w/2,y+h/2); ctx.rotate(o.rot*Math.PI/180); ctx.drawImage(img,-w/2,-h/2,w,h); }
+      else ctx.drawImage(img,x,y,w,h);
+    } else if(o.kind==='circle'){
+      const cx=ox+(o.x+o.w/2)*k, cy=oy+(o.y+o.h/2)*k;
+      const sw=(o.thick||4)*k;
+      ctx.beginPath(); ctx.ellipse(cx,cy,Math.max(1,(o.w/2-(o.thick||4))*k),Math.max(1,(o.h/2-(o.thick||4))*k),0,0,Math.PI*2);
+      ctx.strokeStyle=o.color; ctx.lineWidth=sw; ctx.stroke();
+    } else if(o.kind==='arrow'){
+      const g=arrowGeo(ox+o.x*k, oy+o.y*k, ox+(o.x+o.w)*k, oy+(o.y+o.h)*k, (o.thick||4)*k);
+      ctx.strokeStyle=o.color; ctx.fillStyle=o.color; ctx.lineWidth=(o.thick||4)*k; ctx.lineCap='round';
+      ctx.beginPath(); ctx.moveTo(g.shaft[0],g.shaft[1]); ctx.lineTo(g.shaft[2],g.shaft[3]); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(g.head[0],g.head[1]); ctx.lineTo(g.head[2],g.head[3]); ctx.lineTo(g.head[4],g.head[5]); ctx.closePath(); ctx.fill();
+    } else if(o.kind==='badge'){
+      const cx=ox+(o.x+o.w/2)*k, cy=oy+(o.y+o.h/2)*k, r=(o.w/2)*k;
+      ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fillStyle=o.color; ctx.fill();
+      ctx.fillStyle='#fff'; ctx.font='700 '+(o.w*0.55*k)+'px -apple-system,BlinkMacSystemFont,Inter,"Segoe UI",sans-serif';
+      ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(String(o.num), cx, cy+r*0.04);
+    }
+    ctx.restore();
+  });
+}
+
+/* Asset upload */
+document.getElementById('haf').addEventListener('change', e=>{
+  const file=e.target.files&&e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>addImageOverlay(ev.target.result);
+  reader.readAsDataURL(file);
+  e.target.value='';
+});
+
+/* ══════════════════════════════════════════════════════
+   SMART ALIGNMENT, SNAP, GRID & SOCIAL SAFE-ZONES
+   All guides are screen-only (inside #guide-layer, never exported).
+══════════════════════════════════════════════════════ */
+const SNAP_THRESH = 6;
+function applySnap(x, y, w, h){
+  const [cw,ch]=canvasPx();
+  const sv=document.getElementById('snap-v'), sh=document.getElementById('snap-h');
+  let snX=false, snY=false; const cx=x+w/2, cy=y+h/2;
+  if(Math.abs(cx-cw/2)<=SNAP_THRESH){ x=Math.round(cw/2-w/2); snX=true; }
+  else if(Math.abs(x)<=SNAP_THRESH){ x=0; }
+  else if(Math.abs(x+w-cw)<=SNAP_THRESH){ x=cw-w; }
+  if(Math.abs(cy-ch/2)<=SNAP_THRESH){ y=Math.round(ch/2-h/2); snY=true; }
+  else if(Math.abs(y)<=SNAP_THRESH){ y=0; }
+  else if(Math.abs(y+h-ch)<=SNAP_THRESH){ y=ch-h; }
+  if(sv){ sv.style.left=(cw/2)+'px'; sv.classList.toggle('on',snX); }
+  if(sh){ sh.style.top=(ch/2)+'px'; sh.classList.toggle('on',snY); }
+  return {x,y};
+}
+function clearSnap(){ const sv=document.getElementById('snap-v'),sh=document.getElementById('snap-h'); if(sv)sv.classList.remove('on'); if(sh)sh.classList.remove('on'); }
+
+function alignedTarget(){
+  if(selectedOvId!=null){ const o=curOv(); if(o) return {type:'ov', o}; }
+  if(typeof selectedTextId!=='undefined' && selectedTextId!=null){ const t=texts.find(x=>x.id===selectedTextId); if(t) return {type:'text', t}; }
+  return null;
+}
+function alignSelected(mode){
+  const tg=alignedTarget();
+  if(!tg){ showExportNotice('Select a text or element to align it.'); setTimeout(hideExportNotice,1600); return; }
+  const [cw,ch]=canvasPx();
+  if(tg.type==='ov'){
+    const o=tg.o, bb=ovBBox(o); let nl=bb.left, nt=bb.top;
+    if(mode==='left') nl=0; else if(mode==='right') nl=cw-bb.w; else if(mode==='centerH'||mode==='center') nl=(cw-bb.w)/2;
+    if(mode==='top') nt=0; else if(mode==='bottom') nt=ch-bb.h; else if(mode==='centerV'||mode==='center') nt=(ch-bb.h)/2;
+    o.x+=Math.round(nl-bb.left); o.y+=Math.round(nt-bb.top); renderOverlays();
+  } else {
+    const t=tg.t, el=document.querySelector('#text-layer .text-block[data-id="'+t.id+'"]');
+    const w=el?el.offsetWidth:120, h=el?el.offsetHeight:40;
+    if(mode==='left') t.x=0; else if(mode==='right') t.x=cw-w; else if(mode==='centerH'||mode==='center') t.x=Math.round((cw-w)/2);
+    if(mode==='top') t.y=0; else if(mode==='bottom') t.y=ch-h; else if(mode==='centerV'||mode==='center') t.y=Math.round((ch-h)/2);
+    renderTexts();
+  }
+}
+
+function toggleGrid(on){ document.getElementById('guide-grid').classList.toggle('on', !!on); }
+
+const SAFE_ZONES = {
+  'ig-square':{ar:1, label:'Square 1:1'}, 'ig-portrait':{ar:4/5, label:'Portrait 4:5'},
+  'story':{ar:9/16, label:'Story 9:16'}, 'x-post':{ar:16/9, label:'X 16:9'}, 'og':{ar:1.91, label:'OG 1.91:1'}
+};
+let currentSafeZone='none';
+function setSafeZone(key){
+  currentSafeZone=key;
+  const host=document.getElementById('safe-zone-host'); if(!host) return;
+  host.innerHTML='';
+  const z=SAFE_ZONES[key]; if(!z) return;
+  const [cw,ch]=canvasPx();
+  let w=cw, h=w/z.ar; if(h>ch){ h=ch; w=h*z.ar; }
+  const box=document.createElement('div'); box.className='safe-zone';
+  box.style.width=w+'px'; box.style.height=h+'px';
+  box.style.left=((cw-w)/2)+'px'; box.style.top=((ch-h)/2)+'px';
+  box.innerHTML='<span class="sz-lbl">Safe area · '+z.label+'</span>';
+  host.appendChild(box);
+}
+
+/* ══════════════════════════════════════════════════════
+   ANIMATED GIF ENCODER (self-contained: median-cut palette + GIF89a LZW)
+══════════════════════════════════════════════════════ */
+function gifChannelRange(box){
+  let mn=[255,255,255], mx=[0,0,0];
+  for(const c of box){ for(let k=0;k<3;k++){ if(c[k]<mn[k])mn[k]=c[k]; if(c[k]>mx[k])mx[k]=c[k]; } }
+  const r=[mx[0]-mn[0],mx[1]-mn[1],mx[2]-mn[2]];
+  let ch=0; if(r[1]>r[ch])ch=1; if(r[2]>r[ch])ch=2;
+  return {range:r[ch], ch};
+}
+function gifBuildPalette(frames, w, h, maxColors){
+  const samples=[]; const step=Math.max(1, Math.floor((w*h)/4000));
+  for(const f of frames){ const d=f.data; for(let p=0;p<w*h;p+=step){ const i=p*4; samples.push([d[i],d[i+1],d[i+2]]); } }
+  if(!samples.length) samples.push([0,0,0]);
+  let boxes=[samples];
+  while(boxes.length<maxColors){
+    let bi=-1, best=-1, bch=0;
+    boxes.forEach((box,idx)=>{ if(box.length<2) return; const r=gifChannelRange(box); if(r.range>best){ best=r.range; bi=idx; bch=r.ch; } });
+    if(bi<0) break;
+    const box=boxes[bi]; box.sort((a,b)=>a[bch]-b[bch]);
+    const mid=box.length>>1;
+    boxes.splice(bi,1,box.slice(0,mid),box.slice(mid));
+  }
+  return boxes.map(box=>{ let r=0,g=0,b=0; for(const c of box){r+=c[0];g+=c[1];b+=c[2];} const n=box.length||1; return [Math.round(r/n),Math.round(g/n),Math.round(b/n)]; });
+}
+function gifMakeMapper(pal){
+  const cache=new Map();
+  return (r,g,b)=>{
+    const key=((r>>3)<<10)|((g>>3)<<5)|(b>>3);
+    const hit=cache.get(key); if(hit!==undefined) return hit;
+    let best=0, bd=1e12;
+    for(let i=0;i<pal.length;i++){ const p=pal[i], dr=r-p[0],dg=g-p[1],db=b-p[2], d=dr*dr+dg*dg+db*db; if(d<bd){bd=d;best=i;} }
+    cache.set(key,best); return best;
+  };
+}
+function gifLzw(indices, minCodeSize){
+  const clear=1<<minCodeSize, eoi=clear+1;
+  let codeSize=minCodeSize+1, next, dict;
+  const out=[]; let buf=0, bits=0;
+  const emit=code=>{ buf|=code<<bits; bits+=codeSize; while(bits>=8){ out.push(buf&255); buf>>=8; bits-=8; } };
+  const reset=()=>{ dict=new Map(); for(let i=0;i<clear;i++) dict.set(''+i,i); next=eoi+1; codeSize=minCodeSize+1; };
+  reset(); emit(clear);
+  let w=''+indices[0];
+  for(let i=1;i<indices.length;i++){
+    const k=indices[i]; const c=w+','+k;
+    if(dict.has(c)){ w=c; }
+    else{
+      emit(dict.get(w));
+      dict.set(c, next++);
+      if(next===(1<<codeSize) && codeSize<12) codeSize++;
+      if(next===4096){ emit(clear); reset(); }
+      w=''+k;
+    }
+  }
+  emit(dict.get(w)); emit(eoi);
+  if(bits>0) out.push(buf&255);
+  return out;
+}
+function encodeAnimatedGif(frames, w, h, delayCs){
+  const pal0=gifBuildPalette(frames, w, h, 256);
+  let ctSize=2; while(ctSize<pal0.length) ctSize<<=1;
+  const pal=pal0.slice(0,ctSize); while(pal.length<ctSize) pal.push([0,0,0]);
+  const minCodeSize=Math.max(2, Math.round(Math.log2(ctSize)));
+  const gctField=Math.round(Math.log2(ctSize))-1;
+  const map=gifMakeMapper(pal);
+  const bytes=[];
+  const push=(...b)=>{ for(const x of b) bytes.push(x&255); };
+  const str=s=>{ for(let i=0;i<s.length;i++) bytes.push(s.charCodeAt(i)); };
+  str('GIF89a');
+  push(w&255,(w>>8)&255, h&255,(h>>8)&255, 0x80|(gctField&7), 0, 0);
+  for(const c of pal) push(c[0],c[1],c[2]);
+  push(0x21,0xFF,0x0B); str('NETSCAPE2.0'); push(0x03,0x01,0x00,0x00,0x00);  // loop forever
+  for(const f of frames){
+    push(0x21,0xF9,0x04, 0x04, delayCs&255,(delayCs>>8)&255, 0x00, 0x00);    // GCE: do-not-dispose
+    push(0x2C, 0,0,0,0, w&255,(w>>8)&255, h&255,(h>>8)&255, 0x00);           // image descriptor
+    const d=f.data, n=w*h, idx=new Array(n);
+    for(let p=0;p<n;p++){ const i=p*4; idx[p]=map(d[i],d[i+1],d[i+2]); }
+    push(minCodeSize);
+    const lz=gifLzw(idx, minCodeSize);
+    let off=0; while(off<lz.length){ const m=Math.min(255, lz.length-off); push(m); for(let j=0;j<m;j++) push(lz[off+j]); off+=m; }
+    push(0);
+  }
+  push(0x3B);
+  return new Uint8Array(bytes);
+}
+
+/* ══════════════════════════════════════════════════════
+   DEVICE FINISH (chassis color) + SCREEN GLARE
+   Chassis grays in the bezel SVG are remapped onto a tint ramp,
+   so one tint works across every device. Applied in preview + all exports.
+══════════════════════════════════════════════════════ */
+let chassisTint = null;    // null = original graphite; else hex tint
+let glareOn = false;
+
+function hexToRgb(h){ h=(''+h).replace('#',''); if(h.length===3)h=h.split('').map(x=>x+x).join(''); if(h.length!==6)return null; return {r:parseInt(h.slice(0,2),16),g:parseInt(h.slice(2,4),16),b:parseInt(h.slice(4,6),16)}; }
+// Recolor only the gray chassis fills; leave the black screen + colored bits alone.
+function tintBezelSVG(svg, tint){
+  if(!tint) return svg;
+  const t=hexToRgb(tint); if(!t) return svg;
+  return svg.replace(/fill="(#[0-9a-fA-F]{3,6})"/g, (m, hex)=>{
+    const c=hexToRgb(hex); if(!c) return m;
+    if(Math.max(c.r,c.g,c.b)-Math.min(c.r,c.g,c.b) > 18) return m;   // colored → keep
+    const lum=(c.r+c.g+c.b)/3;
+    const f=Math.min(1, lum/58);                                     // map dark chassis grays onto the ramp
+    return 'fill="rgb('+Math.round(t.r*f)+','+Math.round(t.g*f)+','+Math.round(t.b*f)+')"';
+  });
+}
+const FINISHES=[
+  {name:'Graphite',  sw:'#3a3a3f', tint:null},
+  {name:'Midnight',  sw:'#2c3042', tint:'#3a4060'},
+  {name:'Silver',    sw:'#c9ccd1', tint:'#d2d5da'},
+  {name:'Titanium',  sw:'#8e8e93', tint:'#9c9ca2'},
+  {name:'Gold',      sw:'#cdae6e', tint:'#dcbd7c'},
+  {name:'Deep Blue', sw:'#2b3a67', tint:'#3a52a0'},
+];
+function buildFinishGrid(){
+  const grid=document.getElementById('finish-grid'); if(!grid) return;
+  grid.innerHTML='';
+  FINISHES.forEach((fin,i)=>{
+    const sw=document.createElement('div');
+    sw.className='finish-sw'+(i===0?' active':'');
+    sw.style.background=fin.sw;
+    sw.title=fin.name;
+    sw.onclick=()=>setFinish(i);
+    grid.appendChild(sw);
+  });
+}
+function setFinish(i){
+  chassisTint=FINISHES[i].tint;
+  document.querySelectorAll('#finish-grid .finish-sw').forEach((el,idx)=>el.classList.toggle('active',idx===i));
+  if(activeDevice){ const bz=document.getElementById('device-bezel'); if(bz) bz.innerHTML=tintBezelSVG(activeDevice.bezel('#000'), chassisTint); }
+  if(typeof renderDual==='function' && layoutMode==='dual') renderDual();
+}
+function toggleGlare(on){ glareOn=!!on; document.querySelectorAll('.screen-glare').forEach(el=>el.classList.toggle('on', glareOn)); }
+// Draw a soft diagonal sheen inside the current screen clip (export paths).
+function drawGlare(ctx, x, y, w, h){
+  if(!glareOn) return;
+  const g=ctx.createLinearGradient(x, y, x+w*0.55, y+h*0.8);
+  g.addColorStop(0,'rgba(255,255,255,0.22)');
+  g.addColorStop(0.22,'rgba(255,255,255,0.06)');
+  g.addColorStop(0.45,'rgba(255,255,255,0)');
+  ctx.fillStyle=g; ctx.fillRect(x,y,w,h);
+}
+
 /* ── INIT ── */
-buildImgGrid(); buildGradGrid(); buildSolidSws();
+buildImgGrid(); buildGradGrid(); buildSolidSws(); buildBadgeGrid();
+buildDeviceGrid(); buildFinishGrid();
 /* buildDeviceGrid(); -- device selector hidden while mockup controls are removed */
 enableReposition('mockup-inner', ['mockup-img','mockup-video']);
 enableReposition('gadget-screen', ['gadget-img','gadget-video']);
 requestAnimationFrame(applyCanvasRatio);
-</script>
-</body>
-</html>

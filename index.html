@@ -4,311 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mockup Studio</title>
-<style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --bg: #0c0c0d; --surface: #141416; --surface2: #1c1c1f; --surface3: #242428;
-  --border: rgba(255,255,255,0.07); --border-h: rgba(255,255,255,0.18);
-  --text: #f0f0f0; --text-muted: #878797; --text-dim: #42424e;
-  --accent: #f97316; --accent-h: #fb923c; --accent-dim: rgba(249,115,22,0.12);
-  --panel-width: 288px;
-  --s1:8px; --s2:16px; --s3:24px; --s4:32px; --s5:40px; --s6:48px;
-}
-body { font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif; background:var(--bg); color:var(--text); height:100vh; display:flex; flex-direction:column; overflow:hidden; }
-
-/* NAV */
-nav { height:48px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 var(--s3); flex-shrink:0; background:var(--bg); z-index:10; }
-.logo { font-size:13px; font-weight:700; letter-spacing:-.3px; display:flex; align-items:center; gap:var(--s1); }
-.logo-dot { width:8px; height:8px; border-radius:50%; background:var(--accent); }
-.nav-r { display:flex; gap:var(--s1); align-items:center; }
-.btn { display:inline-flex; align-items:center; gap:6px; padding:7px var(--s2); border-radius:8px; font-size:12px; font-weight:500; cursor:pointer; border:none; transition:all .14s; font-family:inherit; line-height:1; white-space:nowrap; }
-.btn svg { width:13px; height:13px; flex-shrink:0; }
-.btn-ghost { background:transparent; color:var(--text-muted); border:1px solid var(--border); }
-.btn-ghost:hover { background:var(--surface); color:var(--text); border-color:var(--border-h); }
-.btn-primary { background:var(--accent); color:#fff; }
-.btn-primary:hover { background:var(--accent-h); }
-.btn-primary:disabled { opacity:.3; cursor:not-allowed; }
-
-/* LAYOUT */
-.app-body { display:flex; flex:1; overflow:hidden; }
-
-/* LEFT SIDEBAR */
-.sidebar { width:var(--panel-width); border-left:1px solid var(--border); border-right:none; overflow-y:auto; flex-shrink:0; background:var(--bg); display:flex; flex-direction:column; order:3; }
-.sidebar::-webkit-scrollbar { width:3px; }
-.sidebar::-webkit-scrollbar-thumb { background:var(--surface3); border-radius:3px; }
-
-/* RIGHT SIDEBAR — Mockup / device picker */
-.sidebar-r { width:var(--panel-width); border-right:1px solid var(--border); border-left:none; overflow-y:auto; flex-shrink:0; background:var(--bg); display:flex; flex-direction:column; order:1; }
-.sidebar-r::-webkit-scrollbar { width:3px; }
-.sidebar-r::-webkit-scrollbar-thumb { background:var(--surface3); border-radius:3px; }
-.sidebar-r-header { padding:var(--s2); border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--bg); z-index:5; }
-.layout-toggle { margin-bottom:var(--s1); }
-.slot-tabs { margin-bottom:var(--s1); }
-.sidebar-r-title { font-size:13px; font-weight:700; color:var(--text); margin-bottom:var(--s2); }
-
-/* (old top tabs — not used in new layout) */
-.top-tabs { display:flex; border-bottom:1px solid var(--border); flex-shrink:0; }
-.top-tab { flex:1; padding:12px 0; text-align:center; font-size:12px; font-weight:600; color:var(--text-dim); cursor:pointer; border:none; background:transparent; font-family:inherit; border-bottom:2px solid transparent; margin-bottom:-1px; transition:all .14s; }
-.top-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
-.top-tab:hover:not(.active) { color:var(--text-muted); }
-.tab-panel { display:none; flex-direction:column; }
-.tab-panel.active { display:flex; }
-
-/* CTRL SECTIONS */
-.ctrl-sec { padding:var(--s3) var(--s2); border-bottom:1px solid var(--border); }
-.ctrl-sec:last-child { border-bottom:none; }
-.sec-lbl { font-size:9px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--text-dim); margin-bottom:var(--s2); }
-
-/* GADGET CATEGORY PILLS */
-.cat-pills { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:var(--s2); }
-.cat-pill { padding:5px 10px; border-radius:20px; border:1px solid var(--border); background:var(--surface); font-size:11px; font-weight:500; color:var(--text-muted); cursor:pointer; transition:all .14s; font-family:inherit; }
-.cat-pill:hover { border-color:var(--border-h); color:var(--text); }
-.cat-pill.active { border-color:var(--accent); background:var(--accent-dim); color:var(--text); }
-
-/* DEVICE GRID */
-.device-grid { display:grid; grid-template-columns:1fr 1fr; gap:var(--s1); }
-.device-card { border:1.5px solid var(--border); background:var(--surface); border-radius:10px; padding:12px 8px 10px; cursor:pointer; text-align:center; transition:all .14s; }
-.device-card:hover { border-color:var(--border-h); background:var(--surface2); }
-.device-card.active { border-color:var(--accent); background:var(--accent-dim); }
-.device-preview { display:flex; align-items:center; justify-content:center; height:52px; margin-bottom:7px; }
-.device-preview svg { max-width:100%; max-height:100%; }
-.device-name { font-size:10.5px; font-weight:600; color:var(--text); }
-.device-sub { font-size:9px; color:var(--text-dim); margin-top:2px; }
-
-/* Change media btn */
-.change-btn { display:none; width:100%; padding:9px 0; border:1px solid var(--accent); border-radius:8px; background:var(--accent-dim); color:var(--accent); font-size:12px; font-weight:600; cursor:pointer; transition:all .14s; font-family:inherit; align-items:center; justify-content:center; gap:7px; }
-.change-btn:hover { background:var(--accent); color:#fff; }
-
-/* RATIO */
-.ratio-grid { display:grid; grid-template-columns:1fr 1fr; gap:var(--s1); }
-.ratio-btn { border:1px solid var(--border); background:var(--surface); border-radius:8px; padding:var(--s1) 6px; cursor:pointer; text-align:center; transition:all .14s; color:var(--text-muted); font-family:inherit; }
-.ratio-btn:hover { border-color:var(--border-h); color:var(--text); }
-.ratio-btn.active { border-color:var(--accent); background:var(--accent-dim); color:var(--text); }
-.ratio-preview { display:flex; align-items:center; justify-content:center; height:24px; margin-bottom:6px; }
-.ratio-box { border:1.5px solid currentColor; border-radius:2px; opacity:.65; }
-.ratio-lbl { font-size:11px; font-weight:600; }
-.ratio-sub { font-size:9px; color:var(--text-dim); margin-top:2px; }
-
-/* SLIDERS */
-.slider-row { display:flex; align-items:center; gap:var(--s1); padding:var(--s2) 0; border-bottom:1px solid var(--border); }
-.slider-row:last-child { border-bottom:none; padding-bottom:0; }
-.slider-row:first-of-type { padding-top:0; }
-.slider-lbl { font-size:11px; color:var(--text-muted); white-space:nowrap; min-width:48px; }
-.slider-row input[type=range] { flex:1; height:3px; accent-color:var(--accent); background:var(--surface2); border-radius:3px; outline:none; cursor:pointer; }
-.slider-val { font-size:11px; color:var(--text-muted); min-width:34px; text-align:right; font-variant-numeric:tabular-nums; }
-
-/* BG TABS */
-.bg-tabs { display:flex; gap:2px; background:var(--surface2); border-radius:8px; padding:3px; margin-bottom:var(--s2); }
-.bg-tab { flex:1; padding:6px 4px; text-align:center; font-size:11px; font-weight:500; border-radius:6px; cursor:pointer; color:var(--text-dim); transition:all .14s; border:none; background:transparent; font-family:inherit; }
-.bg-tab.active { background:var(--surface3); color:var(--text); }
-.bg-tab:hover:not(.active) { color:var(--text-muted); }
-.bg-panel { display:none; } .bg-panel.active { display:block; }
-
-/* IMAGE GRID */
-.img-grid { display:grid; grid-template-columns:1fr 1fr; gap:var(--s1); margin-bottom:var(--s1); max-height:400px; overflow-y:auto; padding-right:2px; }
-.img-grid::-webkit-scrollbar { width:3px; }
-.img-grid::-webkit-scrollbar-thumb { background:var(--surface3); border-radius:3px; }
-.img-thumb { aspect-ratio:3/2; border-radius:6px; cursor:pointer; overflow:hidden; border:2px solid transparent; transition:all .14s; position:relative; background:var(--surface2); }
-.img-thumb:hover { border-color:var(--border-h); transform:scale(1.02); }
-.img-thumb.active { border-color:var(--accent); }
-.img-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
-.img-thumb .chk { position:absolute; top:var(--s1); right:var(--s1); width:16px; height:16px; border-radius:50%; background:var(--accent); display:none; align-items:center; justify-content:center; }
-.img-thumb.active .chk { display:flex; }
-.img-thumb .chk svg { width:9px; height:9px; }
-.img-thumb .tlbl { position:absolute; bottom:0; left:0; right:0; background:linear-gradient(transparent,rgba(0,0,0,.75)); color:#fff; font-size:9px; padding:10px 5px 4px; opacity:0; transition:opacity .14s; }
-.img-thumb:hover .tlbl { opacity:1; }
-.upload-btn { width:100%; padding:var(--s1) 0; border:1px dashed rgba(255,255,255,.13); border-radius:8px; background:transparent; color:var(--text-muted); font-size:11.5px; cursor:pointer; transition:all .14s; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:6px; margin-top:var(--s1); }
-.upload-btn:hover { border-color:var(--accent); color:var(--text); background:var(--accent-dim); }
-
-/* GRADIENTS */
-.grad-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:var(--s1); }
-.grad-sw { aspect-ratio:3/2; border-radius:8px; cursor:pointer; border:2px solid transparent; transition:all .14s; }
-.grad-sw:hover { transform:scale(1.04); }
-.grad-sw.active { border-color:rgba(255,255,255,.9); }
-
-/* COLOR */
-.color-row { display:flex; gap:var(--s1); align-items:center; margin-bottom:var(--s2); }
-.color-pick-wrap { position:relative; width:40px; height:40px; border-radius:8px; overflow:hidden; border:1px solid var(--border-h); flex-shrink:0; }
-.color-pick-wrap input[type="color"] { position:absolute; inset:-5px; width:calc(100% + 10px); height:calc(100% + 10px); border:none; cursor:pointer; padding:0; }
-.hex-in { flex:1; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:0 var(--s1); height:40px; color:var(--text); font-size:12px; font-family:'SF Mono','Menlo',monospace; outline:none; transition:border-color .14s; }
-.hex-in:focus { border-color:var(--accent); }
-.solid-sws { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
-.solid-sw { aspect-ratio:1; border-radius:6px; cursor:pointer; border:2px solid transparent; transition:all .14s; }
-.solid-sw:hover { transform:scale(1.12); }
-.solid-sw.active { border-color:#fff; }
-
-/* WORK AREA */
-.work-area { flex:1; position:relative; overflow:hidden; order:2; background-color:#080809; background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(rgba(255,255,255,.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.015) 1px,transparent 1px); background-size:80px 80px,80px 80px,16px 16px,16px 16px; background-position:-1px -1px,-1px -1px,-1px -1px,-1px -1px; }
-.work-area::before { content:''; position:absolute; inset:0; pointer-events:none; z-index:1; background:radial-gradient(ellipse 70% 65% at 50% 50%,transparent 30%,rgba(8,8,9,.78) 100%); }
-
-/* CANVAS WRAP */
-.canvas-wrap { position:absolute; z-index:2; border-radius:16px; overflow:visible; display:flex; align-items:center; justify-content:center; transition:width .35s cubic-bezier(.4,0,.2,1),height .35s cubic-bezier(.4,0,.2,1),left .35s cubic-bezier(.4,0,.2,1),top .35s cubic-bezier(.4,0,.2,1); }
-#canvas-bg-clip { position:absolute; inset:0; border-radius:16px; overflow:hidden; z-index:0; pointer-events:none; }
-#canvas-bg { position:absolute; inset:-12px; background:#1a1a2e; background-size:cover; background-position:center; background-repeat:no-repeat; transition:filter .2s; }
-.canvas-ov { position:absolute; inset:0; background:rgba(0,0,0,.06); z-index:1; pointer-events:none; }
-
-/* MOCKUP WRAP */
-.mockup-wrap { position:relative; z-index:3; display:flex; align-items:center; justify-content:center; }
-
-/* PLAIN MOCKUP FRAME (used when no gadget selected) */
-.mockup-frame { position:relative; border-radius:14px; overflow:hidden; background:#111; box-shadow:0 0 0 1px rgba(255,255,255,.09),0 6px 24px rgba(0,0,0,.45),0 20px 60px rgba(0,0,0,.5),0 48px 120px rgba(0,0,0,.38); transition:border-radius .2s ease,box-shadow .2s ease; }
-.mockup-inner { width:100%; height:100%; position:relative; display:flex; align-items:center; justify-content:center; }
-
-/* GADGET FRAME WRAPPER */
-.gadget-frame-wrap {
-  position:relative;      /* ← critical: screen positions relative to this */
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  filter:drop-shadow(0 24px 60px rgba(0,0,0,.55)) drop-shadow(0 8px 24px rgba(0,0,0,.45));
-}
-.gadget-frame-wrap svg.device-svg {
-  display:block;          /* ← removes inline baseline gap */
-  position:relative;
-  z-index:2;
-  pointer-events:none;
-}
-/* Screen sits absolutely inside the wrap, behind the SVG bezel */
-.gadget-screen {
-  position:absolute;
-  z-index:1;
-  overflow:hidden;
-  background:#000;
-  /* left/top/width/height set by JS */
-}
-.gadget-screen img,
-.gadget-screen video,
-.gadget-media {
-  position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  display:none;           /* hidden by default, shown by JS */
-  transform-origin:center center;
-  will-change:transform;
-}
-.gadget-screen.repositionable { cursor:grab; }
-.gadget-screen.repositionable:active { cursor:grabbing; }
-.gadget-screen.dragging { cursor:grabbing; }
-
-/* DROP ZONE — plain frame */
-.drop-zone { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:var(--s1); cursor:pointer; transition:background .14s; z-index:5; }
-.drop-zone.drag-over { background:var(--accent-dim); }
-.dz-icon { width:56px; height:56px; border-radius:14px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.1); display:flex; align-items:center; justify-content:center; color:rgba(255,255,255,.3); }
-.dz-icon svg { width:26px; height:26px; }
-.dz-title { font-size:13px; font-weight:500; color:rgba(255,255,255,.45); }
-.dz-sub { font-size:11px; color:rgba(255,255,255,.25); }
-
-/* GADGET DROP OVERLAY — sits above the device SVG, covers full gadget-frame-wrap */
-.gadget-drop-overlay {
-  position:absolute; inset:0; z-index:10;
-  display:flex; flex-direction:column;
-  align-items:center; justify-content:center; gap:var(--s1);
-  cursor:pointer;
-  background:rgba(0,0,0,0.55);
-  backdrop-filter:blur(2px);
-  border-radius:inherit;
-  transition:background .14s;
-}
-.gadget-drop-overlay.drag-over { background:rgba(249,115,22,0.25); }
-.gadget-drop-overlay .dz-icon { width:56px; height:56px; border-radius:14px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); display:flex; align-items:center; justify-content:center; color:rgba(255,255,255,.7); }
-.gadget-drop-overlay .dz-icon svg { width:26px; height:26px; }
-.gadget-drop-overlay .dz-title { font-size:13px; font-weight:600; color:rgba(255,255,255,.9); text-align:center; }
-.gadget-drop-overlay .dz-sub { font-size:11px; color:rgba(255,255,255,.5); text-align:center; }
-
-.mockup-img { width:100%; height:100%; object-fit:cover; display:none; transform-origin:center center; will-change:transform; }
-.mockup-video { width:100%; height:100%; object-fit:cover; display:none; transform-origin:center center; will-change:transform; }
-.mockup-inner.repositionable { cursor:grab; }
-.mockup-inner.dragging { cursor:grabbing; }
-#hf { display:none; } #hbf { display:none; }
-.wm { position:absolute; bottom:var(--s2); right:var(--s3); z-index:4; font-size:10px; color:rgba(255,255,255,.16); pointer-events:none; letter-spacing:.06em; }
-
-/* EXPORT MODAL */
-.modal-backdrop { display:none; position:fixed; inset:0; z-index:100; background:rgba(0,0,0,.72); align-items:center; justify-content:center; }
-.modal-backdrop.open { display:flex; }
-.modal { background:#18181b; border:1px solid rgba(255,255,255,.1); border-radius:20px; padding:var(--s4) var(--s3); width:420px; max-width:calc(100vw - 32px); }
-.modal-title { font-size:20px; font-weight:700; color:var(--text); margin-bottom:var(--s4); }
-.modal-close { position:absolute; top:var(--s2); right:var(--s2); background:transparent; border:none; cursor:pointer; color:var(--text-muted); padding:var(--s1); border-radius:8px; transition:all .14s; }
-.modal-close:hover { background:rgba(255,255,255,.06); color:var(--text); }
-.modal-inner { position:relative; }
-.qual-option { display:flex; align-items:center; justify-content:space-between; padding:var(--s2); border:1px solid rgba(255,255,255,.08); border-radius:12px; margin-bottom:var(--s1); cursor:pointer; transition:all .14s; }
-.qual-option:last-of-type { margin-bottom:0; }
-.qual-option:hover { border-color:rgba(255,255,255,.18); background:rgba(255,255,255,.03); }
-.qual-option.selected { border-color:var(--accent); background:var(--accent-dim); }
-.qual-left { display:flex; flex-direction:column; gap:3px; }
-.qual-name { font-size:16px; font-weight:600; color:var(--text); display:flex; align-items:center; gap:8px; }
-.qual-desc { font-size:13px; color:var(--text-muted); }
-.qual-radio { width:22px; height:22px; border-radius:50%; border:2px solid rgba(255,255,255,.25); flex-shrink:0; transition:all .14s; display:flex; align-items:center; justify-content:center; }
-.qual-option.selected .qual-radio { border-color:var(--accent); background:var(--accent); }
-.qual-option.selected .qual-radio::after { content:''; width:8px; height:8px; border-radius:50%; background:#fff; }
-.modal-note { font-size:12px; color:var(--text-dim); margin-top:var(--s3); text-align:center; }
-.modal-actions { display:flex; gap:var(--s1); margin-top:var(--s3); }
-.modal-actions .btn { flex:1; justify-content:center; height:48px; font-size:14px; }
-.btn-cancel { background:rgba(255,255,255,.06); color:var(--text); border:1px solid rgba(255,255,255,.1); }
-.btn-cancel:hover { background:rgba(255,255,255,.1); }
-.btn-start { background:#fff; color:#000; font-weight:700; }
-.btn-start:hover { background:#e5e5e5; }
-
-/* ── DUAL STAGE ── */
-#dual-stage { position:absolute; inset:0; z-index:3; display:none; }
-#dual-stage.active { display:block; }
-.device-instance { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); cursor:grab; transition:filter .15s; touch-action:none; }
-.device-instance.dragging { cursor:grabbing; z-index:20 !important; }
-.device-instance.selected { filter:drop-shadow(0 0 0 2px var(--accent)); }
-.device-instance .inst-wrap { position:relative; filter:drop-shadow(0 24px 60px rgba(0,0,0,.55)) drop-shadow(0 8px 24px rgba(0,0,0,.45)); }
-.device-instance svg.inst-bezel { position:absolute; inset:0; z-index:1; pointer-events:none; display:block; }
-.device-instance .inst-screen { position:absolute; z-index:2; overflow:hidden; background:#000; }
-.device-instance .inst-screen img, .device-instance .inst-screen video { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:none; }
-.device-instance svg.inst-overlay { position:absolute; inset:0; z-index:3; pointer-events:none; display:block; }
-.device-instance .inst-drop { position:absolute; z-index:4; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; cursor:pointer; background:rgba(0,0,0,.5); backdrop-filter:blur(2px); }
-.device-instance .inst-drop .dz-icon { width:44px; height:44px; }
-.device-instance .inst-drop .dz-title { font-size:11px; }
-.device-instance .inst-drop .dz-sub { font-size:9px; }
-
-/* Layout toggle + slot tabs */
-.layout-toggle { display:flex; gap:2px; background:var(--surface2); border-radius:8px; padding:3px; margin-bottom:var(--s2); }
-.layout-opt { flex:1; padding:7px 4px; text-align:center; font-size:11px; font-weight:500; border-radius:6px; cursor:pointer; color:var(--text-dim); border:none; background:transparent; font-family:inherit; transition:all .14s; }
-.layout-opt.active { background:var(--surface3); color:var(--text); }
-.layout-opt:hover:not(.active) { color:var(--text-muted); }
-.slot-tabs { display:flex; gap:6px; margin-bottom:var(--s2); }
-.slot-tab { flex:1; padding:8px 4px; text-align:center; font-size:11px; font-weight:600; border-radius:8px; cursor:pointer; color:var(--text-muted); border:1px solid var(--border); background:var(--surface); font-family:inherit; transition:all .14s; }
-.slot-tab.active { border-color:var(--accent); background:var(--accent-dim); color:var(--text); }
-.slot-tab .st-dev { font-size:9px; color:var(--text-dim); margin-top:2px; font-weight:400; }
-
-/* ── TEXT LAYER ── */
-#text-layer { position:absolute; inset:0; z-index:7; pointer-events:none; }
-#text-layer .text-block {
-  position:absolute; pointer-events:auto; cursor:grab;
-  white-space:pre; line-height:1.3; user-select:none;
-  padding:2px 6px; border:1.5px solid transparent; border-radius:5px;
-  font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif;
-  max-width:90%; word-break:normal;
-}
-#text-layer .text-block.selected { border-color:var(--accent); }
-#text-layer .text-block.editing { cursor:text; user-select:text; border-color:var(--accent); background:rgba(0,0,0,0.15); }
-#text-layer .text-block.dragging { cursor:grabbing; }
-/* Text controls in sidebar */
-.text-list { display:flex; flex-direction:column; gap:6px; margin-bottom:var(--s2); }
-.text-list-item { display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid var(--border); border-radius:8px; cursor:pointer; transition:all .14s; background:var(--surface); }
-.text-list-item:hover { border-color:var(--border-h); }
-.text-list-item.active { border-color:var(--accent); background:var(--accent-dim); }
-.text-list-item .tli-text { flex:1; font-size:11.5px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.text-list-item .tli-del { color:var(--text-dim); flex-shrink:0; padding:2px; border-radius:4px; }
-.text-list-item .tli-del:hover { color:#ef4444; background:rgba(239,68,68,0.1); }
-.add-text-btn { width:100%; padding:9px 0; border:1px dashed rgba(255,255,255,0.16); border-radius:8px; background:transparent; color:var(--text-muted); font-size:12px; font-weight:500; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:7px; transition:all .14s; }
-.add-text-btn:hover { border-color:var(--accent); color:var(--text); background:var(--accent-dim); }
-.text-ctrls { margin-top:var(--s2); padding-top:var(--s2); border-top:1px solid var(--border); display:none; }
-.text-ctrls.active { display:block; }
-.text-ctrls textarea { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:8px 10px; color:var(--text); font-size:12px; font-family:inherit; outline:none; resize:vertical; min-height:50px; margin-bottom:var(--s2); transition:border-color .14s; }
-.text-ctrls textarea:focus { border-color:var(--accent); }
-.weight-toggle, .align-toggle { display:flex; gap:4px; }
-.wt-opt, .al-opt { flex:1; padding:7px 0; text-align:center; font-size:11px; border:1px solid var(--border); border-radius:6px; cursor:pointer; color:var(--text-muted); background:var(--surface); font-family:inherit; transition:all .14s; }
-.wt-opt:hover, .al-opt:hover { border-color:var(--border-h); color:var(--text); }
-.wt-opt.active, .al-opt.active { border-color:var(--accent); background:var(--accent-dim); color:var(--text); }
-.text-font-color { display:flex; gap:var(--s1); align-items:center; }
-.text-font-color .color-pick-wrap { width:36px; height:36px; }
-</style>
+  <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
   <!-- MOBILE GATE: shown on small screens, hides the app -->
@@ -321,27 +17,11 @@ nav { height:48px; border-bottom:1px solid var(--border); display:flex; align-it
     <div style="margin-top:36px;width:44px;height:2px;background:rgba(249,115,22,0.6);border-radius:2px"></div>
   </div>
 
-  <script>
-    // Show mobile gate if screen is narrower than 900px (covers all phones and most tablets)
-    (function(){
-      function check(){
-        const gate = document.getElementById('mobile-gate');
-        if(!gate) return;
-        if(window.innerWidth < 900){
-          gate.style.display='flex';
-          document.body.style.overflow='hidden';
-        } else {
-          gate.style.display='none';
-          document.body.style.overflow='';
-        }
-      }
-      check();
-      window.addEventListener('resize', check);
-    })();
-  </script>
+  <script src="js/mobile-gate.js"></script>
 
 <input type="file" id="hf" accept="image/*,video/*">
 <input type="file" id="hbf" accept="image/*">
+<input type="file" id="haf" accept="image/png,image/svg+xml,image/*">
 
 <nav>
   <div class="logo"><div class="logo-dot"></div>mockup studio</div>
@@ -401,6 +81,14 @@ nav { height:48px; border-bottom:1px solid var(--border); display:flex; align-it
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       Add text
     </button>
+    <button class="add-text-btn" id="load-text-presets-btn" onclick="loadTextPresets()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4h12M6 10h12M6 16h12M6 22h12"/></svg>
+      Load curated text presets
+    </button>
+    <div id="text-presets" style="display:none; margin-top:var(--s2)">
+      <div class="sec-lbl" style="margin-bottom:8px">Curated text</div>
+      <div class="preset-grid" id="preset-grid"></div>
+    </div>
     <div class="text-ctrls" id="text-ctrls">
       <textarea id="text-content" placeholder="Type your text..." oninput="updateTextContent(this.value)"></textarea>
       <div class="slider-row" style="border:none;padding:0 0 var(--s2)">
@@ -438,8 +126,69 @@ nav { height:48px; border-bottom:1px solid var(--border); display:flex; align-it
     </div>
   </div>
 
-  <!-- Mockup sliders -->
+  <!-- ELEMENTS: logos, badges, stickers & annotations -->
   <div class="ctrl-sec">
+    <div class="sec-lbl">Elements</div>
+    <div class="el-list" id="el-list"></div>
+    <div class="el-tools">
+      <button class="el-tool" onclick="document.getElementById('haf').click()" title="Upload a transparent PNG or SVG logo/sticker">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Logo / PNG
+      </button>
+      <button class="el-tool" onclick="addAnnotation('arrow')" title="Add an arrow">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="19" x2="19" y2="5"/><polyline points="9 5 19 5 19 15"/></svg>
+        Arrow
+      </button>
+      <button class="el-tool" onclick="addAnnotation('circle')" title="Add an accent circle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="12" rx="9" ry="7"/></svg>
+        Circle
+      </button>
+      <button class="el-tool" onclick="addAnnotation('badge')" title="Add a numbered badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><text x="12" y="16" font-size="11" font-weight="700" text-anchor="middle" fill="currentColor" stroke="none">1</text></svg>
+        Number
+      </button>
+    </div>
+    <div class="el-sub-lbl">Marketing badges</div>
+    <div class="badge-grid" id="badge-grid"></div>
+
+    <!-- Selected element inspector -->
+    <div class="el-inspect" id="el-inspect">
+      <div id="el-inspect-size" style="margin-bottom:var(--s2)">
+        <div class="slider-row" style="border:none;padding:0 0 var(--s2)">
+          <span class="slider-lbl">Size</span>
+          <input type="range" min="20" max="600" value="160" step="1" id="el-size" oninput="updateElSize(this.value)">
+          <span class="slider-val" id="el-size-val">160px</span>
+        </div>
+      </div>
+      <div id="el-inspect-rot" style="margin-bottom:var(--s2)">
+        <div class="slider-row" style="border:none;padding:0 0 var(--s2)">
+          <span class="slider-lbl">Rotate</span>
+          <input type="range" min="-180" max="180" value="0" step="1" id="el-rot" oninput="updateElRot(this.value)">
+          <span class="slider-val" id="el-rot-val">0°</span>
+        </div>
+      </div>
+      <div id="el-inspect-color" style="margin-bottom:var(--s2);display:none">
+        <div class="sec-lbl" style="margin-bottom:6px">Color</div>
+        <div class="text-font-color">
+          <div class="color-pick-wrap"><input type="color" id="el-color" value="#f97316" oninput="updateElColor(this.value)"></div>
+          <input class="hex-in" type="text" id="el-color-hex" value="#f97316" maxlength="7" oninput="updateElColorHex(this.value)">
+        </div>
+      </div>
+      <div id="el-inspect-thick" style="margin-bottom:var(--s2);display:none">
+        <div class="slider-row" style="border:none;padding:0 0 var(--s2)">
+          <span class="slider-lbl">Thickness</span>
+          <input type="range" min="1" max="16" value="4" step="1" id="el-thick" oninput="updateElThick(this.value)">
+          <span class="slider-val" id="el-thick-val">4px</span>
+        </div>
+      </div>
+      <button class="add-text-btn" style="border-style:solid;border-color:rgba(239,68,68,0.3);color:#ef4444" onclick="deleteSelectedEl()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+        Delete element
+      </button>
+    </div>
+  </div>
+
+  <div class="ctrl-sec" id="mockup-ctrls">
     <div class="sec-lbl">Mockup</div>
     <div class="slider-row">
       <span class="slider-lbl">Padding</span>
@@ -455,6 +204,16 @@ nav { height:48px; border-bottom:1px solid var(--border); display:flex; align-it
       <span class="slider-lbl">Shadow</span>
       <input type="range" min="0" max="100" value="60" step="1" id="sl-shad" oninput="onShadow(this.value)">
       <span class="slider-val" id="vl-shad">60%</span>
+    </div>
+    <div class="slider-row">
+      <span class="slider-lbl">Tilt X</span>
+      <input type="range" min="-26" max="26" value="0" step="1" id="sl-tiltx" oninput="onTilt('x',this.value)">
+      <span class="slider-val" id="vl-tiltx">0°</span>
+    </div>
+    <div class="slider-row">
+      <span class="slider-lbl">Tilt Y</span>
+      <input type="range" min="-26" max="26" value="0" step="1" id="sl-tilty" oninput="onTilt('y',this.value)">
+      <span class="slider-val" id="vl-tilty">0°</span>
     </div>
     <div class="slider-row" id="zoom-row" style="display:none">
       <span class="slider-lbl">Zoom</span>
@@ -513,6 +272,35 @@ nav { height:48px; border-bottom:1px solid var(--border); display:flex; align-it
     </div>
   </div>
 
+  <!-- LAYOUT & GUIDES -->
+  <div class="ctrl-sec">
+    <div class="sec-lbl">Align &amp; guides</div>
+    <div style="font-size:10px;color:var(--text-dim);margin-bottom:8px;line-height:1.4">Aligns the selected text or element. Snaps to center while dragging.</div>
+    <div class="align-grid">
+      <button class="align-btn" onclick="alignSelected('left')" title="Align left edge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="4" x2="4" y2="20"/><rect x="8" y="7" width="10" height="4" rx="1"/><rect x="8" y="14" width="6" height="4" rx="1"/></svg></button>
+      <button class="align-btn" onclick="alignSelected('centerH')" title="Center horizontally"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="4" x2="12" y2="20"/><rect x="6" y="7" width="12" height="4" rx="1"/><rect x="8" y="14" width="8" height="4" rx="1"/></svg></button>
+      <button class="align-btn" onclick="alignSelected('right')" title="Align right edge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="20" y1="4" x2="20" y2="20"/><rect x="6" y="7" width="10" height="4" rx="1"/><rect x="10" y="14" width="6" height="4" rx="1"/></svg></button>
+      <button class="align-btn" onclick="alignSelected('top')" title="Align top edge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="4" x2="20" y2="4"/><rect x="7" y="8" width="4" height="10" rx="1"/><rect x="14" y="8" width="4" height="6" rx="1"/></svg></button>
+      <button class="align-btn" onclick="alignSelected('centerV')" title="Center vertically"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="12" x2="20" y2="12"/><rect x="7" y="6" width="4" height="12" rx="1"/><rect x="14" y="8" width="4" height="8" rx="1"/></svg></button>
+      <button class="align-btn" onclick="alignSelected('center')" title="Center on canvas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg></button>
+    </div>
+    <div class="guide-row" style="border-top:1px solid var(--border)">
+      <span class="gr-lbl">Grid overlay</span>
+      <label class="tgl"><input type="checkbox" id="grid-toggle" onchange="toggleGrid(this.checked)"><span class="tgl-track"></span></label>
+    </div>
+    <div style="padding-top:4px">
+      <div class="sec-lbl" style="margin-bottom:6px">Social safe-zone</div>
+      <select class="sz-select" id="safe-zone-select" onchange="setSafeZone(this.value)">
+        <option value="none">None</option>
+        <option value="ig-square">Instagram · Square 1:1</option>
+        <option value="ig-portrait">Instagram · Portrait 4:5</option>
+        <option value="story">Story / Reel · 9:16</option>
+        <option value="x-post">X / Twitter · 16:9</option>
+        <option value="og">Open Graph · 1.91:1</option>
+      </select>
+    </div>
+  </div>
+
 </aside>
 
 <!-- WORK AREA -->
@@ -535,6 +323,7 @@ nav { height:48px; border-bottom:1px solid var(--border); display:flex; align-it
           </div>
           <img class="mockup-img" id="mockup-img" alt="">
           <video class="mockup-video" id="mockup-video" autoplay loop playsinline></video>
+          <div class="screen-glare" id="glare-p"></div>
         </div>
       </div>
       <!-- gadget frame (shown when device selected) -->
@@ -545,6 +334,7 @@ nav { height:48px; border-bottom:1px solid var(--border); display:flex; align-it
         <div class="gadget-screen" id="gadget-screen">
           <img class="gadget-media" id="gadget-img" alt="">
           <video class="gadget-media" id="gadget-video" autoplay loop playsinline></video>
+          <div class="screen-glare" id="glare-g"></div>
         </div>
         <!-- Layer 3: overlay SVG (notch / island / camera) — OVER the media -->
         <svg class="device-svg" id="device-overlay" viewBox="0 0 0 0"></svg>
@@ -560,8 +350,17 @@ nav { height:48px; border-bottom:1px solid var(--border); display:flex; align-it
     </div>
     <!-- DUAL STAGE: free-positioned device instances -->
     <div id="dual-stage"></div>
+    <!-- ELEMENTS LAYER: floating logos, badges, stickers, annotations -->
+    <div id="overlay-layer"></div>
     <!-- TEXT LAYER: draggable text blocks -->
     <div id="text-layer"></div>
+    <!-- GUIDES: grid, social safe-zones, snap lines (screen-only) -->
+    <div id="guide-layer">
+      <div id="guide-grid"></div>
+      <div id="safe-zone-host"></div>
+      <div class="snap-line v" id="snap-v"></div>
+      <div class="snap-line h" id="snap-h"></div>
+    </div>
   </div>
   <div class="wm">mockup studio</div>
 </main>
@@ -570,7 +369,6 @@ nav { height:48px; border-bottom:1px solid var(--border); display:flex; align-it
 <aside class="sidebar-r">
   <div class="sidebar-r-header">
     <div class="sidebar-r-title">Mockup</div>
-    <!-- Sticky change/upload button — always visible, no scroll needed -->
     <button class="change-btn" id="change-btn" onclick="if(typeof layoutMode!=='undefined'&&layoutMode==='dual'){activeFileSlot=selectedSlot;} document.getElementById('hf').click()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
       Change image / video
@@ -598,6 +396,15 @@ nav { height:48px; border-bottom:1px solid var(--border); display:flex; align-it
     </div>
     <div class="device-grid" id="device-grid"></div>
   </div>
+  <div class="ctrl-sec" id="device-finish-sec">
+    <div class="sec-lbl">Frame finish</div>
+    <div class="finish-grid" id="finish-grid"></div>
+    <div class="guide-row" style="border-top:1px solid var(--border);margin-top:var(--s2)">
+      <span class="gr-lbl">Screen glare</span>
+      <label class="tgl"><input type="checkbox" id="glare-toggle" onchange="toggleGlare(this.checked)"><span class="tgl-track"></span></label>
+    </div>
+    <p style="font-size:10px;color:var(--text-dim);margin:8px 0 0;line-height:1.4">Finish &amp; glare apply when a device frame is selected.</p>
+  </div>
 </aside>
 
 </div>
@@ -619,6 +426,13 @@ nav { height:48px; border-bottom:1px solid var(--border); display:flex; align-it
       <div class="qual-left"><div class="qual-name">WebP</div><div class="qual-desc">Modern format · great compression</div></div>
       <div class="qual-radio"></div>
     </div>
+    <div class="sec-lbl" style="margin:var(--s3) 0 6px">Resolution</div>
+    <div class="weight-toggle" id="scale-toggle">
+      <button class="wt-opt active" data-s="1" onclick="selectImgScale(1)">1× standard</button>
+      <button class="wt-opt" data-s="2" onclick="selectImgScale(2)">2× retina</button>
+      <button class="wt-opt" data-s="3" onclick="selectImgScale(3)">3× print</button>
+    </div>
+    <div id="scale-dim" style="font-size:11px;color:var(--text-dim);text-align:center;margin-top:8px"></div>
     <p class="modal-note">All processing happens in your browser · nothing is uploaded.</p>
     <div class="modal-actions">
       <button class="btn btn-cancel" onclick="closeModal('img-modal')">Cancel</button>
@@ -632,6 +446,11 @@ nav { height:48px; border-bottom:1px solid var(--border); display:flex; align-it
   <div class="modal modal-inner">
     <button class="modal-close" onclick="closeModal('vid-modal')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
     <div class="modal-title">Export Video</div>
+    <div class="weight-toggle" id="vidfmt-toggle" style="margin-bottom:var(--s3)">
+      <button class="wt-opt active" data-vf="video" onclick="selectVidFmt('video')">Video · MP4 / WebM</button>
+      <button class="wt-opt" data-vf="gif" onclick="selectVidFmt('gif')">Animated GIF</button>
+    </div>
+    <div id="vid-qual-block">
     <div class="qual-option" id="q-720" onclick="selectQ('720')">
       <div class="qual-left"><div class="qual-name">720p</div><div class="qual-desc">Fast export · smaller file</div></div><div class="qual-radio"></div>
     </div>
@@ -644,6 +463,9 @@ nav { height:48px; border-bottom:1px solid var(--border); display:flex; align-it
     <div class="qual-option" id="q-4k" onclick="selectQ('4k')">
       <div class="qual-left"><div class="qual-name">4K</div><div class="qual-desc">Maximum quality · 3840×2160</div></div><div class="qual-radio"></div>
     </div>
+    </div>
+    <div id="vid-gif-note" style="display:none;font-size:11.5px;color:var(--text-muted);line-height:1.5;padding:4px 2px 0">Exports a looping GIF (up to 6s, 12fps, max 720px). Larger and lower-color than video — best for short loops in READMEs, Slack or email.</div>
+    <div id="vid-tilt-note" style="display:none;font-size:11.5px;color:#f59e0b;line-height:1.5;padding:4px 2px 0">Note: 3D tilt applies to image exports. Video exports render flat (untilted).</div>
     <p class="modal-note">All processing happens in your browser · nothing is uploaded.</p>
     <div class="modal-actions">
       <button class="btn btn-cancel" onclick="closeModal('vid-modal')">Cancel</button>
@@ -652,1845 +474,6 @@ nav { height:48px; border-bottom:1px solid var(--border); display:flex; align-it
   </div>
 </div>
 
-<script>
-/* ══════════════════════════════════════════════════════
-   DEVICE DEFINITIONS
-   Each device has: id, name, sub, cat, ar (w/h of screen),
-   svgFn (function returning SVG string), screenRect (x,y,w,h in SVG coords)
-══════════════════════════════════════════════════════ */
-const DEVICES = [
-  // ═══════════ PHONES ═══════════
-  // Each device: vw/vh = SVG canvas; screen = content rect; screenRR = screen corner radius
-  // bezel(c): the frame drawn UNDER the media. overlay(): notch/island drawn OVER the media.
-  {id:'iphone17pro', name:'iPhone 17 Pro', sub:'Dynamic Island', cat:'phone',
-   vw:380, vh:812, screen:{x:16,y:16,w:348,h:780}, screenRR:42,
-   bezel:(c)=>`
-     <rect x="2" y="2" width="376" height="808" rx="56" fill="#1d1d1f"/>
-     <rect x="2" y="2" width="376" height="808" rx="56" fill="none" stroke="#000" stroke-width="2"/>
-     <rect x="6" y="6" width="368" height="800" rx="52" fill="#2c2c2e"/>
-     <rect x="11" y="11" width="358" height="790" rx="47" fill="#0a0a0a"/>
-     <rect x="16" y="16" width="348" height="780" rx="42" fill="${c}"/>
-     <rect x="0" y="150" width="3" height="34" rx="1.5" fill="#1a1a1c"/>
-     <rect x="0" y="200" width="3" height="58" rx="1.5" fill="#1a1a1c"/>
-     <rect x="0" y="272" width="3" height="58" rx="1.5" fill="#1a1a1c"/>
-     <rect x="377" y="220" width="3" height="92" rx="1.5" fill="#1a1a1c"/>`,
-   overlay:()=>`
-     <rect x="138" y="26" width="104" height="30" rx="15" fill="#000"/>
-     <circle cx="226" cy="41" r="5.5" fill="#0a0a14"/>
-     <circle cx="226" cy="41" r="2.5" fill="#1a1a2e"/>`
-  },
-  {id:'iphone16promax', name:'iPhone 16 Pro Max', sub:'Dynamic Island', cat:'phone',
-   vw:392, vh:812, screen:{x:16,y:16,w:360,h:780}, screenRR:44,
-   bezel:(c)=>`
-     <rect x="2" y="2" width="388" height="808" rx="56" fill="#1d1d1f"/>
-     <rect x="2" y="2" width="388" height="808" rx="56" fill="none" stroke="#000" stroke-width="2"/>
-     <rect x="6" y="6" width="380" height="800" rx="52" fill="#2c2c2e"/>
-     <rect x="11" y="11" width="370" height="790" rx="48" fill="#0a0a0a"/>
-     <rect x="16" y="16" width="360" height="780" rx="44" fill="${c}"/>
-     <rect x="0" y="160" width="3" height="34" rx="1.5" fill="#1a1a1c"/>
-     <rect x="0" y="210" width="3" height="56" rx="1.5" fill="#1a1a1c"/>
-     <rect x="0" y="280" width="3" height="56" rx="1.5" fill="#1a1a1c"/>
-     <rect x="389" y="230" width="3" height="88" rx="1.5" fill="#1a1a1c"/>`,
-   overlay:()=>`
-     <rect x="144" y="26" width="104" height="30" rx="15" fill="#000"/>
-     <circle cx="232" cy="41" r="5.5" fill="#0a0a14"/>
-     <circle cx="232" cy="41" r="2.5" fill="#1a1a2e"/>`
-  },
-  {id:'iphone13pro', name:'iPhone 13 Pro', sub:'Notch', cat:'phone',
-   vw:380, vh:812, screen:{x:16,y:16,w:348,h:780}, screenRR:44,
-   bezel:(c)=>`
-     <rect x="2" y="2" width="376" height="808" rx="56" fill="#3a3a40"/>
-     <rect x="2" y="2" width="376" height="808" rx="56" fill="none" stroke="#000" stroke-width="2"/>
-     <rect x="6" y="6" width="368" height="800" rx="52" fill="#48484f"/>
-     <rect x="11" y="11" width="358" height="790" rx="48" fill="#0a0a0a"/>
-     <rect x="16" y="16" width="348" height="780" rx="44" fill="${c}"/>
-     <rect x="0" y="160" width="3" height="34" rx="1.5" fill="#2a2a30"/>
-     <rect x="0" y="210" width="3" height="56" rx="1.5" fill="#2a2a30"/>
-     <rect x="0" y="280" width="3" height="56" rx="1.5" fill="#2a2a30"/>
-     <rect x="377" y="230" width="3" height="88" rx="1.5" fill="#2a2a30"/>`,
-   overlay:()=>`
-     <path d="M120 16 h140 v8 a18 18 0 0 1 -18 18 h-104 a18 18 0 0 1 -18 -18 z" fill="#000"/>
-     <rect x="170" y="25" width="40" height="6" rx="3" fill="#15151c"/>
-     <circle cx="226" cy="28" r="4.5" fill="#0a0a16"/>
-     <circle cx="226" cy="28" r="2" fill="#16213e"/>`
-  },
-  {id:'samsung-s24', name:'Samsung S24 Ultra', sub:'Punch-hole', cat:'phone',
-   vw:368, vh:800, screen:{x:11,y:11,w:346,h:778}, screenRR:18,
-   bezel:(c)=>`
-     <rect x="2" y="2" width="364" height="796" rx="32" fill="#16161a"/>
-     <rect x="2" y="2" width="364" height="796" rx="32" fill="none" stroke="#000" stroke-width="1.5"/>
-     <rect x="5" y="5" width="358" height="790" rx="29" fill="#28282e"/>
-     <rect x="9" y="9" width="350" height="782" rx="22" fill="#0a0a0a"/>
-     <rect x="11" y="11" width="346" height="778" rx="18" fill="${c}"/>
-     <rect x="365" y="180" width="3" height="50" rx="1.5" fill="#1a1a1e"/>
-     <rect x="365" y="240" width="3" height="90" rx="1.5" fill="#1a1a1e"/>`,
-   overlay:()=>`
-     <circle cx="184" cy="32" r="8" fill="#000"/>
-     <circle cx="184" cy="32" r="4.5" fill="#0a0a16"/>
-     <circle cx="184" cy="32" r="2" fill="#16213e"/>`
-  },
-  {id:'pixel9', name:'Google Pixel 9 Pro', sub:'Punch-hole', cat:'phone',
-   vw:368, vh:800, screen:{x:13,y:13,w:342,h:774}, screenRR:30,
-   bezel:(c)=>`
-     <rect x="2" y="2" width="364" height="796" rx="42" fill="#3a3a40"/>
-     <rect x="2" y="2" width="364" height="796" rx="42" fill="none" stroke="#000" stroke-width="1.5"/>
-     <rect x="5" y="5" width="358" height="790" rx="39" fill="#48484f"/>
-     <rect x="10" y="10" width="348" height="780" rx="34" fill="#0a0a0a"/>
-     <rect x="13" y="13" width="342" height="774" rx="30" fill="${c}"/>
-     <rect x="365" y="210" width="3" height="56" rx="1.5" fill="#2a2a30"/>
-     <rect x="365" y="276" width="3" height="44" rx="1.5" fill="#2a2a30"/>`,
-   overlay:()=>`
-     <circle cx="184" cy="34" r="8" fill="#000"/>
-     <circle cx="184" cy="34" r="4.5" fill="#0a0a16"/>`
-  },
-
-  // ═══════════ TABLETS ═══════════
-  {id:'ipad-pro', name:'iPad Pro 13"', sub:'M4 · Face ID', cat:'tablet',
-   vw:580, vh:780, screen:{x:22,y:22,w:536,h:736}, screenRR:18,
-   bezel:(c)=>`
-     <rect x="2" y="2" width="576" height="776" rx="32" fill="#1d1d1f"/>
-     <rect x="2" y="2" width="576" height="776" rx="32" fill="none" stroke="#000" stroke-width="1.5"/>
-     <rect x="6" y="6" width="568" height="768" rx="28" fill="#2c2c2e"/>
-     <rect x="18" y="18" width="544" height="744" rx="22" fill="#0a0a0a"/>
-     <rect x="22" y="22" width="536" height="736" rx="18" fill="${c}"/>`,
-   overlay:()=>`<circle cx="290" cy="13" r="3.5" fill="#1a1a1e"/>`
-  },
-  {id:'ipad-air', name:'iPad Air', sub:'M2 · Touch ID', cat:'tablet',
-   vw:560, vh:760, screen:{x:20,y:20,w:520,h:720}, screenRR:14,
-   bezel:(c)=>`
-     <rect x="2" y="2" width="556" height="756" rx="26" fill="#3a3a40"/>
-     <rect x="2" y="2" width="556" height="756" rx="26" fill="none" stroke="#000" stroke-width="1.5"/>
-     <rect x="6" y="6" width="548" height="748" rx="22" fill="#48484f"/>
-     <rect x="16" y="16" width="528" height="728" rx="18" fill="#0a0a0a"/>
-     <rect x="20" y="20" width="520" height="720" rx="14" fill="${c}"/>`,
-   overlay:()=>`<circle cx="280" cy="11" r="3" fill="#2a2a30"/>`
-  },
-  {id:'samsung-tab', name:'Galaxy Tab S9', sub:'Android Tablet', cat:'tablet',
-   vw:780, vh:500, screen:{x:18,y:16,w:744,h:468}, screenRR:12,
-   bezel:(c)=>`
-     <rect x="2" y="2" width="776" height="496" rx="22" fill="#16161a"/>
-     <rect x="2" y="2" width="776" height="496" rx="22" fill="none" stroke="#000" stroke-width="1.5"/>
-     <rect x="6" y="6" width="768" height="488" rx="18" fill="#28282e"/>
-     <rect x="14" y="12" width="752" height="476" rx="15" fill="#0a0a0a"/>
-     <rect x="18" y="16" width="744" height="468" rx="12" fill="${c}"/>`,
-   overlay:()=>`<circle cx="9" cy="250" r="3" fill="#1a1a1e"/>`
-  },
-
-  // ═══════════ LAPTOPS ═══════════
-  // Laptop: screen on top, hinge/base below. screen rect is the display area.
-  {id:'macbook-pro', name:'MacBook Pro 16"', sub:'M4 Pro · Space Black', cat:'laptop',
-   vw:900, vh:572, screen:{x:62,y:24,w:776,h:486}, screenRR:6,
-   bezel:(c)=>`
-     <rect x="40" y="14" width="820" height="506" rx="14" fill="#1a1a1c"/>
-     <rect x="40" y="14" width="820" height="506" rx="14" fill="none" stroke="#000" stroke-width="1.5"/>
-     <rect x="48" y="20" width="804" height="494" rx="10" fill="#0a0a0a"/>
-     <rect x="62" y="24" width="776" height="486" rx="6" fill="${c}"/>
-     <!-- base / keyboard deck -->
-     <path d="M8 520 h884 l24 34 a6 6 0 0 1 -6 8 H-10 a6 6 0 0 1 -6 -8 z" fill="#2a2a2c"/>
-     <rect x="0" y="520" width="900" height="6" fill="#1a1a1c"/>
-     <rect x="380" y="520" width="140" height="9" rx="4" fill="#1a1a1c"/>
-     <path d="M380 520 h140 v4 a6 6 0 0 1 -6 6 h-128 a6 6 0 0 1 -6 -6 z" fill="#141416"/>`,
-   overlay:()=>`<circle cx="450" cy="34" r="3" fill="#1a1a1e"/>`
-  },
-  {id:'macbook-air', name:'MacBook Air 15"', sub:'M3 · Midnight', cat:'laptop',
-   vw:900, vh:572, screen:{x:58,y:22,w:784,h:490}, screenRR:5,
-   bezel:(c)=>`
-     <rect x="36" y="12" width="828" height="510" rx="12" fill="#1c1f28"/>
-     <rect x="36" y="12" width="828" height="510" rx="12" fill="none" stroke="#000" stroke-width="1.5"/>
-     <rect x="44" y="18" width="812" height="498" rx="9" fill="#0a0a0a"/>
-     <rect x="58" y="22" width="784" height="490" rx="5" fill="${c}"/>
-     <path d="M6 522 h888 l22 32 a6 6 0 0 1 -6 8 H-10 a6 6 0 0 1 -6 -8 z" fill="#252834"/>
-     <rect x="0" y="522" width="900" height="6" fill="#1c1f28"/>
-     <path d="M390 522 h120 v4 a5 5 0 0 1 -5 5 h-110 a5 5 0 0 1 -5 -5 z" fill="#15171e"/>`,
-   overlay:()=>`<circle cx="450" cy="32" r="2.5" fill="#1a1a1e"/>`
-  },
-  {id:'macbook-pro-14', name:'MacBook Pro 14"', sub:'M4 · Silver', cat:'laptop',
-   vw:880, vh:560, screen:{x:60,y:22,w:760,h:476}, screenRR:5,
-   bezel:(c)=>`
-     <rect x="38" y="12" width="804" height="496" rx="12" fill="#c8c8cc"/>
-     <rect x="38" y="12" width="804" height="496" rx="12" fill="none" stroke="#999" stroke-width="1.5"/>
-     <rect x="46" y="18" width="788" height="484" rx="9" fill="#0a0a0a"/>
-     <rect x="60" y="22" width="760" height="476" rx="5" fill="${c}"/>
-     <path d="M6 508 h868 l20 30 a6 6 0 0 1 -6 8 H-8 a6 6 0 0 1 -6 -8 z" fill="#d4d4d8"/>
-     <rect x="0" y="508" width="880" height="6" fill="#c0c0c4"/>
-     <path d="M385 508 h110 v4 a5 5 0 0 1 -5 5 h-100 a5 5 0 0 1 -5 -5 z" fill="#b0b0b4"/>`,
-   overlay:()=>`<circle cx="440" cy="32" r="2.5" fill="#888"/>`
-  },
-  {id:'win-laptop', name:'Windows Laptop', sub:'15.6" · 16:9', cat:'laptop',
-   vw:900, vh:540, screen:{x:50,y:20,w:800,h:450}, screenRR:3,
-   bezel:(c)=>`
-     <rect x="28" y="10" width="844" height="470" rx="8" fill="#1a1a1e"/>
-     <rect x="28" y="10" width="844" height="470" rx="8" fill="none" stroke="#000" stroke-width="1.5"/>
-     <rect x="38" y="16" width="824" height="458" rx="5" fill="#0a0a0a"/>
-     <rect x="50" y="20" width="800" height="450" rx="3" fill="${c}"/>
-     <path d="M10 480 h880 l18 28 a5 5 0 0 1 -5 7 H-3 a5 5 0 0 1 -5 -7 z" fill="#222228"/>
-     <rect x="0" y="480" width="900" height="6" fill="#1a1a1e"/>
-     <path d="M400 480 h100 v3 a4 4 0 0 1 -4 4 h-92 a4 4 0 0 1 -4 -4 z" fill="#15151a"/>`,
-   overlay:()=>`<circle cx="450" cy="30" r="2.5" fill="#1a1a1e"/>`
-  },
-
-  // ═══════════ DESKTOP ═══════════
-  {id:'imac', name:'iMac 24"', sub:'Apple Silicon', cat:'desktop',
-   vw:900, vh:640, screen:{x:26,y:24,w:848,h:478}, screenRR:4,
-   bezel:(c)=>`
-     <rect x="6" y="8" width="888" height="510" rx="14" fill="#e6e6ea"/>
-     <rect x="6" y="8" width="888" height="510" rx="14" fill="none" stroke="#ccc" stroke-width="1.5"/>
-     <rect x="14" y="14" width="872" height="498" rx="10" fill="#0a0a0a"/>
-     <rect x="26" y="24" width="848" height="478" rx="4" fill="${c}"/>
-     <rect x="14" y="502" width="872" height="14" fill="#d4d4d8"/>
-     <!-- chin -->
-     <rect x="14" y="514" width="872" height="36" fill="#e6e6ea"/>
-     <!-- stand -->
-     <path d="M390 550 h120 v52 a4 4 0 0 1 -4 4 h-112 a4 4 0 0 1 -4 -4 z" fill="#dcdce0"/>
-     <rect x="300" y="606" width="300" height="14" rx="7" fill="#d0d0d4"/>`,
-   overlay:()=>`<circle cx="450" cy="34" r="3" fill="#b8b8bc"/>`
-  },
-  {id:'studio-display', name:'Studio Display', sub:'5K Retina', cat:'desktop',
-   vw:900, vh:600, screen:{x:18,y:16,w:864,h:486}, screenRR:4,
-   bezel:(c)=>`
-     <rect x="4" y="4" width="892" height="510" rx="14" fill="#1c1c1e"/>
-     <rect x="4" y="4" width="892" height="510" rx="14" fill="none" stroke="#000" stroke-width="1.5"/>
-     <rect x="12" y="10" width="876" height="498" rx="10" fill="#0a0a0a"/>
-     <rect x="18" y="16" width="864" height="486" rx="4" fill="${c}"/>
-     <!-- stand neck + foot -->
-     <rect x="410" y="514" width="80" height="48" fill="#2a2a2c"/>
-     <path d="M320 562 h260 a6 6 0 0 1 6 6 v6 a6 6 0 0 1 -6 6 H320 a6 6 0 0 1 -6 -6 v-6 a6 6 0 0 1 6 -6 z" fill="#222224"/>`,
-   overlay:()=>`<circle cx="450" cy="30" r="4" fill="#161618"/>`
-  },
-  {id:'win-monitor', name:'Windows Monitor', sub:'4K IPS · 27"', cat:'desktop',
-   vw:900, vh:600, screen:{x:16,y:14,w:868,h:492}, screenRR:2,
-   bezel:(c)=>`
-     <rect x="2" y="2" width="896" height="512" rx="8" fill="#1a1a1e"/>
-     <rect x="2" y="2" width="896" height="512" rx="8" fill="none" stroke="#000" stroke-width="1.5"/>
-     <rect x="10" y="8" width="880" height="500" rx="5" fill="#0a0a0a"/>
-     <rect x="16" y="14" width="868" height="492" rx="2" fill="${c}"/>
-     <rect x="420" y="514" width="60" height="52" fill="#1c1c20"/>
-     <path d="M330 566 h240 a4 4 0 0 1 4 4 v8 a4 4 0 0 1 -4 4 H330 a4 4 0 0 1 -4 -4 v-8 a4 4 0 0 1 4 -4 z" fill="#18181c"/>`,
-   overlay:()=>`<rect x="436" y="496" width="28" height="6" rx="2" fill="#0a0a0a"/>`
-  },
-];
-
-/* ── DATA ── */
-const RATIOS = {'16:9':[1920,1080],'4:3':[1440,1080],'9:16':[1080,1920]};
-let customRatio = [1920,1080];   // px, used when currentRatio === 'custom'
-// Returns the chosen output size in pixels
-function getTargetSize(){ return (currentRatio==='custom') ? customRatio : RATIOS[currentRatio]; }
-const PHOTOS = [
-  {id:'photo-1519681393784-d120267933ba',label:'Starry peaks'},
-  {id:'photo-1501785888041-af3ef285b470',label:'Alpine lake'},
-  {id:'photo-1464822759023-fed622ff2c3b',label:'Mountain water'},
-  {id:'photo-1470770841072-f978cf4d019e',label:'Lake cabin'},
-  {id:'photo-1506744038136-46273834b3fb',label:'Forest lake'},
-  {id:'photo-1433838552652-f9a46b332c40',label:'Balloons sky'},
-  {id:'photo-1531366936337-7c912a4589a7',label:'Aurora forest'},
-  {id:'photo-1448375240586-882707db888b',label:'Dark forest'},
-  {id:'photo-1507525428034-b723cf961d3e',label:'Tropical beach'},
-  {id:'photo-1505118380757-91f5f5632de0',label:'Ocean sunset'},
-  {id:'photo-1419242902214-272b3f66ee7a',label:'Milky Way'},
-  {id:'photo-1500534314209-a25ddb2bd429',label:'Meadow mist'},
-  {id:'photo-1446776811953-b23d57bd21aa',label:'Earth from space'},
-  {id:'photo-1518020382113-a7e8fc38eac9',label:'Desert dunes'},
-  {id:'photo-1426604966848-d7adac402bff',label:'Pine valley'},
-  {id:'photo-1469474968028-56623f02e42e',label:'Golden meadow'},
-  {id:'photo-1493246507139-91e8fad9978e',label:'Foggy mountain'},
-  {id:'photo-1508739773434-c26b3d09e071',label:'Red rocks'},
-  {id:'photo-1470770903676-69b98201ea1c',label:'Road ahead'},
-  {id:'photo-1501854140801-50d01698950b',label:'Alpine sunrise'},
-];
-const GRADIENTS = [
-  {g:'linear-gradient(135deg,#fbc2eb,#a18cd1)',label:'Cotton candy'},
-  {g:'linear-gradient(135deg,#a1c4fd,#c2e9fb)',label:'Sky mist'},
-  {g:'linear-gradient(135deg,#ffecd2,#fcb69f)',label:'Peach glow'},
-  {g:'linear-gradient(135deg,#c3f4d4,#a8edea)',label:'Mint breeze'},
-  {g:'linear-gradient(135deg,#f8ceec,#fda7df,#a29bfe)',label:'Candy dream'},
-  {g:'linear-gradient(135deg,#ffd6e7,#ffb3c6,#ff8fab)',label:'Rose bloom'},
-  {g:'linear-gradient(135deg,#d4f1f9,#a8dadc,#74b9ff)',label:'Ocean foam'},
-  {g:'linear-gradient(135deg,#e0c3fc,#8ec5fc)',label:'Lavender sky'},
-  {g:'linear-gradient(135deg,#fff1eb,#ace0f9)',label:'Cloud drift'},
-  {g:'linear-gradient(135deg,#fddb92,#d1fdff)',label:'Golden hour'},
-  {g:'linear-gradient(135deg,#c1dfc4,#deecdd)',label:'Soft sage'},
-  {g:'linear-gradient(135deg,#fccb90,#d57eeb)',label:'Sunset berry'},
-  {g:'linear-gradient(135deg,#f953c6,#b91d73)',label:'Hot magenta'},
-  {g:'linear-gradient(135deg,#f7971e,#ffd200)',label:'Solar flare'},
-  {g:'linear-gradient(135deg,#11998e,#38ef7d)',label:'Neon mint'},
-  {g:'linear-gradient(135deg,#4776e6,#8e54e9)',label:'Electric violet'},
-  {g:'linear-gradient(135deg,#f02fc2,#6094ea)',label:'Synthwave'},
-  {g:'linear-gradient(135deg,#fc4a1a,#f7b733)',label:'Molten'},
-  {g:'linear-gradient(135deg,#00c9ff,#92fe9d)',label:'Aqua laser'},
-  {g:'linear-gradient(135deg,#e52d27,#b31217)',label:'Red alert'},
-];
-const SWATCHES = [
-  '#0a0a0a','#0d1117','#0f1923','#1c1c1e','#111827','#1a1a2e','#0a0f1e',
-  '#1b2838','#0d2137','#1e3a5f','#2c3e50','#1a2744','#0a1a0a','#0f2d0f',
-  '#2a0a0a','#1a0a2e','#2e1a00','#1a1a0a','#00141a','#0a001a','#001a0a',
-];
-
-/* ── STATE ── */
-let currentRatio = '16:9';
-let hasMedia = false;
-let isVideo = false;
-let padPct = 6;
-let mediaAR = 16/9;
-/* Reposition + zoom state (Option 1: cover-fit + drag + zoom) */
-let mediaScale = 1;        // zoom multiplier, 1 = cover-fit
-let mediaOffX = 0;         // horizontal offset in px (screen space), + = move image right
-let mediaOffY = 0;         // vertical offset in px
-let activeDevice = null; // null = plain frame, else device object
-let currentCat = 'all';
-let selectedFmt = 'png';
-let selectedQ = '1080';
-
-/* switchTopTab removed — left/right sidebar layout replaces tabs */
-
-/* ── DEVICE GRID ── */
-function buildDeviceGrid() {
-  const grid = document.getElementById('device-grid');
-  grid.innerHTML = '';
-  const list = currentCat === 'all' ? DEVICES : DEVICES.filter(d=>d.cat===currentCat);
-  list.forEach(dev => {
-    const card = document.createElement('div');
-    card.className = 'device-card' + (activeDevice && activeDevice.id===dev.id ? ' active' : '');
-    card.dataset.id = dev.id;
-    // Mini SVG preview: bezel with a subtle screen fill + notch overlay
-    const pvW = dev.vw >= dev.vh ? 76 : Math.round(76*dev.vw/dev.vh);
-    const pvH = Math.round(pvW*dev.vh/dev.vw);
-    const previewSVG = `<svg viewBox="0 0 ${dev.vw} ${dev.vh}" width="${pvW}" height="${pvH}" xmlns="http://www.w3.org/2000/svg">${dev.bezel('#3a3a45')}${dev.overlay()}</svg>`;
-    card.innerHTML = `<div class="device-preview">${previewSVG}</div><div class="device-name">${dev.name}</div><div class="device-sub">${dev.sub}</div>`;
-    card.onclick = () => selectDevice(dev);
-    grid.appendChild(card);
-  });
-  // "None" option first if cat=all or phone
-  if(currentCat==='all') {
-    const none = document.createElement('div');
-    none.className = 'device-card' + (!activeDevice ? ' active' : '');
-    none.style.gridColumn = '1/-1';
-    none.innerHTML = `<div class="device-name" style="padding:8px 0">No device — plain frame</div>`;
-    none.onclick = () => selectDevice(null);
-    grid.insertBefore(none, grid.firstChild);
-  }
-}
-
-function filterCat(pill, cat) {
-  document.querySelectorAll('.cat-pill').forEach(p=>p.classList.remove('active'));
-  pill.classList.add('active');
-  currentCat = cat;
-  buildDeviceGrid();
-}
-
-function selectDevice(dev) {
-  if(layoutMode==='dual'){
-    slots[selectedSlot].device = dev;
-    activeDevice = dev;
-    document.getElementById('st-dev-'+selectedSlot).textContent = dev ? dev.name : 'None';
-    buildDeviceGrid();
-    renderDualStage();
-    return;
-  }
-  activeDevice = dev;
-  mediaOffX = 0; mediaOffY = 0;
-  buildDeviceGrid();
-  applyDevice();
-  if(hasMedia) requestAnimationFrame(applyMediaTransform);
-}
-
-function applyDevice() {
-  const plain = document.getElementById('mockup-frame');
-  const gadgetWrap = document.getElementById('gadget-frame-wrap');
-  const radiusRow = document.getElementById('row-radius');
-
-  if (!activeDevice) {
-    plain.style.display = 'flex';
-    gadgetWrap.style.display = 'none';
-    radiusRow.style.display = 'flex';
-    // Restore audio to the plain-frame video
-    if (hasMedia && isVideo) {
-      const mainVid = document.getElementById('mockup-video');
-      const gVid = document.getElementById('gadget-video');
-      gVid.muted = true; gVid.pause();
-      mainVid.muted = false; mainVid.volume = 1;
-      mainVid.currentTime = gVid.currentTime || 0;
-      mainVid.play().catch(()=>{ mainVid.muted=true; mainVid.play().catch(()=>{}); });
-    }
-    sizeFrameToMedia();
-    return;
-  }
-
-  plain.style.display = 'none';
-  gadgetWrap.style.display = 'flex';
-  radiusRow.style.display = 'none'; // device controls its own radius
-
-  // Render bezel (under media) and overlay (notch, over media) separately
-  const dev = activeDevice;
-  const bezelEl = document.getElementById('device-bezel');
-  const overlayEl = document.getElementById('device-overlay');
-  bezelEl.setAttribute('viewBox', '0 0 '+dev.vw+' '+dev.vh);
-  bezelEl.innerHTML = dev.bezel('#000');         // screen area filled black (under media)
-  overlayEl.setAttribute('viewBox', '0 0 '+dev.vw+' '+dev.vh);
-  overlayEl.innerHTML = dev.overlay();           // notch / island / camera
-
-  // Transfer already-loaded media to gadget elements
-  if (hasMedia) {
-    const gsImg = document.getElementById('gadget-img');
-    const gsVid = document.getElementById('gadget-video');
-    const mainVid = document.getElementById('mockup-video');
-    if (isVideo) {
-      gsVid.src = mainVid.src; gsVid.style.display='block';
-      gsImg.style.display='none';
-      // Audio moves to the gadget video; mute & pause the plain one
-      mainVid.muted = true; mainVid.pause();
-      gsVid.muted = false; gsVid.volume = 1;
-      gsVid.currentTime = mainVid.currentTime || 0;
-      gsVid.play().catch(()=>{ gsVid.muted=true; gsVid.play().catch(()=>{}); });
-    } else {
-      const srcImg = document.getElementById('mockup-img');
-      gsImg.src = srcImg.src; gsImg.style.display='block';
-      gsVid.style.display='none';
-    }
-    const dzg = document.getElementById('drop-zone-g');
-    if(dzg) dzg.style.display='none';
-  }
-
-  requestAnimationFrame(sizeGadget);
-}
-
-function sizeGadget() {
-  if (!activeDevice) return;
-  const dev = activeDevice;
-  const wrap = document.getElementById('canvas-wrap');
-  const cw = parseInt(wrap.style.width) || wrap.clientWidth || 800;
-  const ch = parseInt(wrap.style.height) || wrap.clientHeight || 500;
-  const p = padPct/100;
-  const maxW = cw*(1-p*2), maxH = ch*(1-p*2);
-  const devAR = dev.vw/dev.vh;
-  let dw=maxW, dh=maxW/devAR;
-  if(dh>maxH){dh=maxH;dw=maxH*devAR;}
-  dw=Math.round(dw); dh=Math.round(dh);
-
-  // 1. Size the wrap
-  const gfw = document.getElementById('gadget-frame-wrap');
-  gfw.style.width    = dw + 'px';
-  gfw.style.height   = dh + 'px';
-  gfw.style.position = 'relative';
-  gfw.style.display  = 'block';
-
-  // 2. Bezel SVG: z-index 1 (under media)
-  const bezelEl = document.getElementById('device-bezel');
-  bezelEl.style.cssText = 'position:absolute;inset:0;width:'+dw+'px;height:'+dh+'px;z-index:1;pointer-events:none;background:transparent;display:block;';
-  bezelEl.setAttribute('width', dw);
-  bezelEl.setAttribute('height', dh);
-
-  // 3. Screen rect (scaled from native device coords)
-  const sx = Math.round(dev.screen.x / dev.vw * dw);
-  const sy = Math.round(dev.screen.y / dev.vh * dh);
-  const sw = Math.round(dev.screen.w / dev.vw * dw);
-  const sh = Math.round(dev.screen.h / dev.vh * dh);
-  const rr = Math.round((dev.screenRR||20) / dev.vw * dw);
-
-  // 4. gadget-screen: z-index 2 (media here, above bezel)
-  const gs = document.getElementById('gadget-screen');
-  gs.style.cssText = 'position:absolute;z-index:2;overflow:hidden;background:#000;'
-    + 'left:'+sx+'px;top:'+sy+'px;width:'+sw+'px;height:'+sh+'px;border-radius:'+rr+'px;';
-
-  // 5. Media: ensure absolute positioning; exact size/pos set by applyMediaTransform()
-  const gImg = document.getElementById('gadget-img');
-  const gVid = document.getElementById('gadget-video');
-  [gImg, gVid].forEach(el => { if(el) el.style.position = 'absolute'; });
-  if (hasMedia) {
-    if (isVideo) { gVid.style.display = 'block'; gImg.style.display = 'none'; }
-    else { gImg.style.display = 'block'; gVid.style.display = 'none'; }
-  } else {
-    gImg.style.display = 'none'; gVid.style.display = 'none';
-  }
-
-  // 6. Overlay SVG (notch / island): z-index 3 — ALWAYS on top of media
-  const overlayEl = document.getElementById('device-overlay');
-  overlayEl.style.cssText = 'position:absolute;inset:0;width:'+dw+'px;height:'+dh+'px;z-index:3;pointer-events:none;background:transparent;display:block;';
-  overlayEl.setAttribute('width', dw);
-  overlayEl.setAttribute('height', dh);
-
-  // 7. Drop overlay: z-index 4 (above everything when no media)
-  const dzo = document.getElementById('drop-zone-g');
-  if (dzo) {
-    // Clip the drop overlay to just the screen area so it sits inside the device
-    dzo.style.cssText = 'position:absolute;z-index:4;display:'+(hasMedia?'none':'flex')
-      + ';left:'+sx+'px;top:'+sy+'px;width:'+sw+'px;height:'+sh+'px;border-radius:'+rr+'px;'
-      + 'flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;'
-      + 'background:rgba(0,0,0,0.5);backdrop-filter:blur(2px);';
-  }
-  if(hasMedia) applyMediaTransform();
-}
-
-/* ── CANVAS SIZING ── */
-function applyCanvasRatio() {
-  const area = document.getElementById('work-area');
-  const aw = area.clientWidth-112, ah = area.clientHeight-96;
-  if(aw<=0||ah<=0){requestAnimationFrame(applyCanvasRatio);return;}
-  const [rw,rh] = (currentRatio==='custom') ? customRatio : RATIOS[currentRatio];
-  let w=aw,h=aw*rh/rw;
-  if(h>ah){h=ah;w=ah*rw/rh;}
-  w=Math.round(w);h=Math.round(h);
-  const wrap = document.getElementById('canvas-wrap');
-  const prevW=parseFloat(wrap.style.width)||0, prevH=parseFloat(wrap.style.height)||0;
-  wrap.style.width=w+'px'; wrap.style.height=h+'px';
-  wrap.style.left=Math.round((area.clientWidth-w)/2)+'px';
-  wrap.style.top=Math.round((area.clientHeight-h)/2)+'px';
-  if(activeDevice) sizeGadget(); else sizeFrameToMedia();
-  if(typeof texts!=='undefined' && texts.length && prevW && prevH) repositionTextsOnResize(prevW, prevH, w, h);
-}
-
-function sizeFrameToMedia() {
-  if(activeDevice){sizeGadget();return;}
-  const wrap = document.getElementById('canvas-wrap');
-  const cw=parseInt(wrap.style.width)||wrap.clientWidth||800;
-  const ch=parseInt(wrap.style.height)||wrap.clientHeight||450;
-  const p=padPct/100;
-  const maxW=cw*(1-p*2),maxH=ch*(1-p*2);
-  let fw=maxW,fh=maxW/mediaAR;
-  if(fh>maxH){fh=maxH;fw=maxH*mediaAR;}
-  const f=document.getElementById('mockup-frame');
-  f.style.width=Math.round(fw)+'px'; f.style.height=Math.round(fh)+'px';
-  if(hasMedia) applyMediaTransform();
-}
-
-function calcFrame() {
-  if(activeDevice){
-    const gs=document.getElementById('gadget-screen');
-    return {w:parseInt(gs.style.width)||300,h:parseInt(gs.style.height)||200};
-  }
-  const wrap=document.getElementById('canvas-wrap');
-  const cw=parseInt(wrap.style.width)||wrap.clientWidth||800;
-  const ch=parseInt(wrap.style.height)||wrap.clientHeight||450;
-  const p=padPct/100;
-  const maxW=cw*(1-p*2),maxH=ch*(1-p*2);
-  let fw=maxW,fh=maxW/mediaAR;
-  if(fh>maxH){fh=maxH;fw=maxH*mediaAR;}
-  return {w:Math.round(fw),h:Math.round(fh)};
-}
-
-function setRatio(btn,ratio){
-  document.querySelectorAll('.ratio-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active'); currentRatio=ratio;
-  document.getElementById('custom-ratio-row').style.display='none';
-  applyCanvasRatio();
-}
-function toggleCustomRatio(btn){
-  document.querySelectorAll('.ratio-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active'); currentRatio='custom';
-  document.getElementById('custom-ratio-row').style.display='flex';
-  applyCustomRatio();
-}
-function applyCustomRatio(){
-  let w=parseFloat(document.getElementById('custom-w').value);
-  let h=parseFloat(document.getElementById('custom-h').value);
-  if(!w||w<1) w=1; if(!h||h<1) h=1;
-  w=Math.min(w,9999); h=Math.min(h,9999);
-  customRatio=[w,h];
-  if(currentRatio==='custom') applyCanvasRatio();
-}
-window.addEventListener('resize',applyCanvasRatio);
-
-/* ── SLIDERS ── */
-function onPad(v){padPct=parseInt(v);document.getElementById('vl-pad').textContent=v+'%';if(activeDevice)sizeGadget();else sizeFrameToMedia();}
-function onRadius(v){document.getElementById('vl-rad').textContent=v+'px';document.getElementById('mockup-frame').style.borderRadius=v+'px';}
-function onShadow(v){
-  document.getElementById('vl-shad').textContent=v+'%';
-  const f=document.getElementById('mockup-frame'),t=v/100;
-  if(t===0){f.style.boxShadow='0 0 0 1px rgba(255,255,255,0.09)';return;}
-  const a1=(0.45*t).toFixed(2),a2=(0.5*t).toFixed(2),a3=(0.38*t).toFixed(2);
-  const b1=Math.round(6+18*t),b2=Math.round(24+36*t),b3=Math.round(20+40*t),b4=Math.round(60+60*t),b5=Math.round(48+72*t),b6=Math.round(120+80*t);
-  f.style.boxShadow='0 0 0 1px rgba(255,255,255,0.09),0 '+b1+'px '+b2+'px rgba(0,0,0,'+a1+'),0 '+b3+'px '+b4+'px rgba(0,0,0,'+a2+'),0 '+b5+'px '+b6+'px rgba(0,0,0,'+a3+')';
-}
-
-/* ── BACKGROUND ── */
-let transparentBg = false;
-let bgType = 'image';   // 'image' | 'gradient' | 'color' | 'none'
-let bgValue = '';       // url for image, css gradient string, or color hex
-function switchBgTab(tab,panel){
-  document.querySelectorAll('.bg-tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.bg-panel').forEach(p=>p.classList.remove('active'));
-  tab.classList.add('active');
-  document.getElementById('panel-'+panel).classList.add('active');
-  transparentBg = (panel==='none');
-  if(transparentBg){
-    bgType='none'; bgValue='';
-    const el=document.getElementById('canvas-bg');
-    el.style.background='transparent';el.style.backgroundImage='none';
-    document.getElementById('canvas-bg-clip').style.background='repeating-conic-gradient(#1e1e1e 0% 25%, #151515 0% 50%) 0 0 / 20px 20px';
-  } else {
-    document.getElementById('canvas-bg-clip').style.background='';
-  }
-}
-function applyBgImg(url){
-  const el=document.getElementById('canvas-bg');
-  el.style.background='';el.style.backgroundImage='url('+url+')';
-  el.style.backgroundSize='cover';el.style.backgroundPosition='center';el.style.backgroundRepeat='no-repeat';
-  bgType='image'; bgValue=url; transparentBg=false;
-}
-function applyBgSolid(val){
-  const el=document.getElementById('canvas-bg');
-  el.style.backgroundImage='';el.style.background=val;
-  bgType = /gradient/i.test(val) ? 'gradient' : 'color';
-  bgValue = val; transparentBg=false;
-}
-function onBlur(v){document.getElementById('vl-blur').textContent=v+'px';document.getElementById('canvas-bg').style.filter=v>0?'blur('+v+'px)':'';}
-function onBgSize(v){
-  document.getElementById('vl-bgz').textContent=v+'%';
-  document.getElementById('canvas-wrap').style.transform='scale('+v/100+')';
-}
-function buildImgGrid(){
-  const grid=document.getElementById('img-grid');
-  PHOTOS.forEach((p,i)=>{
-    const tu='https://images.unsplash.com/'+p.id+'?w=500&q=72&auto=format&fit=crop';
-    const fu='https://images.unsplash.com/'+p.id+'?w=2000&q=88&auto=format&fit=crop';
-    const div=document.createElement('div');
-    div.className='img-thumb'+(i===0?' active':'');
-    div.innerHTML='<img src="'+tu+'" loading="lazy" alt="'+p.label+'"><div class="tlbl">'+p.label+'</div><div class="chk"><svg viewBox="0 0 12 10" fill="none" stroke="#fff" stroke-width="2"><polyline points="1 5 4.5 8.5 11 1"/></svg></div>';
-    div.onclick=()=>{document.querySelectorAll('.img-thumb').forEach(t=>t.classList.remove('active'));div.classList.add('active');applyBgImg(fu);};
-    grid.appendChild(div);
-  });
-  applyBgImg('https://images.unsplash.com/'+PHOTOS[0].id+'?w=2000&q=88&auto=format&fit=crop');
-}
-function buildGradGrid(){
-  const grid=document.getElementById('grad-grid');
-  GRADIENTS.forEach((item,i)=>{
-    const div=document.createElement('div');
-    div.className='grad-sw'+(i===0?' active':'');
-    div.style.background=item.g;div.title=item.label;
-    div.onclick=()=>{document.querySelectorAll('.grad-sw').forEach(s=>s.classList.remove('active'));div.classList.add('active');applyBgSolid(item.g);};
-    grid.appendChild(div);
-  });
-}
-function buildSolidSws(){
-  const cont=document.getElementById('solid-sws');
-  SWATCHES.forEach(c=>{
-    const div=document.createElement('div');
-    div.className='solid-sw';div.style.background=c;
-    div.onclick=()=>{document.querySelectorAll('.solid-sw').forEach(s=>s.classList.remove('active'));div.classList.add('active');document.getElementById('color-pick').value=c;document.getElementById('hex-in').value=c;applyBgSolid(c);};
-    cont.appendChild(div);
-  });
-}
-function onColorPick(v){document.getElementById('hex-in').value=v;applyBgSolid(v);document.querySelectorAll('.solid-sw').forEach(s=>s.classList.remove('active'));}
-function onHex(v){if(/^#[0-9a-fA-F]{6}$/.test(v)){document.getElementById('color-pick').value=v;applyBgSolid(v);document.querySelectorAll('.solid-sw').forEach(s=>s.classList.remove('active'));}}
-
-/* ══════════════════════════════════════════════════════
-   REPOSITION + ZOOM ENGINE (Option 1: cover-fit + drag + zoom)
-   - mediaScale: zoom (1 = exact cover)
-   - mediaOffX/Y: pan offset in screen pixels
-   The SAME math is applied in export so download matches preview.
-══════════════════════════════════════════════════════ */
-
-// Returns the active screen rect {w,h} in CSS pixels
-function activeScreenSize(){
-  if(activeDevice){
-    const gs=document.getElementById('gadget-screen');
-    return {w: parseFloat(gs.style.width)||300, h: parseFloat(gs.style.height)||200};
-  }
-  const f=document.getElementById('mockup-frame');
-  return {w: parseFloat(f.style.width)||400, h: parseFloat(f.style.height)||300};
-}
-
-// Cover-fit base: how the image fills the screen at scale=1 (object-fit:cover)
-// Returns the displayed media size that covers the screen.
-function coverSize(screenW, screenH){
-  const scrAR = screenW/screenH;
-  let w,h;
-  if(mediaAR > scrAR){ h=screenH; w=screenH*mediaAR; }  // image wider → match height
-  else { w=screenW; h=screenW/mediaAR; }                 // image taller → match width
-  return {w,h};
-}
-
-// Clamp offsets so you can never drag past the image edges (no empty gaps)
-function clampOffsets(){
-  const {w:sw,h:sh}=activeScreenSize();
-  const base=coverSize(sw,sh);
-  const dispW=base.w*mediaScale, dispH=base.h*mediaScale;
-  const maxX=Math.max(0,(dispW-sw)/2);
-  const maxY=Math.max(0,(dispH-sh)/2);
-  mediaOffX=Math.max(-maxX, Math.min(maxX, mediaOffX));
-  mediaOffY=Math.max(-maxY, Math.min(maxY, mediaOffY));
-}
-
-// Apply pan/zoom by SIZING the media to its true cover dimensions and
-// positioning it absolutely. This reveals real image content when dragging
-// (no gaps), and the edges are hard-clamped so it never overflows into a gap.
-function positionMediaIn(el, sw, sh){
-  if(!el) return;
-  const base = coverSize(sw, sh);
-  const dispW = base.w * mediaScale;
-  const dispH = base.h * mediaScale;
-  // centered + offset (offsets already clamped by caller)
-  const left = (sw - dispW)/2 + mediaOffX;
-  const top  = (sh - dispH)/2 + mediaOffY;
-  // override the CSS 100%/inset:0/cover with explicit pixel box (aspect preserved → no distortion)
-  el.style.inset = 'auto';
-  el.style.left = left + 'px';
-  el.style.top = top + 'px';
-  el.style.width = dispW + 'px';
-  el.style.height = dispH + 'px';
-  el.style.objectFit = 'fill';   // box already matches image aspect, so fill = no distortion
-  el.style.transform = 'none';
-}
-
-function applyMediaTransform(){
-  if(!hasMedia) return;
-  clampOffsets();
-  const {w:sw,h:sh} = activeScreenSize();
-  const ids = activeDevice ? ['gadget-img','gadget-video'] : ['mockup-img','mockup-video'];
-  ids.forEach(id=>{ positionMediaIn(document.getElementById(id), sw, sh); });
-  // keep the off-screen duplicate sized too (using the OTHER frame's screen size)
-  const otherSize = activeDevice
-    ? { w: parseFloat(document.getElementById('mockup-frame').style.width)||sw,
-        h: parseFloat(document.getElementById('mockup-frame').style.height)||sh }
-    : (function(){ const gs=document.getElementById('gadget-screen');
-        return { w: parseFloat(gs.style.width)||sw, h: parseFloat(gs.style.height)||sh }; })();
-  const others = activeDevice ? ['mockup-img','mockup-video'] : ['gadget-img','gadget-video'];
-  others.forEach(id=>{ positionMediaIn(document.getElementById(id), otherSize.w, otherSize.h); });
-  // update zoom slider readout
-  const zv=document.getElementById('vl-zoom'); if(zv) zv.textContent=Math.round(mediaScale*100)+'%';
-  const zs=document.getElementById('sl-zoom'); if(zs && parseFloat(zs.value)!==mediaScale) zs.value=mediaScale;
-}
-
-function resetMediaTransform(){ mediaScale=1; mediaOffX=0; mediaOffY=0; applyMediaTransform(); }
-
-function onZoom(v){
-  if(layoutMode==='dual'){
-    slots[selectedSlot].scale=parseFloat(v);
-    document.getElementById('vl-zoom').textContent=Math.round(parseFloat(v)*100)+'%';
-    const inst=document.querySelectorAll('.device-instance')[selectedSlot];
-    if(inst) sizeInstance(inst, selectedSlot);
-    return;
-  }
-  mediaScale=parseFloat(v); applyMediaTransform();
-}
-
-// Enable drag + scroll-zoom on a screen container
-function enableReposition(containerId, mediaIds){
-  const cont=document.getElementById(containerId);
-  if(!cont || cont.dataset.repoBound) return;
-  cont.dataset.repoBound='1';
-  let dragging=false, startX=0, startY=0, baseX=0, baseY=0;
-
-  cont.addEventListener('pointerdown', e=>{
-    if(!hasMedia) return;
-    // don't start drag if clicking the drop overlay
-    dragging=true; startX=e.clientX; startY=e.clientY; baseX=mediaOffX; baseY=mediaOffY;
-    cont.classList.add('dragging');
-    cont.setPointerCapture(e.pointerId);
-    e.preventDefault();
-  });
-  cont.addEventListener('pointermove', e=>{
-    if(!dragging) return;
-    mediaOffX=baseX+(e.clientX-startX);
-    mediaOffY=baseY+(e.clientY-startY);
-    applyMediaTransform();
-  });
-  const endDrag=e=>{ if(dragging){ dragging=false; cont.classList.remove('dragging'); try{cont.releasePointerCapture(e.pointerId);}catch(_){} } };
-  cont.addEventListener('pointerup', endDrag);
-  cont.addEventListener('pointercancel', endDrag);
-
-  // scroll to zoom (centered)
-  cont.addEventListener('wheel', e=>{
-    if(!hasMedia) return;
-    e.preventDefault();
-    const delta = e.deltaY<0 ? 0.06 : -0.06;
-    mediaScale = Math.max(1, Math.min(3, mediaScale+delta));
-    applyMediaTransform();
-  }, {passive:false});
-}
-
-/* ── MEDIA ── */
-function syncMediaToActiveFrame(src, type) {
-  const img=document.getElementById('mockup-img'),vid=document.getElementById('mockup-video');
-  const gImg=document.getElementById('gadget-img'),gVid=document.getElementById('gadget-video');
-  // Hide drop zones on both plain and gadget frame
-  const dz=document.getElementById('drop-zone');
-  const dzg=document.getElementById('drop-zone-g');
-  if(dz) dz.style.display='none';
-  if(dzg) dzg.style.display='none';
-  img.style.display='none'; vid.style.display='none';
-  gImg.style.display='none'; gVid.style.display='none';
-  if(type==='video'){
-    vid.src=src; gVid.src=src;
-    // The element shown in the ACTIVE frame plays with sound; the hidden one is muted.
-    if(activeDevice){
-      gVid.style.display='block'; gVid.muted=false; gVid.volume=1;
-      vid.style.display='none';   vid.muted=true;
-      gVid.play().catch(()=>{ gVid.muted=true; gVid.play().catch(()=>{}); });
-    } else {
-      vid.style.display='block';  vid.muted=false; vid.volume=1;
-      gVid.style.display='none';  gVid.muted=true;
-      vid.play().catch(()=>{ vid.muted=true; vid.play().catch(()=>{}); });
-    }
-  } else {
-    img.src=src; img.style.display='block';
-    gImg.src=src; gImg.style.display='block';
-  }
-}
-
-function showMedia(file){
-  if(layoutMode==='dual'){ showMediaDual(file, activeFileSlot); return; }
-  isVideo=file.type.startsWith('video/');
-  if(isVideo){
-    const url=URL.createObjectURL(file);
-    // Set the real video elements immediately and let THEIR loadedmetadata drive the fit.
-    // (refitVideoFrom listeners recompute mediaAR + re-fit as soon as dimensions are known.)
-    mediaScale=1; mediaOffX=0; mediaOffY=0;
-    syncMediaToActiveFrame(url,'video');
-    // Initial layout so the frame shows right away; final fit comes from loadedmetadata.
-    if(activeDevice) requestAnimationFrame(()=>{sizeGadget();applyMediaTransform();}); else {sizeFrameToMedia();applyMediaTransform();}
-    // Belt-and-suspenders: re-fit a few frames until the video reports real dimensions,
-    // then stop (the loadedmetadata listener does the authoritative fit).
-    let tries=0;
-    const settle=()=>{
-      const av=document.getElementById(activeDevice?'gadget-video':'mockup-video');
-      const ready = av && av.videoWidth>0 && av.videoHeight>0;
-      if(ready){
-        const ar=av.videoWidth/av.videoHeight;
-        if(ar && isFinite(ar)) mediaAR=ar;
-      }
-      if(activeDevice){ sizeGadget(); } else { sizeFrameToMedia(); }
-      applyMediaTransform();
-      // stop once dimensions are known and applied, or after ~1.5s safety cap
-      if(ready || tries++>25) return;
-      setTimeout(settle, 60);
-    };
-    setTimeout(settle, 40);
-  } else {
-    const r=new FileReader();
-    r.onload=ev=>{
-      const tmp=new Image();
-      tmp.onload=()=>{
-        mediaAR=tmp.naturalWidth/tmp.naturalHeight;
-        resetMediaTransform();
-        syncMediaToActiveFrame(ev.target.result,'image');
-        if(activeDevice) requestAnimationFrame(()=>{sizeGadget();applyMediaTransform();}); else {sizeFrameToMedia();applyMediaTransform();}
-      };
-      tmp.src=ev.target.result;
-    };
-    r.readAsDataURL(file);
-  }
-  hasMedia=true;
-  document.getElementById('dl-btn').disabled=false;
-  document.getElementById('clear-btn').style.display='flex';
-  document.getElementById('change-btn').style.display='flex';
-  const zr=document.getElementById('zoom-row'); if(zr) zr.style.display='flex';
-  const rb=document.getElementById('reset-pos-btn'); if(rb) rb.style.display='flex';
-  // enable drag/zoom on whichever frame is active
-  document.getElementById('mockup-inner')?.classList.add('repositionable');
-  document.getElementById('gadget-screen')?.classList.add('repositionable');
-}
-
-function showMediaDual(file, i){
-  const isVid = file.type.startsWith('video/');
-  const url = URL.createObjectURL(file);
-  if(isVid){
-    const tmp=document.createElement('video'); tmp.src=url;
-    tmp.onloadedmetadata=()=>{
-      slots[i].ar = (tmp.videoWidth/tmp.videoHeight)||(16/9);
-      slots[i].src=url; slots[i].type='video'; slots[i].hasMedia=true; slots[i].scale=1;
-      renderDualStage();
-      selectSlot(i);
-      document.getElementById('dl-btn').disabled=false;
-    };
-    tmp.load();
-  } else {
-    const r=new FileReader();
-    r.onload=ev=>{
-      const im=new Image();
-      im.onload=()=>{
-        slots[i].ar=(im.naturalWidth/im.naturalHeight)||(16/9);
-        slots[i].src=ev.target.result; slots[i].type='image'; slots[i].hasMedia=true; slots[i].scale=1;
-        renderDualStage();
-        selectSlot(i);
-        document.getElementById('dl-btn').disabled=false;
-      };
-      im.src=ev.target.result;
-    };
-    r.readAsDataURL(file);
-  }
-  document.getElementById('clear-btn').style.display='flex';
-  document.getElementById('change-btn').style.display='flex';
-}
-
-function clearMedia(){
-  // ── DUAL MODE: clear media from BOTH slots ──
-  if(typeof layoutMode!=='undefined' && layoutMode==='dual'){
-    slots.forEach(s=>{ s.src=null; s.type=null; s.hasMedia=false; s.scale=1; s.ar=16/9; });
-    renderDualStage();
-    selectSlot(selectedSlot);   // refresh tab label + zoom row visibility
-    document.getElementById('dl-btn').disabled = true;
-    document.getElementById('clear-btn').style.display = 'none';
-    document.getElementById('hf').value='';
-    return;
-  }
-
-  // ── SINGLE MODE ──
-  hasMedia=false;isVideo=false;mediaAR=16/9;
-  mediaScale=1;mediaOffX=0;mediaOffY=0;
-  const zr=document.getElementById('zoom-row'); if(zr) zr.style.display='none';
-  const rb=document.getElementById('reset-pos-btn'); if(rb) rb.style.display='none';
-  ['mockup-img','gadget-img'].forEach(id=>{const e=document.getElementById(id);if(e){e.src='';e.removeAttribute('src');e.style.display='none';}});
-  ['mockup-video','gadget-video'].forEach(id=>{const e=document.getElementById(id);if(e){try{e.pause();}catch(_){} e.src='';e.removeAttribute('src');e.load&&e.load();e.style.display='none';}});
-  // Show plain frame drop zone
-  const dz=document.getElementById('drop-zone');
-  if(dz) dz.style.display='flex';
-  // Show gadget drop overlay; re-run sizeGadget so it's clipped/positioned correctly
-  const dzg=document.getElementById('drop-zone-g');
-  if(dzg) dzg.style.display='flex';
-  if(activeDevice) sizeGadget();
-  document.getElementById('dl-btn').disabled=true;
-  document.getElementById('clear-btn').style.display='none';
-  document.getElementById('change-btn').style.display='none';
-  document.getElementById('hf').value='';
-}
-
-document.getElementById('hf').addEventListener('change',function(e){const f=e.target.files[0];if(f)showMedia(f);this.value='';});
-document.getElementById('hbf').addEventListener('change',function(e){
-  const f=e.target.files[0];if(!f)return;
-  applyBgImg(URL.createObjectURL(f));
-  document.querySelectorAll('.img-thumb').forEach(t=>t.classList.remove('active'));
-});
-
-/* Drag + drop */
-// Plain frame
-(()=>{
-  const frm=document.getElementById('mockup-frame');
-  const dz=document.getElementById('drop-zone');
-  if(!frm)return;
-  ['dragenter','dragover'].forEach(e=>frm.addEventListener(e,ev=>{ev.preventDefault();if(dz)dz.classList.add('drag-over');}));
-  ['dragleave','drop'].forEach(e=>frm.addEventListener(e,()=>{if(dz)dz.classList.remove('drag-over');}));
-  frm.addEventListener('drop',e=>{e.preventDefault();const f=e.dataTransfer.files[0];if(f&&(f.type.startsWith('image/')||f.type.startsWith('video/')))showMedia(f);});
-})();
-// Gadget frame — drag over gadget-frame-wrap, highlight overlay
-(()=>{
-  const frm=document.getElementById('gadget-frame-wrap');
-  const dz=document.getElementById('drop-zone-g');
-  if(!frm)return;
-  ['dragenter','dragover'].forEach(e=>frm.addEventListener(e,ev=>{ev.preventDefault();if(dz)dz.classList.add('drag-over');}));
-  ['dragleave','drop'].forEach(e=>frm.addEventListener(e,()=>{if(dz)dz.classList.remove('drag-over');}));
-  frm.addEventListener('drop',e=>{e.preventDefault();const f=e.dataTransfer.files[0];if(f&&(f.type.startsWith('image/')||f.type.startsWith('video/')))showMedia(f);});
-})();
-
-/* ── MODALS ── */
-function openModal(id){document.getElementById(id).classList.add('open');}
-function closeModal(id){document.getElementById(id).classList.remove('open');}
-function selectFmt(fmt){selectedFmt=fmt;['png','jpg','webp'].forEach(f=>document.getElementById('fmt-'+f).classList.toggle('selected',f===fmt));}
-function selectQ(q){selectedQ=q;['720','1080','1440','4k'].forEach(x=>document.getElementById('q-'+x).classList.toggle('selected',x===q));}
-function doExport(){
-  if(layoutMode==='dual'){
-    const any = slots.some(s=>s.hasMedia);
-    if(!any) return;
-    const anyVid = slots.some(s=>s.hasMedia && s.type==='video');
-    if(anyVid) openModal('vid-modal'); else openModal('img-modal');
-    return;
-  }
-  if(!hasMedia)return;
-  if(isVideo)openModal('vid-modal');else openModal('img-modal');
-}
-
-/* ── DOWNLOAD NOTICE (toast) ── */
-function showExportNotice(text){
-  let el=document.getElementById('export-notice');
-  if(!el){
-    el=document.createElement('div');
-    el.id='export-notice';
-    el.style.cssText='position:fixed;left:50%;bottom:32px;transform:translateX(-50%);z-index:200;'
-      +'display:flex;align-items:center;gap:12px;padding:14px 22px;border-radius:14px;'
-      +'background:#18181b;border:1px solid rgba(255,255,255,0.12);color:#f0f0f0;'
-      +'font-family:inherit;font-size:13px;font-weight:500;box-shadow:0 12px 40px rgba(0,0,0,0.5);'
-      +'transition:opacity .2s, transform .2s;';
-    document.body.appendChild(el);
-  }
-  el.innerHTML='<span style="display:inline-block;width:16px;height:16px;border:2px solid rgba(249,115,22,0.35);'
-    +'border-top-color:#f97316;border-radius:50%;animation:expSpin .7s linear infinite"></span>'
-    +'<span id="export-notice-text">'+text+'</span>';
-  el.style.opacity='1'; el.style.pointerEvents='none';
-  // ensure spinner keyframes exist
-  if(!document.getElementById('exp-spin-style')){
-    const s=document.createElement('style'); s.id='exp-spin-style';
-    s.textContent='@keyframes expSpin{to{transform:rotate(360deg)}}';
-    document.head.appendChild(s);
-  }
-}
-function updateExportNotice(text){
-  const t=document.getElementById('export-notice-text');
-  if(t) t.textContent=text;
-}
-function showExportDone(text){
-  const el=document.getElementById('export-notice');
-  if(!el) return;
-  el.innerHTML='<span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;'
-    +'border-radius:50%;background:#22c55e;"><svg width="11" height="11" viewBox="0 0 12 10" fill="none" '
-    +'stroke="#fff" stroke-width="2.2"><polyline points="1 5 4.5 8.5 11 1"/></svg></span>'
-    +'<span>'+(text||'Download ready')+'</span>';
-  setTimeout(()=>hideExportNotice(), 2200);
-}
-function hideExportNotice(){
-  const el=document.getElementById('export-notice');
-  if(!el) return;
-  el.style.opacity='0'; el.style.transform='translateX(-50%) translateY(8px)';
-  setTimeout(()=>{ if(el) el.remove(); }, 250);
-}
-
-/* ── EXPORT BACKGROUND PAINTER (image / gradient / color / none) ── */
-// Parses our 'linear-gradient(ANGLEdeg, c1, c2, ...)' strings into canvas gradient stops.
-function parseGradientColors(str){
-  // grab the part inside the parentheses after the angle
-  const inner = str.substring(str.indexOf('(')+1, str.lastIndexOf(')'));
-  const parts = inner.split(',').map(s=>s.trim());
-  // drop a leading angle token like '135deg'
-  if(/deg|turn|rad|to /i.test(parts[0])) parts.shift();
-  return parts.filter(Boolean);
-}
-function paintExportBackground(ctx, w, h, blurPx, bgImg){
-  if(bgType==='none'){ return; } // leave transparent
-  if(bgType==='image'){
-    if(bgImg && bgImg.naturalWidth){
-      // COVER-fit the background (preserve aspect, crop overflow) — matches CSS background-size:cover
-      const iAR = bgImg.naturalWidth/bgImg.naturalHeight;
-      const cAR = w/h;
-      let dw,dh,dx,dy;
-      if(iAR > cAR){ dh=h; dw=h*iAR; dx=(w-dw)/2; dy=0; }   // image wider → match height
-      else { dw=w; dh=w/iAR; dx=0; dy=(h-dh)/2; }            // image taller → match width
-      if(blurPx>0){
-        // expand a little so blurred edges don't reveal gaps
-        const ex=blurPx*2;
-        ctx.save(); ctx.filter='blur('+blurPx+'px)';
-        ctx.drawImage(bgImg, dx-ex, dy-ex, dw+ex*2, dh+ex*2);
-        ctx.filter='none'; ctx.restore();
-      } else {
-        ctx.drawImage(bgImg, dx, dy, dw, dh);
-      }
-    } else { ctx.fillStyle='#1a1a2e'; ctx.fillRect(0,0,w,h); }
-    return;
-  }
-  if(bgType==='gradient'){
-    const cols=parseGradientColors(bgValue);
-    const g=ctx.createLinearGradient(0,0,w,h); // 135deg ≈ top-left → bottom-right
-    if(cols.length===1){ ctx.fillStyle=cols[0]; ctx.fillRect(0,0,w,h); return; }
-    cols.forEach((col,i)=>{ g.addColorStop(i/(cols.length-1), col); });
-    ctx.fillStyle=g; ctx.fillRect(0,0,w,h);
-    return;
-  }
-  // solid color
-  ctx.fillStyle = bgValue || '#1a1a2e';
-  ctx.fillRect(0,0,w,h);
-}
-
-/* ── DUAL VIDEO EXPORT ── */
-async function confirmVidExportDual(){
-  showExportNotice('Rendering your video...');
-  const wrap=document.getElementById('canvas-wrap');
-  const cW=parseInt(wrap.style.width)||wrap.clientWidth;
-  const cH=parseInt(wrap.style.height)||wrap.clientHeight;
-  // Output at 2x for crispness
-  const scale=2;
-  const outW=cW*scale, outH=cH*scale;
-  const cvs=document.createElement('canvas'); cvs.width=outW; cvs.height=outH;
-  const ctx=cvs.getContext('2d');
-  const blurPx=parseFloat(document.getElementById('sl-blur').value)||0;
-
-  // Pre-rasterize each slot's bezel/overlay
-  const layers=[];
-  for(const slot of slots){
-    if(slot.device){
-      layers.push({
-        bezel: await svgToImage(slot.device.bezel('#000'), slot.device.vw, slot.device.vh),
-        overlay: await svgToImage(slot.device.overlay(), slot.device.vw, slot.device.vh)
-      });
-    } else layers.push(null);
-  }
-
-  // background image (if any)
-  let bgImg=null;
-  if(bgType==='image' && bgValue){
-    bgImg=await new Promise(res=>{ const im=new Image(); im.crossOrigin='anonymous'; im.onload=()=>res(im); im.onerror=()=>res(null); im.src=bgValue; });
-  }
-
-  // longest duration among video slots
-  let duration=5;
-  slots.forEach(s=>{ if(s.type==='video'){ const inst=document.querySelectorAll('.device-instance')[slots.indexOf(s)]; const v=inst&&inst.querySelector('video'); if(v&&v.duration) duration=Math.max(duration, v.duration); } });
-
-  function drawFrame(){
-    ctx.save(); ctx.scale(scale,scale);
-    paintExportBackground(ctx, cW, cH, blurPx, bgImg);
-    slots.forEach((slot,i)=>{
-      if(!slot.device || !slot.hasMedia) return;
-      const dev=slot.device;
-      const canvas=document.getElementById('canvas-wrap');
-      const cw=parseInt(canvas.style.width)||800, ch=parseInt(canvas.style.height)||500;
-      const targetH=Math.min(ch*0.62, cw*0.42*dev.vh/dev.vw);
-      const dh=Math.round(targetH), dw=Math.round(dh*dev.vw/dev.vh);
-      const cx=cW/2+slot.posX, cy=cH/2+slot.posY;
-      const dx=cx-dw/2, dy=cy-dh/2;
-      ctx.save(); ctx.shadowColor='rgba(0,0,0,0.5)';ctx.shadowBlur=70*(dw/600);ctx.shadowOffsetY=26*(dw/600);
-      ctx.fillStyle='rgba(0,0,0,0.001)';ctx.fillRect(dx+dw*0.1,dy+dh*0.1,dw*0.8,dh*0.8); ctx.restore();
-      if(layers[i]&&layers[i].bezel) ctx.drawImage(layers[i].bezel,dx,dy,dw,dh);
-      const sx=dx+dev.screen.x/dev.vw*dw, sy=dy+dev.screen.y/dev.vh*dh;
-      const sw=dev.screen.w/dev.vw*dw, sh=dev.screen.h/dev.vh*dh;
-      const rr=(dev.screenRR||20)/dev.vw*dw;
-      const inst=document.querySelectorAll('.device-instance')[i];
-      const mediaEl=inst ? (slot.type==='video'?inst.querySelector('video'):inst.querySelector('img')) : null;
-      if(mediaEl){
-        ctx.save(); roundRect(ctx,sx,sy,sw,sh,rr); ctx.clip();
-        const base=coverSizeAR(slot.ar, sw, sh);
-        const mw=base.w*slot.scale, mh=base.h*slot.scale;
-        ctx.drawImage(mediaEl, sx+(sw-mw)/2, sy+(sh-mh)/2, mw, mh);
-        ctx.restore();
-      }
-      if(layers[i]&&layers[i].overlay) ctx.drawImage(layers[i].overlay,dx,dy,dw,dh);
-    });
-    drawTextsOnCanvas(ctx);
-    ctx.restore();
-  }
-
-  const stream=cvs.captureStream(60);
-  // audio from first video slot
-  const firstVid = (()=>{ for(let i=0;i<slots.length;i++){ if(slots[i].type==='video'){ const inst=document.querySelectorAll('.device-instance')[i]; return inst&&inst.querySelector('video'); } } return null; })();
-  if(firstVid){
-    try{ const cap=firstVid.captureStream?firstVid.captureStream():null; if(cap){ const at=cap.getAudioTracks(); if(at.length) stream.addTrack(at[0]); } }catch(e){}
-  }
-  const types=['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
-  const mtype=types.find(t=>MediaRecorder.isTypeSupported(t))||'video/webm';
-  const rec=new MediaRecorder(stream,{mimeType:mtype,videoBitsPerSecond:16000000});
-  const chunks=[]; rec.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
-  rec.onstop=()=>{ const blob=new Blob(chunks,{type:mtype}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='mockup-dual.mp4'; a.click(); URL.revokeObjectURL(url); showExportDone('Video downloaded'); };
-
-  // play all video slots from start
-  slots.forEach((s,i)=>{ if(s.type==='video'){ const inst=document.querySelectorAll('.device-instance')[i]; const v=inst&&inst.querySelector('video'); if(v){ v.currentTime=0; if(firstVid && v===firstVid){ v.muted=false; v.volume=1; } v.play().catch(()=>{}); } } });
-  const startT=performance.now();
-  rec.start(); let raf;
-  function loop(){ drawFrame(); const pct=Math.min(99,Math.round((performance.now()-startT)/(duration*1000)*100)); updateExportNotice('Rendering your video... '+pct+'%'); raf=requestAnimationFrame(loop); }
-  loop();
-  setTimeout(()=>{ cancelAnimationFrame(raf); updateExportNotice('Finishing up...'); rec.stop(); }, duration*1000+300);
-}
-
-/* ── DUAL EXPORT: composite both device instances at their positions ── */
-async function compositeSlot(ctx, slot, scale, cW, cH){
-  if(!slot.device || !slot.hasMedia) return;
-  const dev=slot.device;
-  // Recreate the same sizing used on screen (sizeInstance), in export px
-  const canvas=document.getElementById('canvas-wrap');
-  const cw=parseInt(canvas.style.width)||800, ch=parseInt(canvas.style.height)||500;
-  const targetH=Math.min(ch*0.62, cw*0.42*dev.vh/dev.vw);
-  const dh=Math.round(targetH), dw=Math.round(dh*dev.vw/dev.vh);
-  // center of canvas + slot offset
-  const cx=cW/2 + slot.posX, cy=cH/2 + slot.posY;
-  const dx=cx-dw/2, dy=cy-dh/2;
-  // shadow
-  ctx.save();
-  ctx.shadowColor='rgba(0,0,0,0.5)';ctx.shadowBlur=70*(dw/600);ctx.shadowOffsetY=26*(dw/600);
-  ctx.fillStyle='rgba(0,0,0,0.001)';ctx.fillRect(dx+dw*0.1,dy+dh*0.1,dw*0.8,dh*0.8);
-  ctx.restore();
-  const bezelImg=await svgToImage(dev.bezel('#000'), dev.vw, dev.vh);
-  const overlayImg=await svgToImage(dev.overlay(), dev.vw, dev.vh);
-  if(bezelImg) ctx.drawImage(bezelImg,dx,dy,dw,dh);
-  // screen rect
-  const sx=dx+dev.screen.x/dev.vw*dw, sy=dy+dev.screen.y/dev.vh*dh;
-  const sw=dev.screen.w/dev.vw*dw, sh=dev.screen.h/dev.vh*dh;
-  const rr=(dev.screenRR||20)/dev.vw*dw;
-  // media element (live)
-  const inst=document.querySelectorAll('.device-instance')[slots.indexOf(slot)];
-  const mediaEl=inst ? (slot.type==='video'?inst.querySelector('video'):inst.querySelector('img')) : null;
-  if(mediaEl){
-    ctx.save(); roundRect(ctx,sx,sy,sw,sh,rr); ctx.clip();
-    const base=coverSizeAR(slot.ar, sw, sh);
-    const mw=base.w*slot.scale, mh=base.h*slot.scale;
-    const mx=sx+(sw-mw)/2, my=sy+(sh-mh)/2;
-    ctx.drawImage(mediaEl, mx, my, mw, mh);
-    ctx.restore();
-  }
-  if(overlayImg) ctx.drawImage(overlayImg,dx,dy,dw,dh);
-}
-
-async function confirmImgExportDual(){
-  showExportNotice('Preparing your image...');
-  const wrap=document.getElementById('canvas-wrap');
-  const cW=parseInt(wrap.style.width)||wrap.clientWidth;
-  const cH=parseInt(wrap.style.height)||wrap.clientHeight;
-  const [tgtW,tgtH]=getTargetSize();
-  const scale=Math.min(Math.max(tgtW/cW, 1), 14);
-  const cvs=document.createElement('canvas'); cvs.width=Math.round(cW*scale); cvs.height=Math.round(cW*scale*tgtH/tgtW);
-  const ctx=cvs.getContext('2d'); ctx.scale(scale,scale);
-  const blurPx=parseFloat(document.getElementById('sl-blur').value)||0;
-
-  async function render(bgImg){
-    paintExportBackground(ctx, cW, cH, blurPx, bgImg);
-    // draw both slots in order (slot 0 first, slot 1 on top — drag z handled visually)
-    for(const slot of slots){ await compositeSlot(ctx, slot, scale, cW, cH); }
-    drawTextsOnCanvas(ctx);
-    try{
-      const fmtMap={png:'image/png',jpg:'image/jpeg',webp:'image/webp'};
-      const link=document.createElement('a');
-      link.download='mockup-dual-'+getTargetSize().join('x')+'.'+selectedFmt;
-      link.href=cvs.toDataURL(fmtMap[selectedFmt]||'image/png',0.95); link.click();
-      showExportDone('Image downloaded');
-    }catch(err){ updateExportNotice('Export failed.'); setTimeout(hideExportNotice,2500); }
-  }
-
-  if(bgType==='image' && bgValue){
-    const bi=new Image(); bi.crossOrigin='anonymous';
-    bi.onload=()=>render(bi); bi.onerror=()=>render(null); bi.src=bgValue;
-  } else { render(null); }
-}
-
-/* ── SVG → Image helper for export compositing ── */
-function svgToImage(svgInner, vw, vh){
-  return new Promise((resolve)=>{
-    const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+vw+' '+vh+'" width="'+vw+'" height="'+vh+'">'+svgInner+'</svg>';
-    const blob = new Blob([svg], {type:'image/svg+xml;charset=utf-8'});
-    const url = URL.createObjectURL(blob);
-    const img = new Image();
-    img.onload = ()=>{ URL.revokeObjectURL(url); resolve(img); };
-    img.onerror = ()=>{ URL.revokeObjectURL(url); resolve(null); };
-    img.src = url;
-  });
-}
-
-/* ── IMAGE EXPORT ── */
-function confirmImgExport(){
-  closeModal('img-modal');
-  if(layoutMode==='dual'){ confirmImgExportDual(); return; }
-  showExportNotice('Preparing your image...');
-  const wrap=document.getElementById('canvas-wrap');
-  const {w:fw,h:fh}=calcFrame();
-  const cW=parseInt(wrap.style.width)||wrap.clientWidth;
-  const cH=parseInt(wrap.style.height)||wrap.clientHeight;
-  // Export at the exact chosen pixel size (scale derived from target width)
-  const [tgtW,tgtH]=getTargetSize();
-  const scale=Math.min(Math.max(tgtW/cW, 1), 14);   // clamp to avoid extreme canvases
-  const cvs=document.createElement('canvas');
-  cvs.width=Math.round(cW*scale);cvs.height=Math.round(cW*scale*tgtH/tgtW);
-  const ctx=cvs.getContext('2d');
-  ctx.scale(scale,scale);
-  const bgEl=document.getElementById('canvas-bg');
-  const bgUrl=bgEl.style.backgroundImage.replace(/url\(["']?|["']?\)/g,'');
-  const blurPx=parseFloat(document.getElementById('sl-blur').value)||0;
-
-  function finish(){
-    try{
-      const fmtMap={png:'image/png',jpg:'image/jpeg',webp:'image/webp'};
-      const link=document.createElement('a');
-      link.download='mockup-'+getTargetSize().join('x')+'.'+selectedFmt;
-      link.href=cvs.toDataURL(fmtMap[selectedFmt]||'image/png',0.95);link.click();
-      showExportDone('Image downloaded');
-    }catch(err){
-      console.error('Export failed:', err);
-      updateExportNotice('Export failed. Try a different background.');
-      setTimeout(hideExportNotice, 2500);
-    }
-  }
-
-  async function draw(bgImg){
-    paintExportBackground(ctx, cW, cH, blurPx, bgImg);
-
-    if(activeDevice){
-      // ── Composite the full device: bezel → media (clipped to screen) → overlay ──
-      const dev = activeDevice;
-      // Device display size on canvas = same as gadget on screen
-      const gfw = document.getElementById('gadget-frame-wrap');
-      const dw = parseInt(gfw.style.width) || fw;
-      const dh = parseInt(gfw.style.height) || fh;
-      const dx = (cW-dw)/2, dy=(cH-dh)/2;
-
-      // Drop shadow under the whole device
-      ctx.save();
-      ctx.shadowColor='rgba(0,0,0,0.5)';ctx.shadowBlur=70;ctx.shadowOffsetY=26;
-      ctx.fillStyle='rgba(0,0,0,0.001)';
-      ctx.fillRect(dx+dw*0.1, dy+dh*0.1, dw*0.8, dh*0.8);
-      ctx.restore();
-
-      const bezelImg = await svgToImage(dev.bezel('#000'), dev.vw, dev.vh);
-      const overlayImg = await svgToImage(dev.overlay(), dev.vw, dev.vh);
-
-      // 1. bezel under
-      if(bezelImg) ctx.drawImage(bezelImg, dx, dy, dw, dh);
-
-      // 2. media clipped to screen rect
-      const sx = dx + dev.screen.x/dev.vw*dw;
-      const sy = dy + dev.screen.y/dev.vh*dh;
-      const sw = dev.screen.w/dev.vw*dw;
-      const sh = dev.screen.h/dev.vh*dh;
-      const srr = (dev.screenRR||20)/dev.vw*dw;
-      const media = document.getElementById('gadget-img');
-      ctx.save();
-      roundRect(ctx, sx, sy, sw, sh, srr); ctx.clip();
-      // cover-fit + zoom + pan (matches live preview). liveScreenW = on-screen screen width
-      const liveScreenW = parseFloat(document.getElementById('gadget-screen').style.width)||sw;
-      const dr = coverDrawRect(sx, sy, sw, sh, liveScreenW);
-      ctx.drawImage(media, dr.mx, dr.my, dr.mw, dr.mh);
-      ctx.restore();
-
-      // 3. overlay (notch) on top
-      if(overlayImg) ctx.drawImage(overlayImg, dx, dy, dw, dh);
-
-      drawTextsOnCanvas(ctx);
-      finish();
-    } else {
-      // ── Plain frame ──
-      const fx=(cW-fw)/2,fy=(cH-fh)/2;
-      const br=parseFloat(document.getElementById('mockup-frame').style.borderRadius)||14;
-      ctx.shadowColor='rgba(0,0,0,0.55)';ctx.shadowBlur=80;ctx.shadowOffsetY=24;
-      roundRect(ctx,fx,fy,fw,fh,br);ctx.fillStyle='#111';ctx.fill();
-      ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetY=0;
-      const src=document.getElementById('mockup-img');
-      ctx.save();roundRect(ctx,fx,fy,fw,fh,br);ctx.clip();
-      const liveScreenW = parseFloat(document.getElementById('mockup-frame').style.width)||fw;
-      const dr = coverDrawRect(fx, fy, fw, fh, liveScreenW);
-      ctx.drawImage(src, dr.mx, dr.my, dr.mw, dr.mh);
-      ctx.restore();
-      ctx.save();roundRect(ctx,fx,fy,fw,fh,br);ctx.strokeStyle='rgba(255,255,255,0.09)';ctx.lineWidth=1;ctx.stroke();ctx.restore();
-      drawTextsOnCanvas(ctx);
-      finish();
-    }
-  }
-
-  if(bgType==='image' && bgValue){
-    const bi=new Image(); bi.crossOrigin='anonymous';
-    bi.onload=()=>draw(bi); bi.onerror=()=>draw(null); bi.src=bgValue;
-  } else { draw(null); }
-}
-
-/* ── VIDEO EXPORT ── */
-async function confirmVidExport(){
-  closeModal('vid-modal');
-  if(layoutMode==='dual'){ confirmVidExportDual(); return; }
-  showExportNotice('Rendering your video...');
-  const vid=document.getElementById(activeDevice?'gadget-video':'mockup-video');
-  const nativeW=vid.videoWidth||1920,nativeH=vid.videoHeight||1080;
-  const bgEl=document.getElementById('canvas-bg');
-  const bgUrl=bgEl.style.backgroundImage.replace(/url\(["']?|["']?\)/g,'');
-  const blurPx=parseFloat(document.getElementById('sl-blur').value)||0;
-  const pixels=nativeW*nativeH;
-  const bpp={'720':0.1,'1080':0.15,'1440':0.2,'4k':0.25}[selectedQ]||0.15;
-  const cappedMbps=Math.min(Math.max(Math.round(pixels*bpp/1000000*60/8),8),80);
-
-  // Output canvas dimensions depend on whether a device frame is used
-  let outW, outH, cvs, ctx;
-  let bezelImg=null, overlayImg=null;          // device layers (pre-rasterized)
-  let dx,dy,dw,dh, sx,sy,sw,sh, srr;           // device geometry
-  let vx,vy,br;                                // plain-frame geometry
-
-  if(activeDevice){
-    const dev=activeDevice;
-    // Scale device so its SCREEN matches the video's native resolution → crisp output
-    const screenScale = nativeW / dev.screen.w;
-    dw = Math.round(dev.vw * screenScale);
-    dh = Math.round(dev.vh * screenScale);
-    // Add padding around the device
-    const padFraction = padPct/100;
-    const padX = Math.round(dw*padFraction*2), padY = Math.round(dh*padFraction*2);
-    outW = dw + padX; outH = dh + padY;
-    dx = Math.round(padX/2); dy = Math.round(padY/2);
-    // Screen rect within the canvas
-    sx = dx + dev.screen.x/dev.vw*dw;
-    sy = dy + dev.screen.y/dev.vh*dh;
-    sw = dev.screen.w/dev.vw*dw;
-    sh = dev.screen.h/dev.vh*dh;
-    srr = (dev.screenRR||20)/dev.vw*dw;
-    // Pre-rasterize bezel + overlay
-    bezelImg   = await svgToImage(dev.bezel('#000'), dev.vw, dev.vh);
-    overlayImg = await svgToImage(dev.overlay(), dev.vw, dev.vh);
-  } else {
-    const padFraction=padPct/100;
-    const padX=Math.round(nativeW*padFraction*2),padY=Math.round(nativeH*padFraction*2);
-    outW=nativeW+padX; outH=nativeH+padY;
-    vx=Math.round(padX/2); vy=Math.round(padY/2);
-    br=(parseFloat(document.getElementById('mockup-frame').style.borderRadius)||14)*(nativeW/600);
-  }
-
-  cvs=document.createElement('canvas');cvs.width=outW;cvs.height=outH;
-  ctx=cvs.getContext('2d');
-
-  function drawFrame(bgImg){
-    ctx.clearRect(0,0,outW,outH);
-    if(bgType!=='none'){ ctx.fillStyle='#080809'; ctx.fillRect(0,0,outW,outH); }
-    const bl=blurPx*(outW/1080);
-    paintExportBackground(ctx, outW, outH, bl, bgImg);
-
-    if(activeDevice){
-      // shadow under device
-      ctx.save();
-      ctx.shadowColor='rgba(0,0,0,0.5)';ctx.shadowBlur=70*(dw/600);ctx.shadowOffsetY=26*(dw/600);
-      ctx.fillStyle='rgba(0,0,0,0.001)';ctx.fillRect(dx+dw*0.1,dy+dh*0.1,dw*0.8,dh*0.8);
-      ctx.restore();
-      // bezel
-      if(bezelImg) ctx.drawImage(bezelImg,dx,dy,dw,dh);
-      // video clipped to screen (cover fit + zoom + pan)
-      ctx.save();roundRect(ctx,sx,sy,sw,sh,srr);ctx.clip();
-      const liveScreenW=parseFloat(document.getElementById('gadget-screen').style.width)||sw;
-      const dr=coverDrawRect(sx,sy,sw,sh,liveScreenW);
-      ctx.drawImage(vid,dr.mx,dr.my,dr.mw,dr.mh);ctx.restore();
-      // overlay notch
-      if(overlayImg) ctx.drawImage(overlayImg,dx,dy,dw,dh);
-    } else {
-      const ss=nativeW/600;
-      ctx.shadowColor='rgba(0,0,0,0.55)';ctx.shadowBlur=80*ss;ctx.shadowOffsetY=24*ss;
-      roundRect(ctx,vx,vy,nativeW,nativeH,br);ctx.fillStyle='#111';ctx.fill();
-      ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetY=0;
-      ctx.save();roundRect(ctx,vx,vy,nativeW,nativeH,br);ctx.clip();
-      const liveScreenW=parseFloat(document.getElementById('mockup-frame').style.width)||nativeW;
-      const dr=coverDrawRect(vx,vy,nativeW,nativeH,liveScreenW);
-      ctx.drawImage(vid,dr.mx,dr.my,dr.mw,dr.mh);ctx.restore();
-      ctx.save();roundRect(ctx,vx,vy,nativeW,nativeH,br);ctx.strokeStyle='rgba(255,255,255,0.09)';ctx.lineWidth=1;ctx.stroke();ctx.restore();
-    }
-    // Text overlays (transformed to video-export space, anchored on device/frame center)
-    if(texts.length){
-      const liveFrameW = activeDevice
-        ? (parseFloat(document.getElementById('gadget-frame-wrap').style.width)||dw)
-        : (parseFloat(document.getElementById('mockup-frame').style.width)||nativeW);
-      const frameExportW = activeDevice ? dw : nativeW;
-      const tt = textTransformForVideo(outW, outH, frameExportW, liveFrameW);
-      drawTextsOnCanvas(ctx, tt.ox, tt.oy, tt.k);
-    }
-  }
-
-  function startRec(bgImg){
-    const stream=cvs.captureStream(60);
-    // Capture the source video's audio track so the exported file has sound
-    try {
-      const cap = vid.captureStream ? vid.captureStream() : (vid.mozCaptureStream ? vid.mozCaptureStream() : null);
-      if (cap) {
-        const at = cap.getAudioTracks();
-        if (at.length > 0) stream.addTrack(at[0]);
-      }
-    } catch(e) { /* silent export if audio capture unsupported */ }
-    const types=['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm;codecs=vp9','video/webm'];
-    const mtype=types.find(t=>MediaRecorder.isTypeSupported(t))||'video/webm';
-    const rec=new MediaRecorder(stream,{mimeType:mtype,videoBitsPerSecond:cappedMbps*1000000});
-    const chunks=[];
-    rec.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
-    rec.onstop=()=>{
-      const blob=new Blob(chunks,{type:mtype});const url=URL.createObjectURL(blob);
-      const a=document.createElement('a');a.href=url;a.download='mockup-'+outW+'x'+outH+'.mp4';a.click();URL.revokeObjectURL(url);
-      showExportDone('Video downloaded');
-    };
-    const duration=vid.duration||5;vid.currentTime=0;
-    const wasMuted = vid.muted;
-    vid.muted = false; vid.volume = 1; // ensure audio track is active for capture
-    const startT=performance.now();
-    vid.play().then(()=>{
-      rec.start();let raf;
-      function loop(){
-        drawFrame(bgImg);
-        const pct=Math.min(99, Math.round((performance.now()-startT)/(duration*1000)*100));
-        updateExportNotice('Rendering your video... '+pct+'%');
-        raf=requestAnimationFrame(loop);
-      }
-      loop();
-      setTimeout(()=>{cancelAnimationFrame(raf);updateExportNotice('Finishing up...');rec.stop();vid.pause();vid.muted=wasMuted;},duration*1000+300);
-    }).catch(()=>{ vid.muted=true; vid.play(); });
-  }
-
-  if(bgType==='image' && bgValue){
-    const bi=new Image(); bi.crossOrigin='anonymous';
-    bi.onload=()=>startRec(bi); bi.onerror=()=>startRec(null); bi.src=bgValue;
-  } else { startRec(null); }
-}
-
-// Compute media draw rect inside a screen, honoring cover-fit + mediaScale + offsets.
-// targetSx/Sy/Sw/Sh = screen rect in EXPORT pixels.
-// liveScreenW = the on-screen (CSS px) screen width used when the user set the offsets,
-//   so we can scale the pixel offsets to the export resolution.
-function coverDrawRect(tSx,tSy,tSw,tSh, liveScreenW){
-  const scrAR=tSw/tSh;
-  let bw,bh;                       // base cover size
-  if(mediaAR>scrAR){ bh=tSh; bw=tSh*mediaAR; }
-  else { bw=tSw; bh=tSw/mediaAR; }
-  // apply zoom
-  const mw=bw*mediaScale, mh=bh*mediaScale;
-  // offsets were captured in CSS px relative to the live screen; scale to export px
-  const k = tSw / (liveScreenW||tSw);
-  const ox = mediaOffX*k, oy = mediaOffY*k;
-  const mx = tSx-(mw-tSw)/2 + ox;
-  const my = tSy-(mh-tSh)/2 + oy;
-  return {mx,my,mw,mh};
-}
-
-function roundRect(ctx,x,y,w,h,r){
-  ctx.beginPath();
-  ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
-  ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
-  ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);
-  ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);
-  ctx.closePath();
-}
-
-/* ── VIDEO AUTO-FIT: re-fit whenever a video element's true size is known ── */
-function refitVideoFrom(el){
-  if(!hasMedia || !isVideo) return;
-  if(el && el.videoWidth && el.videoHeight){
-    const ar = el.videoWidth/el.videoHeight;
-    if(ar && isFinite(ar)) mediaAR = ar;
-  }
-  if(activeDevice){ sizeGadget(); } else { sizeFrameToMedia(); }
-  applyMediaTransform();
-}
-['mockup-video','gadget-video'].forEach(id=>{
-  const v=document.getElementById(id);
-  if(!v) return;
-  v.addEventListener('loadedmetadata', ()=>refitVideoFrom(v));
-  v.addEventListener('loadeddata',    ()=>refitVideoFrom(v));
-  v.addEventListener('canplay',       ()=>refitVideoFrom(v));
-  v.addEventListener('resize',        ()=>refitVideoFrom(v));
-});
-
-/* ══════════════════════════════════════════════════════
-   DUAL MODE — flexible slots, free-drag positioning
-══════════════════════════════════════════════════════ */
-let layoutMode = 'single';
-let selectedSlot = 0;
-const slots = [
-  { device:null, src:null, type:null, ar:16/9, scale:1, posX:-150, posY:0, hasMedia:false },
-  { device:null, src:null, type:null, ar:16/9, scale:1, posX:150,  posY:0, hasMedia:false },
-];
-let activeFileSlot = 0;  // which slot a file upload targets
-
-function setLayout(mode){
-  layoutMode = mode;
-  document.getElementById('lo-single').classList.toggle('active', mode==='single');
-  document.getElementById('lo-dual').classList.toggle('active', mode==='dual');
-  document.getElementById('slot-tabs').style.display = mode==='dual' ? 'flex' : 'none';
-  document.getElementById('dual-hint').style.display = mode==='dual' ? 'block' : 'none';
-  const stage = document.getElementById('dual-stage');
-  const single = document.getElementById('mockup-wrap');
-  if(mode==='dual'){
-    stage.classList.add('active');
-    single.style.display='none';
-    selectedSlot = 0;
-    selectSlot(0);
-    renderDualStage();
-  } else {
-    stage.classList.remove('active');
-    single.style.display='flex';
-  }
-}
-
-function selectSlot(i){
-  selectedSlot = i;
-  document.getElementById('slot-tab-0').classList.toggle('active', i===0);
-  document.getElementById('slot-tab-1').classList.toggle('active', i===1);
-  // reflect this slot's device selection in the device grid
-  activeDevice = slots[i].device;
-  buildDeviceGrid();
-  // highlight selected instance
-  document.querySelectorAll('.device-instance').forEach((el,idx)=>el.classList.toggle('selected', idx===selectedSlot));
-  // zoom slider reflects this slot
-  const zr=document.getElementById('zoom-row');
-  if(zr) zr.style.display = slots[i].hasMedia ? 'flex' : 'none';
-  const rb=document.getElementById('reset-pos-btn');
-  if(rb) rb.style.display = slots[i].hasMedia ? 'flex' : 'none';
-  const zs=document.getElementById('sl-zoom'); if(zs) zs.value=slots[i].scale;
-  const zv=document.getElementById('vl-zoom'); if(zv) zv.textContent=Math.round(slots[i].scale*100)+'%';
-}
-
-function slotDeviceLabel(i){ return slots[i].device ? slots[i].device.name : 'None'; }
-
-// Build / rebuild the two device instances in the stage
-function renderDualStage(){
-  const stage = document.getElementById('dual-stage');
-  stage.innerHTML='';
-  slots.forEach((slot,i)=>{
-    const inst = document.createElement('div');
-    inst.className='device-instance'+(i===selectedSlot?' selected':'');
-    inst.dataset.slot=i;
-    inst.style.transform='translate(calc(-50% + '+slot.posX+'px), calc(-50% + '+slot.posY+'px))';
-
-    if(!slot.device){
-      // placeholder prompt to pick a device
-      inst.innerHTML='<div style="width:150px;height:300px;border:1.5px dashed rgba(255,255,255,0.18);border-radius:24px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--text-dim);font-size:11px;padding:12px;background:rgba(255,255,255,0.02)">Device '+(i+1)+'<br>pick a frame</div>';
-      stage.appendChild(inst);
-      bindInstanceDrag(inst,i);
-      return;
-    }
-
-    const dev=slot.device;
-    const wrap=document.createElement('div'); wrap.className='inst-wrap';
-    wrap.innerHTML =
-      '<svg class="inst-bezel" viewBox="0 0 '+dev.vw+' '+dev.vh+'">'+dev.bezel('#000')+'</svg>'+
-      '<div class="inst-screen"><img alt=""><video autoplay loop playsinline></video></div>'+
-      '<svg class="inst-overlay" viewBox="0 0 '+dev.vw+' '+dev.vh+'">'+dev.overlay()+'</svg>'+
-      '<div class="inst-drop"><div class="dz-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9l4-4 5 5 4-4 5 5"/><circle cx="8.5" cy="8.5" r="1.5"/></svg></div><div class="dz-title">Upload</div><div class="dz-sub">image / video</div></div>';
-    inst.appendChild(wrap);
-    stage.appendChild(inst);
-    sizeInstance(inst,i);
-    bindInstanceDrag(inst,i);
-  });
-}
-
-// Size one instance's device frame + place its media
-function sizeInstance(inst,i){
-  const slot=slots[i]; const dev=slot.device; if(!dev) return;
-  const wrap=inst.querySelector('.inst-wrap');
-  // base device size: scale phones ~300px tall, others by their natural ratio
-  const canvas=document.getElementById('canvas-wrap');
-  const cw=parseInt(canvas.style.width)||800, ch=parseInt(canvas.style.height)||500;
-  // target: device fits ~ 42% of canvas min dimension (so two fit side by side)
-  const targetH = Math.min(ch*0.62, cw*0.42*dev.vh/dev.vw);
-  const dh = Math.round(targetH);
-  const dw = Math.round(dh*dev.vw/dev.vh);
-  wrap.style.width=dw+'px'; wrap.style.height=dh+'px';
-  const bez=wrap.querySelector('.inst-bezel'); bez.style.width=dw+'px'; bez.style.height=dh+'px'; bez.setAttribute('width',dw); bez.setAttribute('height',dh);
-  const ov=wrap.querySelector('.inst-overlay'); ov.style.width=dw+'px'; ov.style.height=dh+'px'; ov.setAttribute('width',dw); ov.setAttribute('height',dh);
-  // screen rect
-  const sx=Math.round(dev.screen.x/dev.vw*dw), sy=Math.round(dev.screen.y/dev.vh*dh);
-  const sw=Math.round(dev.screen.w/dev.vw*dw), sh=Math.round(dev.screen.h/dev.vh*dh);
-  const rr=Math.round((dev.screenRR||20)/dev.vw*dw);
-  const scr=wrap.querySelector('.inst-screen');
-  scr.style.cssText='position:absolute;z-index:2;overflow:hidden;background:#000;left:'+sx+'px;top:'+sy+'px;width:'+sw+'px;height:'+sh+'px;border-radius:'+rr+'px;';
-  // media
-  const img=scr.querySelector('img'), vid=scr.querySelector('video');
-  const drop=wrap.querySelector('.inst-drop');
-  drop.style.cssText='position:absolute;z-index:4;left:'+sx+'px;top:'+sy+'px;width:'+sw+'px;height:'+sh+'px;border-radius:'+rr+'px;display:'+(slot.hasMedia?'none':'flex')+';flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;background:rgba(0,0,0,0.5);backdrop-filter:blur(2px);';
-  [img,vid].forEach(el=>{
-    const base=coverSizeAR(slot.ar, sw, sh);
-    const mw=base.w*slot.scale, mh=base.h*slot.scale;
-    el.style.position='absolute';
-    el.style.left=((sw-mw)/2)+'px'; el.style.top=((sh-mh)/2)+'px';
-    el.style.width=mw+'px'; el.style.height=mh+'px'; el.style.objectFit='fill';
-  });
-  if(slot.hasMedia){
-    if(slot.type==='video'){ vid.src=slot.src; vid.style.display='block'; vid.muted=(i!==0); vid.play().catch(()=>{}); img.style.display='none'; }
-    else { img.src=slot.src; img.style.display='block'; vid.style.display='none'; }
-  } else { img.style.display='none'; vid.style.display='none'; }
-}
-
-// cover-size with explicit AR (for slots)
-function coverSizeAR(ar, screenW, screenH){
-  const scrAR=screenW/screenH; let w,h;
-  if(ar>scrAR){ h=screenH; w=screenH*ar; } else { w=screenW; h=screenW/ar; }
-  return {w,h};
-}
-
-// Drag to move an instance; click (no drag) on empty screen → upload
-function bindInstanceDrag(inst,i){
-  let down=false, moved=false, sx=0, sy=0, bx=0, by=0;
-  inst.addEventListener('pointerdown', e=>{
-    selectSlot(i);
-    document.querySelectorAll('.device-instance').forEach((el,idx)=>el.classList.toggle('selected', idx===i));
-    down=true; moved=false; sx=e.clientX; sy=e.clientY; bx=slots[i].posX; by=slots[i].posY;
-    inst.classList.add('dragging'); inst.setPointerCapture(e.pointerId);
-  });
-  inst.addEventListener('pointermove', e=>{
-    if(!down) return;
-    const dx=e.clientX-sx, dy=e.clientY-sy;
-    if(Math.abs(dx)>4||Math.abs(dy)>4) moved=true;
-    slots[i].posX=bx+dx; slots[i].posY=by+dy;
-    inst.style.transform='translate(calc(-50% + '+slots[i].posX+'px), calc(-50% + '+slots[i].posY+'px))';
-  });
-  const up=e=>{
-    if(!down) return; down=false; inst.classList.remove('dragging');
-    try{inst.releasePointerCapture(e.pointerId);}catch(_){}
-    if(!moved){
-      // treat as click: if device chosen but no media → open uploader for THIS slot
-      if(slots[i].device && !slots[i].hasMedia){ activeFileSlot=i; document.getElementById('hf').click(); }
-    }
-  };
-  inst.addEventListener('pointerup', up);
-  inst.addEventListener('pointercancel', up);
-}
-
-/* ══════════════════════════════════════════════════════
-   TEXT FEATURE — draggable text blocks on the canvas
-══════════════════════════════════════════════════════ */
-let texts = [];                 // {id, content, x, y, size, weight, color, align}
-let selectedTextId = null;
-let textIdCounter = 0;
-
-function addText(){
-  const wrap = document.getElementById('canvas-wrap');
-  const cw = parseInt(wrap.style.width)||wrap.clientWidth||800;
-  const ch = parseInt(wrap.style.height)||wrap.clientHeight||450;
-  const t = {
-    id: ++textIdCounter,
-    content: 'Your text',
-    x: Math.round(cw*0.5 - 70),    // roughly centered start
-    y: Math.round(ch*0.12),
-    size: 40,
-    weight: '700',
-    color: '#ffffff',
-    align: 'left',
-  };
-  texts.push(t);
-  renderTexts();
-  selectText(t.id);
-}
-
-function renderTexts(){
-  const layer = document.getElementById('text-layer');
-  layer.innerHTML = '';
-  texts.forEach(t=>{
-    const el = document.createElement('div');
-    el.className = 'text-block' + (t.id===selectedTextId ? ' selected' : '');
-    el.dataset.id = t.id;
-    el.textContent = t.content;
-    el.style.left = t.x + 'px';
-    el.style.top  = t.y + 'px';
-    el.style.fontSize = t.size + 'px';
-    el.style.fontWeight = t.weight;
-    el.style.color = t.color;
-    el.style.textAlign = t.align;
-    layer.appendChild(el);
-    bindTextEl(el, t.id);
-  });
-  renderTextList();
-}
-
-function renderTextList(){
-  const list = document.getElementById('text-list');
-  list.innerHTML = '';
-  texts.forEach(t=>{
-    const item = document.createElement('div');
-    item.className = 'text-list-item' + (t.id===selectedTextId?' active':'');
-    const label = (t.content||'(empty)').split('\n')[0].slice(0,22);
-    item.innerHTML = '<span class="tli-text">'+ (label||'(empty)') +'</span>'+
-      '<span class="tli-del"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/></svg></span>';
-    item.onclick = (e)=>{
-      if(e.target.closest('.tli-del')){ deleteText(t.id); e.stopPropagation(); return; }
-      selectText(t.id);
-    };
-    list.appendChild(item);
-  });
-}
-
-function selectText(id){
-  selectedTextId = id;
-  const t = texts.find(x=>x.id===id);
-  document.querySelectorAll('#text-layer .text-block').forEach(el=>
-    el.classList.toggle('selected', parseInt(el.dataset.id)===id));
-  const ctrls = document.getElementById('text-ctrls');
-  if(!t){ ctrls.classList.remove('active'); renderTextList(); return; }
-  ctrls.classList.add('active');
-  document.getElementById('text-content').value = t.content;
-  document.getElementById('text-size').value = t.size;
-  document.getElementById('text-size-val').textContent = t.size+'px';
-  document.getElementById('text-color').value = t.color;
-  document.getElementById('text-color-hex').value = t.color;
-  document.querySelectorAll('.wt-opt').forEach(b=>b.classList.toggle('active', b.dataset.w===t.weight));
-  document.querySelectorAll('.al-opt').forEach(b=>b.classList.toggle('active', b.dataset.a===t.align));
-  renderTextList();
-}
-
-function curText(){ return texts.find(x=>x.id===selectedTextId); }
-
-function updateTextContent(v){ const t=curText(); if(!t)return; t.content=v; renderTexts(); }
-function updateTextSize(v){ const t=curText(); if(!t)return; t.size=parseInt(v); document.getElementById('text-size-val').textContent=v+'px'; applyTextStyle(t); }
-function updateTextWeight(w){ const t=curText(); if(!t)return; t.weight=w; document.querySelectorAll('.wt-opt').forEach(b=>b.classList.toggle('active',b.dataset.w===w)); applyTextStyle(t); }
-function updateTextAlign(a){ const t=curText(); if(!t)return; t.align=a; document.querySelectorAll('.al-opt').forEach(b=>b.classList.toggle('active',b.dataset.a===a)); applyTextStyle(t); }
-function updateTextColor(v){ const t=curText(); if(!t)return; t.color=v; document.getElementById('text-color-hex').value=v; applyTextStyle(t); }
-function updateTextColorHex(v){ if(!/^#[0-9a-fA-F]{6}$/.test(v))return; const t=curText(); if(!t)return; t.color=v; document.getElementById('text-color').value=v; applyTextStyle(t); }
-
-// Apply style to the single live element (no full re-render, keeps editing smooth)
-function applyTextStyle(t){
-  const el = document.querySelector('#text-layer .text-block[data-id="'+t.id+'"]');
-  if(!el) return;
-  el.style.fontSize=t.size+'px'; el.style.fontWeight=t.weight; el.style.color=t.color; el.style.textAlign=t.align;
-}
-
-function deleteText(id){
-  texts = texts.filter(t=>t.id!==id);
-  if(selectedTextId===id){ selectedTextId=null; document.getElementById('text-ctrls').classList.remove('active'); }
-  renderTexts();
-}
-function deleteSelectedText(){ if(selectedTextId!=null) deleteText(selectedTextId); }
-
-// Drag + double-click-to-edit
-function bindTextEl(el, id){
-  let down=false, moved=false, sx=0, sy=0, bx=0, by=0;
-  el.addEventListener('pointerdown', e=>{
-    if(el.classList.contains('editing')) return;  // editing → let caret work
-    selectText(id);
-    const t = texts.find(x=>x.id===id);
-    down=true; moved=false; sx=e.clientX; sy=e.clientY; bx=t.x; by=t.y;
-    el.classList.add('dragging'); el.setPointerCapture(e.pointerId);
-    e.preventDefault();
-  });
-  el.addEventListener('pointermove', e=>{
-    if(!down) return;
-    const dx=e.clientX-sx, dy=e.clientY-sy;
-    if(Math.abs(dx)>3||Math.abs(dy)>3) moved=true;
-    const t = texts.find(x=>x.id===id);
-    t.x=Math.round(bx+dx); t.y=Math.round(by+dy);
-    el.style.left=t.x+'px'; el.style.top=t.y+'px';
-  });
-  const up=e=>{ if(!down)return; down=false; el.classList.remove('dragging'); try{el.releasePointerCapture(e.pointerId);}catch(_){} };
-  el.addEventListener('pointerup', up);
-  el.addEventListener('pointercancel', up);
-  // double-click → edit mode
-  el.addEventListener('dblclick', e=>{
-    el.classList.add('editing');
-    el.contentEditable='true';
-    el.focus();
-    // place caret at end
-    const r=document.createRange(); r.selectNodeContents(el); r.collapse(false);
-    const sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
-    e.stopPropagation();
-  });
-  el.addEventListener('blur', ()=>{
-    if(!el.classList.contains('editing')) return;
-    el.classList.remove('editing'); el.contentEditable='false';
-    const t=texts.find(x=>x.id===id);
-    if(t){ t.content = el.innerText; document.getElementById('text-content').value=t.content; renderTextList(); }
-  });
-}
-
-// Click empty canvas → deselect text
-document.getElementById('work-area').addEventListener('pointerdown', e=>{
-  if(e.target.closest('.text-block')) return;
-  if(selectedTextId!=null){ selectedTextId=null; document.getElementById('text-ctrls').classList.remove('active'); renderTexts(); }
-});
-
-// Reposition texts when canvas resizes (keep them proportional)
-function repositionTextsOnResize(prevW, prevH, newW, newH){
-  if(!prevW||!prevH) return;
-  texts.forEach(t=>{ t.x=Math.round(t.x/prevW*newW); t.y=Math.round(t.y/prevH*newH); });
-  renderTexts();
-}
-
-// Draw all text blocks onto an export canvas.
-// ox/oy = export-canvas point that corresponds to preview canvas-wrap (0,0); k = scale.
-// For image export ctx is pre-scaled to css px, so defaults (0,0,1) are correct.
-function drawTextsOnCanvas(ctx, ox, oy, k){
-  ox = ox||0; oy = oy||0; k = k||1;
-  texts.forEach(t=>{
-    const lines = (t.content||'').split('\n');
-    ctx.save();
-    const size = t.size*k;
-    ctx.font = t.weight + ' ' + size + 'px -apple-system,BlinkMacSystemFont,Inter,"Segoe UI",sans-serif';
-    ctx.fillStyle = t.color;
-    ctx.textBaseline = 'top';
-    let blockW = 0;
-    lines.forEach(ln=>{ blockW = Math.max(blockW, ctx.measureText(ln).width); });
-    const padL = 6*k;     // matches .text-block padding-left
-    const lineH = size * 1.3;
-    lines.forEach((ln, i)=>{
-      const w = ctx.measureText(ln).width;
-      let lx = ox + t.x*k + padL;
-      if(t.align==='center') lx = ox + t.x*k + padL + (blockW - w)/2;
-      else if(t.align==='right') lx = ox + t.x*k + padL + (blockW - w);
-      ctx.fillText(ln, lx, oy + t.y*k + 2*k + i*lineH); // +2 matches padding-top
-    });
-    ctx.restore();
-  });
-}
-
-// Compute the (ox,oy,k) transform that maps preview canvas-wrap coords to a
-// video-export canvas, anchored on the device/frame center.
-function textTransformForVideo(outW, outH, frameExportW, liveFrameW){
-  const wrap=document.getElementById('canvas-wrap');
-  const cWprev=parseFloat(wrap.style.width)||wrap.clientWidth||800;
-  const cHprev=parseFloat(wrap.style.height)||wrap.clientHeight||450;
-  const k = (frameExportW && liveFrameW) ? (frameExportW/liveFrameW) : 1;
-  const ox = outW/2 - (cWprev/2)*k;
-  const oy = outH/2 - (cHprev/2)*k;
-  return {ox,oy,k};
-}
-
-/* ── INIT ── */
-buildImgGrid(); buildGradGrid(); buildSolidSws(); buildDeviceGrid();
-enableReposition('mockup-inner', ['mockup-img','mockup-video']);
-enableReposition('gadget-screen', ['gadget-img','gadget-video']);
-requestAnimationFrame(applyCanvasRatio);
-</script>
+<script src="js/app.js"></script>
 </body>
 </html>
