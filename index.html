@@ -37,122 +37,262 @@
 
 <div class="app-body">
 
-<!-- LEFT SIDEBAR: Aspect ratio + Mockup sliders + Background -->
-<aside class="sidebar">
+<!-- RIGHT SIDEBAR: contextual properties (Figma-style) -->
+<aside class="sidebar" id="props-panel">
 
-  <!-- Aspect ratio -->
-  <div class="ctrl-sec">
-    <div class="sec-lbl">Aspect ratio</div>
-    <div class="ratio-grid">
-      <button class="ratio-btn active" onclick="setRatio(this,'16:9')">
-        <div class="ratio-preview"><div class="ratio-box" style="width:30px;height:17px"></div></div>
-        <div class="ratio-lbl">16:9</div><div class="ratio-sub">1920 × 1080</div>
-      </button>
-      <button class="ratio-btn" onclick="setRatio(this,'4:3')">
-        <div class="ratio-preview"><div class="ratio-box" style="width:26px;height:20px"></div></div>
-        <div class="ratio-lbl">4:3</div><div class="ratio-sub">1440 × 1080</div>
-      </button>
-      <button class="ratio-btn" onclick="setRatio(this,'9:16')">
-        <div class="ratio-preview"><div class="ratio-box" style="width:17px;height:30px"></div></div>
-        <div class="ratio-lbl">9:16</div><div class="ratio-sub">1080 × 1920</div>
-      </button>
-      <button class="ratio-btn" id="ratio-custom-btn" onclick="toggleCustomRatio(this)">
-        <div class="ratio-preview"><div class="ratio-box" style="width:26px;height:18px;border-style:dashed"></div></div>
-        <div class="ratio-lbl">Custom</div><div class="ratio-sub">Set size</div>
-      </button>
+  <!-- POSITION (always on top, icon-only) -->
+  <div class="ctrl-sec" id="sec-position">
+    <div class="sec-lbl">Position</div>
+    <div class="align-grid">
+      <button class="align-btn" onclick="alignSelected('left')" title="Align left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="4" x2="4" y2="20"/><rect x="8" y="7" width="10" height="4" rx="1"/><rect x="8" y="14" width="6" height="4" rx="1"/></svg></button>
+      <button class="align-btn" onclick="alignSelected('centerH')" title="Center horizontally"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="4" x2="12" y2="20"/><rect x="6" y="7" width="12" height="4" rx="1"/><rect x="8" y="14" width="8" height="4" rx="1"/></svg></button>
+      <button class="align-btn" onclick="alignSelected('right')" title="Align right"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="20" y1="4" x2="20" y2="20"/><rect x="6" y="7" width="10" height="4" rx="1"/><rect x="10" y="14" width="6" height="4" rx="1"/></svg></button>
+      <button class="align-btn" onclick="alignSelected('top')" title="Align top"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="4" x2="20" y2="4"/><rect x="7" y="8" width="4" height="10" rx="1"/><rect x="14" y="8" width="4" height="6" rx="1"/></svg></button>
+      <button class="align-btn" onclick="alignSelected('centerV')" title="Center vertically"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="12" x2="20" y2="12"/><rect x="7" y="6" width="4" height="12" rx="1"/><rect x="14" y="8" width="4" height="8" rx="1"/></svg></button>
+      <button class="align-btn" onclick="alignSelected('center')" title="Center on canvas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg></button>
     </div>
-    <!-- Custom ratio inputs (hidden until Custom is chosen) -->
-    <div id="custom-ratio-row" style="display:none;align-items:center;gap:8px;margin-top:var(--s2)">
-      <input type="number" id="custom-w" min="1" max="9999" value="1920" placeholder="W"
-        oninput="applyCustomRatio()"
-        style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;text-align:center;">
-      <span style="color:var(--text-dim);font-size:13px;flex-shrink:0">×</span>
-      <input type="number" id="custom-h" min="1" max="9999" value="1080" placeholder="H"
-        oninput="applyCustomRatio()"
-        style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;text-align:center;">
+    <div class="pos-row">
+      <button class="icon-toggle" id="grid-toggle-btn" title="Grid overlay" onclick="this.classList.toggle('active');toggleGrid(this.classList.contains('active'))">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="1"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/></svg>
+      </button>
+      <select class="sz-select sz-mini" id="safe-zone-select" title="Social safe-zone" onchange="setSafeZone(this.value)">
+        <option value="none">No safe-zone</option>
+        <option value="ig-square">IG · Square 1:1</option>
+        <option value="ig-portrait">IG · Portrait 4:5</option>
+        <option value="story">Story / Reel · 9:16</option>
+        <option value="x-post">X / Twitter · 16:9</option>
+        <option value="og">Open Graph · 1.91:1</option>
+      </select>
     </div>
   </div>
 
-  <!-- TEXT -->
-  <div class="ctrl-sec">
-    <div class="sec-lbl">Text</div>
-    <div class="text-list" id="text-list"></div>
-    <button class="add-text-btn" onclick="addText()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      Add text
-    </button>
-    <button class="add-text-btn" id="load-text-presets-btn" onclick="loadTextPresets()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4h12M6 10h12M6 16h12M6 22h12"/></svg>
-      Load curated text presets
-    </button>
-    <div id="text-presets" style="display:none; margin-top:var(--s2)">
-      <div class="sec-lbl" style="margin-bottom:8px">Curated text</div>
-      <div class="preset-grid" id="preset-grid"></div>
+  <!-- CONTEXTUAL PROPERTY PANELS (one shown at a time) -->
+  <div class="prop-body" id="prop-body">
+
+    <!-- default / nothing selected -->
+    <div class="prop-panel active" id="pp-empty">
+      <div class="prop-hint">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 4l7 17 2.5-7L20 11.5 4 4z"/></svg>
+        <p>Pick a tool below, or select an object on the canvas to edit its properties.</p>
+      </div>
     </div>
-    <div class="text-ctrls" id="text-ctrls">
-      <textarea id="text-content" placeholder="Type your text..." oninput="updateTextContent(this.value)"></textarea>
-      <div class="slider-row" style="border:none;padding:0 0 var(--s2)">
+
+    <!-- CANVAS SIZE -->
+    <div class="prop-panel" id="pp-canvas">
+      <div class="sec-lbl">Canvas size</div>
+      <div class="ratio-grid">
+        <button class="ratio-btn active" onclick="setRatio(this,'16:9')">
+          <div class="ratio-preview"><div class="ratio-box" style="width:30px;height:17px"></div></div>
+          <div class="ratio-lbl">16:9</div><div class="ratio-sub">1920 × 1080</div>
+        </button>
+        <button class="ratio-btn" onclick="setRatio(this,'4:3')">
+          <div class="ratio-preview"><div class="ratio-box" style="width:26px;height:20px"></div></div>
+          <div class="ratio-lbl">4:3</div><div class="ratio-sub">1440 × 1080</div>
+        </button>
+        <button class="ratio-btn" onclick="setRatio(this,'9:16')">
+          <div class="ratio-preview"><div class="ratio-box" style="width:17px;height:30px"></div></div>
+          <div class="ratio-lbl">9:16</div><div class="ratio-sub">1080 × 1920</div>
+        </button>
+        <button class="ratio-btn" id="ratio-custom-btn" onclick="toggleCustomRatio(this)">
+          <div class="ratio-preview"><div class="ratio-box" style="width:26px;height:18px;border-style:dashed"></div></div>
+          <div class="ratio-lbl">Custom</div><div class="ratio-sub">Set size</div>
+        </button>
+      </div>
+      <div id="custom-ratio-row" style="display:none;align-items:center;gap:8px;margin-top:var(--s2)">
+        <input type="number" id="custom-w" min="1" max="9999" value="1920" placeholder="W" oninput="applyCustomRatio()" class="fig-input" style="text-align:center">
+        <span style="color:var(--text-dim);font-size:13px;flex-shrink:0">×</span>
+        <input type="number" id="custom-h" min="1" max="9999" value="1080" placeholder="H" oninput="applyCustomRatio()" class="fig-input" style="text-align:center">
+      </div>
+    </div>
+
+    <!-- FRAME (mockup adjustments + 3D tilt) -->
+    <div class="prop-panel" id="pp-frame">
+      <div class="sec-lbl">Frame</div>
+      <div class="slider-row">
+        <span class="slider-lbl">Padding</span>
+        <input type="range" min="0" max="18" value="6" step="1" id="sl-pad" oninput="onPad(this.value)">
+        <span class="slider-val" id="vl-pad">6%</span>
+      </div>
+      <div class="slider-row" id="row-radius">
+        <span class="slider-lbl">Radius</span>
+        <input type="range" min="0" max="40" value="14" step="1" id="sl-rad" oninput="onRadius(this.value)">
+        <span class="slider-val" id="vl-rad">14px</span>
+      </div>
+      <div class="slider-row">
+        <span class="slider-lbl">Shadow</span>
+        <input type="range" min="0" max="100" value="60" step="1" id="sl-shad" oninput="onShadow(this.value)">
+        <span class="slider-val" id="vl-shad">60%</span>
+      </div>
+      <div class="slider-row">
+        <span class="slider-lbl">Tilt X</span>
+        <input type="range" min="-26" max="26" value="0" step="1" id="sl-tiltx" oninput="onTilt('x',this.value)">
+        <span class="slider-val" id="vl-tiltx">0°</span>
+      </div>
+      <div class="slider-row">
+        <span class="slider-lbl">Tilt Y</span>
+        <input type="range" min="-26" max="26" value="0" step="1" id="sl-tilty" oninput="onTilt('y',this.value)">
+        <span class="slider-val" id="vl-tilty">0°</span>
+      </div>
+      <div class="slider-row" id="zoom-row" style="display:none">
+        <span class="slider-lbl">Zoom</span>
+        <input type="range" min="1" max="3" value="1" step="0.01" id="sl-zoom" oninput="onZoom(this.value)">
+        <span class="slider-val" id="vl-zoom">100%</span>
+      </div>
+      <button id="reset-pos-btn" onclick="resetMediaTransform()" style="display:none;width:100%;margin-top:var(--s2);padding:7px 0;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text-muted);font-size:11.5px;cursor:pointer;font-family:inherit;align-items:center;justify-content:center;gap:6px;transition:all .14s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--text)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        Reset position
+      </button>
+    </div>
+
+    <!-- BACKGROUND -->
+    <div class="prop-panel" id="pp-background">
+      <div class="sec-lbl">Background</div>
+      <div class="slider-row">
+        <span class="slider-lbl">Blur</span>
+        <input type="range" min="0" max="40" value="0" step="1" id="sl-blur" oninput="onBlur(this.value)">
+        <span class="slider-val" id="vl-blur">0px</span>
+      </div>
+      <div class="slider-row">
         <span class="slider-lbl">Size</span>
-        <input type="range" min="12" max="120" value="40" step="1" id="text-size" oninput="updateTextSize(this.value)">
-        <span class="slider-val" id="text-size-val">40px</span>
+        <input type="range" min="40" max="100" value="100" step="1" id="sl-bgz" oninput="onBgSize(this.value)">
+        <span class="slider-val" id="vl-bgz">100%</span>
       </div>
-      <div style="margin-bottom:var(--s2)">
-        <div class="sec-lbl" style="margin-bottom:6px">Weight</div>
-        <div class="weight-toggle">
-          <button class="wt-opt" data-w="400" onclick="updateTextWeight('400')">Regular</button>
-          <button class="wt-opt" data-w="600" onclick="updateTextWeight('600')">Medium</button>
-          <button class="wt-opt active" data-w="700" onclick="updateTextWeight('700')">Bold</button>
+      <div style="margin-top:var(--s3)">
+        <div class="bg-tabs">
+          <button class="bg-tab active" onclick="switchBgTab(this,'images')">Image</button>
+          <button class="bg-tab" onclick="switchBgTab(this,'gradient')">Gradient</button>
+          <button class="bg-tab" onclick="switchBgTab(this,'color')">Color</button>
+          <button class="bg-tab" onclick="switchBgTab(this,'none')">None</button>
+        </div>
+        <div class="bg-panel active" id="panel-images">
+          <div class="img-grid" id="img-grid"></div>
+          <button class="upload-btn" onclick="document.getElementById('hbf').click()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Upload your own
+          </button>
+        </div>
+        <div class="bg-panel" id="panel-gradient">
+          <div class="grad-grid" id="grad-grid"></div>
+        </div>
+        <div class="bg-panel" id="panel-color">
+          <div class="color-row">
+            <div class="color-pick-wrap"><input type="color" id="color-pick" value="#0a0f1e" oninput="onColorPick(this.value)"></div>
+            <input class="hex-in" type="text" id="hex-in" value="#0a0f1e" maxlength="7" placeholder="#000000" oninput="onHex(this.value)">
+          </div>
+          <div class="solid-sws" id="solid-sws"></div>
+        </div>
+        <div class="bg-panel" id="panel-none">
+          <div style="padding:var(--s2) 0; text-align:center;">
+            <div style="width:100%;aspect-ratio:16/9;border-radius:8px;border:1px dashed rgba(255,255,255,0.15);background:repeating-conic-gradient(#2a2a2a 0% 25%, #1a1a1a 0% 50%) 0 0 / 16px 16px;margin-bottom:var(--s2);"></div>
+            <p style="font-size:11px;color:var(--text-muted);line-height:1.5">Background is transparent.<br>Export as PNG to preserve transparency.</p>
+          </div>
         </div>
       </div>
-      <div style="margin-bottom:var(--s2)">
-        <div class="sec-lbl" style="margin-bottom:6px">Align</div>
-        <div class="align-toggle">
-          <button class="al-opt active" data-a="left" onclick="updateTextAlign('left')">Left</button>
-          <button class="al-opt" data-a="center" onclick="updateTextAlign('center')">Center</button>
-          <button class="al-opt" data-a="right" onclick="updateTextAlign('right')">Right</button>
-        </div>
-      </div>
-      <div style="margin-bottom:var(--s2)">
-        <div class="sec-lbl" style="margin-bottom:6px">Color</div>
-        <div class="text-font-color">
-          <div class="color-pick-wrap"><input type="color" id="text-color" value="#ffffff" oninput="updateTextColor(this.value)"></div>
-          <input class="hex-in" type="text" id="text-color-hex" value="#ffffff" maxlength="7" oninput="updateTextColorHex(this.value)">
-        </div>
-      </div>
-      <button class="add-text-btn" style="border-style:solid;border-color:rgba(239,68,68,0.3);color:#ef4444" onclick="deleteSelectedText()">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-        Delete text
-      </button>
     </div>
-  </div>
 
-  <!-- ELEMENTS: logos, badges, stickers & annotations -->
-  <div class="ctrl-sec">
-    <div class="sec-lbl">Elements</div>
-    <div class="el-list" id="el-list"></div>
-    <div class="el-tools">
-      <button class="el-tool" onclick="document.getElementById('haf').click()" title="Upload a transparent PNG or SVG logo/sticker">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        Logo / PNG
+    <!-- TEXT -->
+    <div class="prop-panel" id="pp-text">
+      <div class="sec-lbl">Text</div>
+      <div class="text-list" id="text-list"></div>
+      <button class="add-text-btn" onclick="addText()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add text
       </button>
-      <button class="el-tool" onclick="addAnnotation('arrow')" title="Add an arrow">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="19" x2="19" y2="5"/><polyline points="9 5 19 5 19 15"/></svg>
-        Arrow
-      </button>
-      <button class="el-tool" onclick="addAnnotation('circle')" title="Add an accent circle">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="12" rx="9" ry="7"/></svg>
-        Circle
-      </button>
-      <button class="el-tool" onclick="addAnnotation('badge')" title="Add a numbered badge">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><text x="12" y="16" font-size="11" font-weight="700" text-anchor="middle" fill="currentColor" stroke="none">1</text></svg>
-        Number
-      </button>
+      <div class="text-ctrls" id="text-ctrls">
+        <textarea id="text-content" placeholder="Type your text..." oninput="updateTextContent(this.value)"></textarea>
+        <div class="fig-field">
+          <label>Font</label>
+          <select class="fig-select" id="text-font" onchange="updateTextFont(this.value)"></select>
+        </div>
+        <div class="fig-grid2">
+          <div class="fig-field">
+            <label>Weight</label>
+            <select class="fig-select" id="text-weight" onchange="updateTextWeight(this.value)">
+              <option value="300">Light</option>
+              <option value="400">Regular</option>
+              <option value="500">Medium</option>
+              <option value="600">Semibold</option>
+              <option value="700" selected>Bold</option>
+              <option value="800">Extrabold</option>
+            </select>
+          </div>
+          <div class="fig-field">
+            <label>Size</label>
+            <input class="fig-input" type="number" id="text-size" value="40" min="4" max="400" step="1" oninput="updateTextSize(this.value)">
+          </div>
+        </div>
+        <div class="fig-grid2">
+          <div class="fig-field">
+            <label>Line height</label>
+            <input class="fig-input" type="number" id="text-lh" value="1.3" min="0.8" max="3" step="0.05" oninput="updateTextLH(this.value)">
+          </div>
+          <div class="fig-field">
+            <label>Spacing</label>
+            <input class="fig-input" type="number" id="text-ls" value="0" min="-5" max="40" step="0.5" oninput="updateTextLS(this.value)">
+          </div>
+        </div>
+        <div class="fig-field">
+          <label>Align</label>
+          <div class="align-toggle">
+            <button class="al-opt active" data-a="left" onclick="updateTextAlign('left')">Left</button>
+            <button class="al-opt" data-a="center" onclick="updateTextAlign('center')">Center</button>
+            <button class="al-opt" data-a="right" onclick="updateTextAlign('right')">Right</button>
+          </div>
+        </div>
+        <div class="fig-field">
+          <label>Color</label>
+          <div class="text-font-color">
+            <div class="color-pick-wrap"><input type="color" id="text-color" value="#ffffff" oninput="updateTextColor(this.value)"></div>
+            <input class="hex-in" type="text" id="text-color-hex" value="#ffffff" maxlength="7" oninput="updateTextColorHex(this.value)">
+          </div>
+        </div>
+        <button class="add-text-btn" style="border-style:solid;border-color:rgba(239,68,68,0.3);color:#ef4444" onclick="deleteSelectedText()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+          Delete text
+        </button>
+      </div>
     </div>
-    <div class="el-sub-lbl">Marketing badges</div>
-    <div class="badge-grid" id="badge-grid"></div>
 
-    <!-- Selected element inspector -->
-    <div class="el-inspect" id="el-inspect">
+    <!-- LOGO / IMAGE -->
+    <div class="prop-panel" id="pp-image">
+      <div class="sec-lbl">Logo / image</div>
+      <button class="add-text-btn" onclick="document.getElementById('haf').click()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Upload PNG / SVG
+      </button>
+      <p class="prop-note">Drop a transparent logo, badge or sticker onto the canvas. Drag to reposition; resize with the corner handle.</p>
+      <div class="el-list" id="el-list"></div>
+    </div>
+
+    <!-- SHAPES / ANNOTATIONS -->
+    <div class="prop-panel" id="pp-shapes">
+      <div class="sec-lbl">Annotate</div>
+      <div class="el-tools">
+        <button class="el-tool" onclick="addAnnotation('arrow')" title="Add an arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="19" x2="19" y2="5"/><polyline points="9 5 19 5 19 15"/></svg>
+          Arrow
+        </button>
+        <button class="el-tool" onclick="addAnnotation('circle')" title="Add an accent circle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="12" rx="9" ry="7"/></svg>
+          Circle
+        </button>
+        <button class="el-tool" onclick="addAnnotation('badge')" title="Add a numbered badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><text x="12" y="16" font-size="11" font-weight="700" text-anchor="middle" fill="currentColor" stroke="none">1</text></svg>
+          Number
+        </button>
+      </div>
+      <p class="prop-note">Click to drop a shape, then drag it onto the feature you want to highlight.</p>
+    </div>
+
+    <!-- MARKETING BADGES -->
+    <div class="prop-panel" id="pp-badges">
+      <div class="sec-lbl">Marketing badges</div>
+      <div class="badge-grid" id="badge-grid"></div>
+    </div>
+
+    <!-- SELECTED ELEMENT INSPECTOR -->
+    <div class="prop-panel" id="pp-element">
+      <div class="sec-lbl">Element</div>
       <div id="el-inspect-size" style="margin-bottom:var(--s2)">
         <div class="slider-row" style="border:none;padding:0 0 var(--s2)">
           <span class="slider-lbl">Size</span>
@@ -186,121 +326,19 @@
         Delete element
       </button>
     </div>
-  </div>
 
-  <div class="ctrl-sec" id="mockup-ctrls">
-    <div class="sec-lbl">Mockup</div>
-    <div class="slider-row">
-      <span class="slider-lbl">Padding</span>
-      <input type="range" min="0" max="18" value="6" step="1" id="sl-pad" oninput="onPad(this.value)">
-      <span class="slider-val" id="vl-pad">6%</span>
+    <!-- DEVICE FINISH + GLARE -->
+    <div class="prop-panel" id="pp-device">
+      <div class="sec-lbl">Device finish</div>
+      <div class="finish-grid" id="finish-grid"></div>
+      <div class="guide-row" style="border-top:1px solid var(--border);margin-top:var(--s2)">
+        <span class="gr-lbl">Screen glare</span>
+        <label class="tgl"><input type="checkbox" id="glare-toggle" onchange="toggleGlare(this.checked)"><span class="tgl-track"></span></label>
+      </div>
+      <p class="prop-note">Pick a device frame from the left panel to use these.</p>
     </div>
-    <div class="slider-row" id="row-radius">
-      <span class="slider-lbl">Radius</span>
-      <input type="range" min="0" max="40" value="14" step="1" id="sl-rad" oninput="onRadius(this.value)">
-      <span class="slider-val" id="vl-rad">14px</span>
-    </div>
-    <div class="slider-row">
-      <span class="slider-lbl">Shadow</span>
-      <input type="range" min="0" max="100" value="60" step="1" id="sl-shad" oninput="onShadow(this.value)">
-      <span class="slider-val" id="vl-shad">60%</span>
-    </div>
-    <div class="slider-row">
-      <span class="slider-lbl">Tilt X</span>
-      <input type="range" min="-26" max="26" value="0" step="1" id="sl-tiltx" oninput="onTilt('x',this.value)">
-      <span class="slider-val" id="vl-tiltx">0°</span>
-    </div>
-    <div class="slider-row">
-      <span class="slider-lbl">Tilt Y</span>
-      <input type="range" min="-26" max="26" value="0" step="1" id="sl-tilty" oninput="onTilt('y',this.value)">
-      <span class="slider-val" id="vl-tilty">0°</span>
-    </div>
-    <div class="slider-row" id="zoom-row" style="display:none">
-      <span class="slider-lbl">Zoom</span>
-      <input type="range" min="1" max="3" value="1" step="0.01" id="sl-zoom" oninput="onZoom(this.value)">
-      <span class="slider-val" id="vl-zoom">100%</span>
-    </div>
-    <button id="reset-pos-btn" onclick="resetMediaTransform()" style="display:none;width:100%;margin-top:var(--s2);padding:7px 0;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text-muted);font-size:11.5px;cursor:pointer;font-family:inherit;align-items:center;justify-content:center;gap:6px;transition:all .14s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--text)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-      Reset position
-    </button>
-  </div>
 
-  <!-- Background -->
-  <div class="ctrl-sec">
-    <div class="sec-lbl">Background</div>
-    <div class="slider-row">
-      <span class="slider-lbl">Blur</span>
-      <input type="range" min="0" max="40" value="0" step="1" id="sl-blur" oninput="onBlur(this.value)">
-      <span class="slider-val" id="vl-blur">0px</span>
-    </div>
-    <div class="slider-row">
-      <span class="slider-lbl">Size</span>
-      <input type="range" min="40" max="100" value="100" step="1" id="sl-bgz" oninput="onBgSize(this.value)">
-      <span class="slider-val" id="vl-bgz">100%</span>
-    </div>
-    <div style="margin-top:var(--s3)">
-      <div class="bg-tabs">
-        <button class="bg-tab active" onclick="switchBgTab(this,'images')">Image</button>
-        <button class="bg-tab" onclick="switchBgTab(this,'gradient')">Gradient</button>
-        <button class="bg-tab" onclick="switchBgTab(this,'color')">Color</button>
-        <button class="bg-tab" onclick="switchBgTab(this,'none')">None</button>
-      </div>
-      <div class="bg-panel active" id="panel-images">
-        <div class="img-grid" id="img-grid"></div>
-        <button class="upload-btn" onclick="document.getElementById('hbf').click()">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          Upload your own
-        </button>
-      </div>
-      <div class="bg-panel" id="panel-gradient">
-        <div class="grad-grid" id="grad-grid"></div>
-      </div>
-      <div class="bg-panel" id="panel-color">
-        <div class="color-row">
-          <div class="color-pick-wrap"><input type="color" id="color-pick" value="#0a0f1e" oninput="onColorPick(this.value)"></div>
-          <input class="hex-in" type="text" id="hex-in" value="#0a0f1e" maxlength="7" placeholder="#000000" oninput="onHex(this.value)">
-        </div>
-        <div class="solid-sws" id="solid-sws"></div>
-      </div>
-      <div class="bg-panel" id="panel-none">
-        <div style="padding:var(--s2) 0; text-align:center;">
-          <div style="width:100%;aspect-ratio:16/9;border-radius:8px;border:1px dashed rgba(255,255,255,0.15);background:repeating-conic-gradient(#2a2a2a 0% 25%, #1a1a1a 0% 50%) 0 0 / 16px 16px;margin-bottom:var(--s2);"></div>
-          <p style="font-size:11px;color:var(--text-muted);line-height:1.5">Background is transparent.<br>Export as PNG to preserve transparency.</p>
-        </div>
-      </div>
-    </div>
   </div>
-
-  <!-- LAYOUT & GUIDES -->
-  <div class="ctrl-sec">
-    <div class="sec-lbl">Align &amp; guides</div>
-    <div style="font-size:10px;color:var(--text-dim);margin-bottom:8px;line-height:1.4">Aligns the selected text or element. Snaps to center while dragging.</div>
-    <div class="align-grid">
-      <button class="align-btn" onclick="alignSelected('left')" title="Align left edge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="4" x2="4" y2="20"/><rect x="8" y="7" width="10" height="4" rx="1"/><rect x="8" y="14" width="6" height="4" rx="1"/></svg></button>
-      <button class="align-btn" onclick="alignSelected('centerH')" title="Center horizontally"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="4" x2="12" y2="20"/><rect x="6" y="7" width="12" height="4" rx="1"/><rect x="8" y="14" width="8" height="4" rx="1"/></svg></button>
-      <button class="align-btn" onclick="alignSelected('right')" title="Align right edge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="20" y1="4" x2="20" y2="20"/><rect x="6" y="7" width="10" height="4" rx="1"/><rect x="10" y="14" width="6" height="4" rx="1"/></svg></button>
-      <button class="align-btn" onclick="alignSelected('top')" title="Align top edge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="4" x2="20" y2="4"/><rect x="7" y="8" width="4" height="10" rx="1"/><rect x="14" y="8" width="4" height="6" rx="1"/></svg></button>
-      <button class="align-btn" onclick="alignSelected('centerV')" title="Center vertically"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="12" x2="20" y2="12"/><rect x="7" y="6" width="4" height="12" rx="1"/><rect x="14" y="8" width="4" height="8" rx="1"/></svg></button>
-      <button class="align-btn" onclick="alignSelected('center')" title="Center on canvas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg></button>
-    </div>
-    <div class="guide-row" style="border-top:1px solid var(--border)">
-      <span class="gr-lbl">Grid overlay</span>
-      <label class="tgl"><input type="checkbox" id="grid-toggle" onchange="toggleGrid(this.checked)"><span class="tgl-track"></span></label>
-    </div>
-    <div style="padding-top:4px">
-      <div class="sec-lbl" style="margin-bottom:6px">Social safe-zone</div>
-      <select class="sz-select" id="safe-zone-select" onchange="setSafeZone(this.value)">
-        <option value="none">None</option>
-        <option value="ig-square">Instagram · Square 1:1</option>
-        <option value="ig-portrait">Instagram · Portrait 4:5</option>
-        <option value="story">Story / Reel · 9:16</option>
-        <option value="x-post">X / Twitter · 16:9</option>
-        <option value="og">Open Graph · 1.91:1</option>
-      </select>
-    </div>
-  </div>
-
 </aside>
 
 <!-- WORK AREA -->
@@ -363,6 +401,32 @@
     </div>
   </div>
   <div class="wm">mockup studio</div>
+
+  <!-- BOTTOM FLOATING TOOLBAR (Figma-style) -->
+  <div class="toolbar" id="toolbar">
+    <button class="tool" data-tool="canvas" data-tip="Canvas size" onclick="selectTool('canvas')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/></svg>
+    </button>
+    <button class="tool" data-tool="frame" data-tip="Frame & tilt" onclick="selectTool('frame')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="3" width="12" height="18" rx="2"/><line x1="9" y1="7" x2="15" y2="7"/></svg>
+    </button>
+    <button class="tool" data-tool="background" data-tip="Background" onclick="selectTool('background')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 16l5-5 4 4 3-3 6 6"/><circle cx="8.5" cy="8.5" r="1.5"/></svg>
+    </button>
+    <div class="tool-sep"></div>
+    <button class="tool" data-tool="text" data-tip="Text" onclick="selectTool('text')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6V4h16v2M9 20h6M12 4v16"/></svg>
+    </button>
+    <button class="tool" data-tool="image" data-tip="Logo / image" onclick="selectTool('image')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+    </button>
+    <button class="tool" data-tool="shapes" data-tip="Shapes & annotations" onclick="selectTool('shapes')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="19" x2="19" y2="5"/><polyline points="9 5 19 5 19 15"/></svg>
+    </button>
+    <button class="tool" data-tool="badges" data-tip="Marketing badges" onclick="selectTool('badges')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L4.2 7.7l5.4-.8z"/></svg>
+    </button>
+  </div>
 </main>
 
 <!-- RIGHT SIDEBAR: Mockup device picker -->
@@ -395,15 +459,6 @@
       <button class="cat-pill" onclick="filterCat(this,'desktop')">Desktop</button>
     </div>
     <div class="device-grid" id="device-grid"></div>
-  </div>
-  <div class="ctrl-sec" id="device-finish-sec">
-    <div class="sec-lbl">Frame finish</div>
-    <div class="finish-grid" id="finish-grid"></div>
-    <div class="guide-row" style="border-top:1px solid var(--border);margin-top:var(--s2)">
-      <span class="gr-lbl">Screen glare</span>
-      <label class="tgl"><input type="checkbox" id="glare-toggle" onchange="toggleGlare(this.checked)"><span class="tgl-track"></span></label>
-    </div>
-    <p style="font-size:10px;color:var(--text-dim);margin:8px 0 0;line-height:1.4">Finish &amp; glare apply when a device frame is selected.</p>
   </div>
 </aside>
 

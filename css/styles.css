@@ -367,3 +367,69 @@ nav { height:48px; border-bottom:1px solid var(--border); display:flex; align-it
 .finish-sw.active { border-color:var(--accent); box-shadow:0 0 0 2px var(--accent-dim); }
 .screen-glare { position:absolute; inset:0; pointer-events:none; display:none; background:linear-gradient(120deg, rgba(255,255,255,.22) 0%, rgba(255,255,255,.06) 22%, rgba(255,255,255,0) 45%); }
 .screen-glare.on { display:block; }
+
+/* ════════════════════════════════════════════════════════
+   FIGMA-STYLE LAYOUT: bottom toolbar + contextual right panel
+═══════════════════════════════════════════════════════════ */
+
+/* Slim the left device rail a touch */
+.sidebar-r { width:248px; }
+
+/* ── Bottom floating toolbar ── */
+.toolbar {
+  position:absolute; bottom:20px; left:50%; transform:translateX(-50%);
+  display:flex; align-items:center; gap:4px; z-index:50;
+  background:rgba(22,22,26,0.92); backdrop-filter:blur(14px);
+  border:1px solid rgba(255,255,255,0.10); border-radius:14px;
+  padding:6px; box-shadow:0 10px 40px rgba(0,0,0,.55), 0 2px 8px rgba(0,0,0,.4);
+}
+.toolbar .tool {
+  width:38px; height:38px; display:flex; align-items:center; justify-content:center;
+  border:none; border-radius:9px; background:transparent; color:var(--text-muted);
+  cursor:pointer; transition:all .13s; position:relative; font-family:inherit;
+}
+.toolbar .tool svg { width:19px; height:19px; }
+.toolbar .tool:hover { background:var(--surface3); color:var(--text); }
+.toolbar .tool.active { background:var(--accent); color:#fff; }
+.toolbar .tool-sep { width:1px; height:24px; background:rgba(255,255,255,0.12); margin:0 4px; }
+/* tooltip */
+.toolbar .tool::after {
+  content:attr(data-tip); position:absolute; bottom:calc(100% + 9px); left:50%; transform:translateX(-50%);
+  background:#000; color:#fff; font-size:10.5px; font-weight:500; white-space:nowrap;
+  padding:4px 8px; border-radius:6px; opacity:0; pointer-events:none; transition:opacity .12s;
+}
+.toolbar .tool:hover::after { opacity:1; }
+
+/* ── Contextual right panel ── */
+#sec-position { position:sticky; top:0; background:var(--bg); z-index:3; }
+.prop-body { display:flex; flex-direction:column; }
+.prop-panel { display:none; }
+.prop-panel.active { display:block; }
+.prop-hint { padding:28px 8px; text-align:center; color:var(--text-dim); }
+.prop-hint svg { width:30px; height:30px; opacity:.5; margin-bottom:12px; }
+.prop-hint p { font-size:12px; line-height:1.55; margin:0; }
+.prop-note { font-size:11px; color:var(--text-muted); line-height:1.5; margin:10px 0 0; }
+
+/* Position section icon row */
+.pos-row { display:flex; gap:8px; align-items:center; margin-top:var(--s2); }
+.icon-toggle { width:36px; height:36px; flex-shrink:0; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); border-radius:8px; background:var(--surface); color:var(--text-muted); cursor:pointer; transition:all .14s; }
+.icon-toggle svg { width:16px; height:16px; }
+.icon-toggle:hover { border-color:var(--border-h); color:var(--text); }
+.icon-toggle.active { border-color:var(--accent); background:var(--accent-dim); color:var(--accent); }
+.sz-mini { flex:1; }
+
+/* ── Figma-style text fields ── */
+.fig-field { display:flex; flex-direction:column; gap:4px; margin-bottom:var(--s2); }
+.fig-field > label { font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.05em; font-weight:600; }
+.fig-grid2 { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.fig-input, .fig-select {
+  width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:8px;
+  padding:8px 10px; color:var(--text); font-size:12px; font-family:inherit; outline:none; transition:border-color .14s;
+}
+.fig-input:focus, .fig-select:focus { border-color:var(--accent); }
+.fig-select { cursor:pointer; appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23888' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; padding-right:26px; }
+
+/* Marketing badges → 2×2 grid */
+.badge-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.badge-btn { display:flex; align-items:center; justify-content:center; padding:12px 8px; min-height:54px; }
+.badge-btn svg { width:100%; height:auto; max-height:34px; }

@@ -432,6 +432,7 @@ function selectDevice(dev) {
   buildDeviceGrid();
   applyDevice();
   if(hasMedia) requestAnimationFrame(applyMediaTransform);
+  if(dev && typeof openPanelForTool==='function') openPanelForTool('device');
 }
 
 function applyDevice() {
@@ -1833,10 +1834,31 @@ function addText(){
     weight: '700',
     color: '#ffffff',
     align: 'left',
+    font: FONTS[0].css,
+    letterSpacing: 0,
+    lineHeight: 1.3,
   };
   texts.push(t);
   renderTexts();
   selectText(t.id);
+}
+
+// Web-safe font stacks (no network load → exports render identically).
+const FONTS = [
+  {name:'Inter / System', css:"-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif"},
+  {name:'Arial', css:"Arial, 'Helvetica Neue', Helvetica, sans-serif"},
+  {name:'Helvetica Neue', css:"'Helvetica Neue', Helvetica, Arial, sans-serif"},
+  {name:'Verdana', css:"Verdana, Geneva, sans-serif"},
+  {name:'Tahoma', css:"Tahoma, Geneva, sans-serif"},
+  {name:'Trebuchet MS', css:"'Trebuchet MS', Helvetica, sans-serif"},
+  {name:'Georgia', css:"Georgia, 'Times New Roman', serif"},
+  {name:'Times New Roman', css:"'Times New Roman', Times, serif"},
+  {name:'Courier New', css:"'Courier New', Courier, monospace"},
+];
+function buildFontSelect(){
+  const sel=document.getElementById('text-font'); if(!sel) return;
+  sel.innerHTML='';
+  FONTS.forEach(f=>{ const o=document.createElement('option'); o.value=f.css; o.textContent=f.name; o.style.fontFamily=f.css; sel.appendChild(o); });
 }
 
 function renderTexts(){
@@ -1853,6 +1875,9 @@ function renderTexts(){
     el.style.fontWeight = t.weight;
     el.style.color = t.color;
     el.style.textAlign = t.align;
+    el.style.fontFamily = t.font || FONTS[0].css;
+    el.style.letterSpacing = (t.letterSpacing||0) + 'px';
+    el.style.lineHeight = (t.lineHeight||1.3);
     layer.appendChild(el);
     bindTextEl(el, t.id);
   });
@@ -1957,23 +1982,29 @@ function selectText(id){
     el.classList.toggle('selected', parseInt(el.dataset.id)===id));
   const ctrls = document.getElementById('text-ctrls');
   if(!t){ ctrls.classList.remove('active'); renderTextList(); return; }
+  if(typeof openPanelForTool==='function') openPanelForTool('text');
   ctrls.classList.add('active');
   document.getElementById('text-content').value = t.content;
   document.getElementById('text-size').value = t.size;
-  document.getElementById('text-size-val').textContent = t.size+'px';
+  document.getElementById('text-font').value = t.font || FONTS[0].css;
+  document.getElementById('text-weight').value = t.weight;
+  document.getElementById('text-lh').value = (t.lineHeight!=null? t.lineHeight : 1.3);
+  document.getElementById('text-ls').value = (t.letterSpacing||0);
   document.getElementById('text-color').value = t.color;
   document.getElementById('text-color-hex').value = t.color;
-  document.querySelectorAll('.wt-opt').forEach(b=>b.classList.toggle('active', b.dataset.w===t.weight));
-  document.querySelectorAll('.al-opt').forEach(b=>b.classList.toggle('active', b.dataset.a===t.align));
+  document.querySelectorAll('#pp-text .al-opt').forEach(b=>b.classList.toggle('active', b.dataset.a===t.align));
   renderTextList();
 }
 
 function curText(){ return texts.find(x=>x.id===selectedTextId); }
 
 function updateTextContent(v){ const t=curText(); if(!t)return; t.content=v; renderTexts(); }
-function updateTextSize(v){ const t=curText(); if(!t)return; t.size=parseInt(v); document.getElementById('text-size-val').textContent=v+'px'; applyTextStyle(t); }
-function updateTextWeight(w){ const t=curText(); if(!t)return; t.weight=w; document.querySelectorAll('.wt-opt').forEach(b=>b.classList.toggle('active',b.dataset.w===w)); applyTextStyle(t); }
-function updateTextAlign(a){ const t=curText(); if(!t)return; t.align=a; document.querySelectorAll('.al-opt').forEach(b=>b.classList.toggle('active',b.dataset.a===a)); applyTextStyle(t); }
+function updateTextSize(v){ const t=curText(); if(!t)return; t.size=parseInt(v)||t.size; applyTextStyle(t); }
+function updateTextWeight(w){ const t=curText(); if(!t)return; t.weight=w; applyTextStyle(t); }
+function updateTextFont(css){ const t=curText(); if(!t)return; t.font=css; applyTextStyle(t); }
+function updateTextLH(v){ const t=curText(); if(!t)return; t.lineHeight=parseFloat(v)||1.3; applyTextStyle(t); }
+function updateTextLS(v){ const t=curText(); if(!t)return; t.letterSpacing=parseFloat(v)||0; applyTextStyle(t); }
+function updateTextAlign(a){ const t=curText(); if(!t)return; t.align=a; document.querySelectorAll('#pp-text .al-opt').forEach(b=>b.classList.toggle('active',b.dataset.a===a)); applyTextStyle(t); }
 function updateTextColor(v){ const t=curText(); if(!t)return; t.color=v; document.getElementById('text-color-hex').value=v; applyTextStyle(t); }
 function updateTextColorHex(v){ if(!/^#[0-9a-fA-F]{6}$/.test(v))return; const t=curText(); if(!t)return; t.color=v; document.getElementById('text-color').value=v; applyTextStyle(t); }
 
@@ -1982,6 +2013,8 @@ function applyTextStyle(t){
   const el = document.querySelector('#text-layer .text-block[data-id="'+t.id+'"]');
   if(!el) return;
   el.style.fontSize=t.size+'px'; el.style.fontWeight=t.weight; el.style.color=t.color; el.style.textAlign=t.align;
+  el.style.fontFamily=t.font||FONTS[0].css; el.style.letterSpacing=(t.letterSpacing||0)+'px'; el.style.lineHeight=(t.lineHeight||1.3);
+  renderTextList();
 }
 
 function deleteText(id){
@@ -2034,8 +2067,8 @@ function bindTextEl(el, id){
 
 // Click empty canvas → deselect text
 document.getElementById('work-area').addEventListener('pointerdown', e=>{
-  if(e.target.closest('.text-block')) return;
-  if(selectedTextId!=null){ selectedTextId=null; document.getElementById('text-ctrls').classList.remove('active'); renderTexts(); }
+  if(e.target.closest('.text-block')||e.target.closest('.toolbar')) return;
+  if(selectedTextId!=null){ selectedTextId=null; document.getElementById('text-ctrls').classList.remove('active'); renderTexts(); if(typeof revertPanel==='function') revertPanel(); }
 });
 
 // Reposition texts when canvas resizes (keep them proportional)
@@ -2054,13 +2087,14 @@ function drawTextsOnCanvas(ctx, ox, oy, k){
     const lines = (t.content||'').split('\n');
     ctx.save();
     const size = t.size*k;
-    ctx.font = t.weight + ' ' + size + 'px -apple-system,BlinkMacSystemFont,Inter,"Segoe UI",sans-serif';
+    ctx.font = t.weight + ' ' + size + 'px ' + (t.font || "-apple-system,BlinkMacSystemFont,Inter,'Segoe UI',sans-serif");
+    try { ctx.letterSpacing = ((t.letterSpacing||0)*k) + 'px'; } catch(_){}
     ctx.fillStyle = t.color;
     ctx.textBaseline = 'top';
     let blockW = 0;
     lines.forEach(ln=>{ blockW = Math.max(blockW, ctx.measureText(ln).width); });
     const padL = 6*k;     // matches .text-block padding-left
-    const lineH = size * 1.3;
+    const lineH = size * (t.lineHeight || 1.3);
     lines.forEach((ln, i)=>{
       const w = ctx.measureText(ln).width;
       let lx = ox + t.x*k + padL;
@@ -2102,8 +2136,7 @@ const BADGES = [
   { name:'App Store', w:200, h:60, svg:(c,h)=>`<svg xmlns="http://www.w3.org/2000/svg" width="200" height="60" viewBox="0 0 200 60"><rect x="1" y="1" width="198" height="58" rx="12" fill="#000" stroke="#fff" stroke-width="1"/><path d="M44 22.5c-1.6 0-3 1-3.9 1-1 0-2.2-.9-3.6-.9-1.9 0-3.6 1.1-4.6 2.8-2 3.4-.5 8.5 1.4 11.3.9 1.3 2 2.8 3.4 2.8 1.4-.1 1.9-.9 3.5-.9 1.6 0 2.1.9 3.6.9 1.5 0 2.4-1.4 3.3-2.7.6-.9.9-1.4 1.4-2.4-3.6-1.4-4.2-6.5-.6-8.5-1.1-1.4-2.6-2.2-4.3-2.2zm-.2-4c.9-1.1 1.5-2.6 1.3-4.1-1.3.1-2.8.9-3.7 1.9-.8.9-1.5 2.4-1.3 3.8 1.4.1 2.8-.7 3.7-1.6z" fill="#fff"/><text x="60" y="26" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#fff">Download on the</text><text x="60" y="44" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="20" font-weight="600" fill="#fff">App Store</text></svg>` },
   { name:'Google Play', w:210, h:60, svg:()=>`<svg xmlns="http://www.w3.org/2000/svg" width="210" height="60" viewBox="0 0 210 60"><rect x="1" y="1" width="208" height="58" rx="12" fill="#000" stroke="#fff" stroke-width="1"/><g transform="translate(20 16)"><path d="M0 0v28l15-14z" fill="#00d3ff"/><path d="M0 0l19 11 4-4z" fill="#00f076"/><path d="M0 28l19-11 4 4z" fill="#fd5"/><path d="M19 11l8 5-4 4-4-4 4-4z" fill="#f44"/><path d="M19 11l8 5-4 4z" fill="#f44"/><path d="M19 17l8-1-4 4z" fill="#e33"/></g><text x="60" y="26" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="11" fill="#fff">GET IT ON</text><text x="60" y="44" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="20" font-weight="600" fill="#fff">Google Play</text></svg>` },
   { name:'Product Hunt', w:210, h:60, svg:()=>`<svg xmlns="http://www.w3.org/2000/svg" width="210" height="60" viewBox="0 0 210 60"><rect x="1" y="1" width="208" height="58" rx="12" fill="#da552f"/><circle cx="30" cy="30" r="16" fill="#fff"/><path d="M26 21h8a6 6 0 0 1 0 12h-4v6h-4zm4 4v4h4a2 2 0 0 0 0-4z" fill="#da552f"/><text x="56" y="26" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="10" fill="#fff" opacity=".85">FEATURED ON</text><text x="56" y="44" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="18" font-weight="700" fill="#fff">Product Hunt</text></svg>` },
-  { name:'NEW pill', w:96, h:42, svg:()=>`<svg xmlns="http://www.w3.org/2000/svg" width="96" height="42" viewBox="0 0 96 42"><rect x="1" y="1" width="94" height="40" rx="20" fill="#f97316"/><text x="48" y="28" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="18" font-weight="800" fill="#fff" text-anchor="middle" letter-spacing="1">NEW</text></svg>` },
-  { name:'Coming Soon', w:150, h:42, svg:()=>`<svg xmlns="http://www.w3.org/2000/svg" width="150" height="42" viewBox="0 0 150 42"><rect x="1" y="1" width="148" height="40" rx="20" fill="none" stroke="#fff" stroke-width="2"/><text x="75" y="27" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="14" font-weight="700" fill="#fff" text-anchor="middle" letter-spacing="1">COMING SOON</text></svg>` },
+  { name:'5-star rating', w:200, h:60, svg:()=>{const star='M10 1l2.6 5.3 5.9.9-4.2 4.1 1 5.8L10 14.4 4.7 17.1l1-5.8L1.5 7.2l5.9-.9z';let s='';for(let i=0;i<5;i++)s+=`<path transform="translate(${14+i*36} 12) scale(1.3)" d="${star}" fill="#ffc107"/>`;return `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="60" viewBox="0 0 200 60"><rect x="1" y="1" width="198" height="58" rx="12" fill="#1d1d1f"/>${s}</svg>`;} },
 ];
 function svgDataUrl(svg){ return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg); }
 function buildBadgeGrid(){
@@ -2240,9 +2273,8 @@ function selectOv(id){
   selectedOvId=id;
   document.querySelectorAll('#overlay-layer .ov-item').forEach(el=>el.classList.toggle('selected', parseInt(el.dataset.id)===id));
   const o=curOv();
-  const insp=document.getElementById('el-inspect');
-  if(!o){ insp.classList.remove('active'); renderOvList(); return; }
-  insp.classList.add('active');
+  if(!o){ renderOvList(); return; }
+  if(typeof openPanelForTool==='function') openPanelForTool('element');
   const isImg=o.kind==='image', isArrow=o.kind==='arrow', isShape=(o.kind==='circle'||o.kind==='arrow');
   document.getElementById('el-inspect-size').style.display = isArrow ? 'none':'block';
   document.getElementById('el-inspect-rot').style.display = isImg ? 'block':'none';
@@ -2263,7 +2295,7 @@ function updateElRot(v){ const o=curOv(); if(!o)return; o.rot=parseInt(v); docum
 function updateElColor(v){ const o=curOv(); if(!o)return; o.color=v; document.getElementById('el-color-hex').value=v; renderOverlays(); }
 function updateElColorHex(v){ if(!/^#[0-9a-fA-F]{6}$/.test(v))return; const o=curOv(); if(!o)return; o.color=v; document.getElementById('el-color').value=v; renderOverlays(); }
 function updateElThick(v){ const o=curOv(); if(!o)return; o.thick=parseInt(v); document.getElementById('el-thick-val').textContent=v+'px'; renderOverlays(); }
-function deleteOv(id){ overlays=overlays.filter(o=>o.id!==id); if(selectedOvId===id){ selectedOvId=null; document.getElementById('el-inspect').classList.remove('active'); } renderOverlays(); }
+function deleteOv(id){ overlays=overlays.filter(o=>o.id!==id); if(selectedOvId===id){ selectedOvId=null; if(typeof showPanel==='function') showPanel('pp-empty'); } renderOverlays(); }
 function deleteSelectedEl(){ if(selectedOvId!=null) deleteOv(selectedOvId); }
 
 /* ---- Drag body + resize handle ---- */
@@ -2302,8 +2334,8 @@ function bindOvEl(el, id){
 
 /* Click empty canvas → deselect element */
 document.getElementById('work-area').addEventListener('pointerdown', e=>{
-  if(e.target.closest('.ov-item')||e.target.closest('.text-block')) return;
-  if(selectedOvId!=null){ selectedOvId=null; document.getElementById('el-inspect').classList.remove('active'); renderOverlays(); }
+  if(e.target.closest('.ov-item')||e.target.closest('.text-block')||e.target.closest('.toolbar')) return;
+  if(selectedOvId!=null){ selectedOvId=null; renderOverlays(); if(typeof revertPanel==='function') revertPanel(); }
 });
 
 /* Keep elements proportional when the canvas resizes */
@@ -2562,10 +2594,29 @@ function drawGlare(ctx, x, y, w, h){
   ctx.fillStyle=g; ctx.fillRect(x,y,w,h);
 }
 
+/* ══════════════════════════════════════════════════════
+   CONTEXTUAL PANELS — bottom toolbar drives the right panel (Figma-style)
+══════════════════════════════════════════════════════ */
+const TOOL_PANEL = {
+  canvas:'pp-canvas', frame:'pp-frame', background:'pp-background',
+  text:'pp-text', image:'pp-image', shapes:'pp-shapes', badges:'pp-badges',
+  element:'pp-element', device:'pp-device'
+};
+let activeTool = null;   // last toolbar tool clicked (null = nothing)
+function showPanel(id){ document.querySelectorAll('.prop-panel').forEach(p=>p.classList.toggle('active', p.id===id)); }
+function setToolHighlight(tool){ document.querySelectorAll('#toolbar .tool').forEach(b=>b.classList.toggle('active', b.dataset.tool===tool)); }
+function selectTool(tool){ activeTool=tool; setToolHighlight(tool); showPanel(TOOL_PANEL[tool]||'pp-empty'); }
+// Selection-driven panel open (text/element/device). Text doubles as a toolbar tool.
+function openPanelForTool(key){
+  if(key==='text'){ activeTool='text'; setToolHighlight('text'); showPanel('pp-text'); return; }
+  showPanel(TOOL_PANEL[key]||'pp-empty');   // element / device: keep current toolbar highlight
+}
+// After deselecting an object, go back to the active toolbar tool (or empty)
+function revertPanel(){ setToolHighlight(activeTool); showPanel(activeTool ? (TOOL_PANEL[activeTool]||'pp-empty') : 'pp-empty'); }
+
 /* ── INIT ── */
 buildImgGrid(); buildGradGrid(); buildSolidSws(); buildBadgeGrid();
-buildDeviceGrid(); buildFinishGrid();
-/* buildDeviceGrid(); -- device selector hidden while mockup controls are removed */
+buildDeviceGrid(); buildFinishGrid(); buildFontSelect();
 enableReposition('mockup-inner', ['mockup-img','mockup-video']);
 enableReposition('gadget-screen', ['gadget-img','gadget-video']);
 requestAnimationFrame(applyCanvasRatio);
