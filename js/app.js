@@ -1811,16 +1811,24 @@ function coverSizeAR(ar, screenW, screenH){
 }
 
 // Drag the FRAME to move an instance; drag the SCREEN to pan its image; click empty screen → upload
+function setSlotImgEdit(i, on){
+  slots.forEach((s,idx)=>{ s._imgEdit = (idx===i && !!on); });
+  document.querySelectorAll('.device-instance').forEach((el,idx)=>{
+    const scr=el.querySelector('.inst-screen'); if(scr) scr.classList.toggle('img-editing', !!slots[idx]._imgEdit);
+  });
+}
 function bindInstanceDrag(inst,i){
-  let down=false, moved=false, panning=false, sx=0, sy=0, bx=0, by=0;
+  let down=false, moved=false, panning=false, onScreen=false, sx=0, sy=0, bx=0, by=0;
   inst.addEventListener('pointerdown', e=>{
     selectSlot(i);
     document.querySelectorAll('.device-instance').forEach((el,idx)=>el.classList.toggle('selected', idx===i));
-    // grabbing the screen of a device that has media → pan the image; else → move the instance
-    panning = !!(slots[i].hasMedia && e.target.closest('.inst-screen'));
+    onScreen = !!e.target.closest('.inst-screen');
+    // Drag moves the device by default; pans the image only when it's in adjust mode.
+    panning = !!(slots[i]._imgEdit && slots[i].hasMedia && onScreen);
     down=true; moved=false; sx=e.clientX; sy=e.clientY;
     if(panning){ bx=slots[i].offX||0; by=slots[i].offY||0; } else { bx=slots[i].posX; by=slots[i].posY; }
     inst.classList.add('dragging'); inst.setPointerCapture(e.pointerId);
+    if(slots[i].hasMedia) e.preventDefault();
   });
   inst.addEventListener('pointermove', e=>{
     if(!down) return;
@@ -1843,8 +1851,8 @@ function bindInstanceDrag(inst,i){
     if(!down) return; down=false; inst.classList.remove('dragging');
     try{inst.releasePointerCapture(e.pointerId);}catch(_){}
     if(!moved){
-      // treat as click: if device chosen but no media → open uploader for THIS slot
       if(slots[i].device && !slots[i].hasMedia){ activeFileSlot=i; document.getElementById('hf').click(); }
+      else if(slots[i].hasMedia){ setSlotImgEdit(i, onScreen); }  // tap screen → adjust; tap frame → exit
     }
   };
   inst.addEventListener('pointerup', up);
@@ -2771,6 +2779,8 @@ function redo(){ if(!_future.length) return; _past.push(_snap()); _restore(_futu
 function deselectAll(){
   if(selectedTextId!=null){ selectedTextId=null; document.getElementById('text-ctrls').classList.remove('active'); renderTexts(); }
   if(selectedOvId!=null){ selectedOvId=null; renderOverlays(); }
+  if(typeof setImgEdit==='function') setImgEdit(false);
+  if(typeof setSlotImgEdit==='function') setSlotImgEdit(-1, false);
   setTextPlace(false); revertPanel();
 }
 
@@ -2802,24 +2812,39 @@ document.addEventListener('keydown', e=>{
 
 
 /* ── Drag the whole mockup to reposition it on the canvas (single mode) ── */
+// Image-adjust mode (single): click the screen image to enter, then drag pans it.
+let imgEdit = false;
+function setImgEdit(on){
+  imgEdit=!!on;
+  const gs=document.getElementById('gadget-screen'); if(gs) gs.classList.toggle('img-editing', imgEdit);
+  const mi=document.getElementById('mockup-inner');  if(mi) mi.classList.toggle('img-editing', imgEdit);
+}
 (function enableMockupDrag(){
   const wrap=document.getElementById('mockup-wrap'); if(!wrap) return;
-  let armed=false, dragging=false, sx=0, sy=0, bx=0, by=0, pid=null;
+  let armed=false, dragging=false, mode='move', onScreen=false, sx=0, sy=0, bx=0, by=0, pid=null;
   wrap.addEventListener('pointerdown', e=>{
     if(typeof layoutMode!=='undefined' && layoutMode==='dual') return; // dual uses its own instances
     if(e.target.closest('.text-block')||e.target.closest('.ov-item')) return; // let layers handle their own
-    // On a device, the screen pans the image (see enableReposition) — only the FRAME moves the mockup
-    if(activeDevice && e.target.closest('#gadget-screen')) return;
-    armed=true; dragging=false; sx=e.clientX; sy=e.clientY; bx=mockOffX; by=mockOffY; pid=e.pointerId;
+    onScreen = !!(e.target.closest('#gadget-screen')||e.target.closest('#mockup-inner'));
+    // Drag moves the mockup by default; only pans the image when it's been clicked into adjust mode.
+    mode = (imgEdit && onScreen && hasMedia) ? 'pan' : 'move';
+    armed=true; dragging=false; sx=e.clientX; sy=e.clientY; pid=e.pointerId;
+    if(mode==='pan'){ bx=mediaOffX; by=mediaOffY; } else { bx=mockOffX; by=mockOffY; }
+    if(hasMedia) e.preventDefault();   // stop native image-drag ghost (keeps click-to-upload when empty)
   });
   wrap.addEventListener('pointermove', e=>{
     if(!armed) return;
     const dx=e.clientX-sx, dy=e.clientY-sy;
     if(!dragging){ if(Math.abs(dx)<3 && Math.abs(dy)<3) return; dragging=true; histBefore(); wrap.setPointerCapture(pid); wrap.classList.add('dragging'); }
-    mockOffX=Math.round(bx+dx); mockOffY=Math.round(by+dy);
-    applyMockupTransform();
+    if(mode==='pan'){ mediaOffX=Math.round(bx+dx); mediaOffY=Math.round(by+dy); applyMediaTransform(); }
+    else { mockOffX=Math.round(bx+dx); mockOffY=Math.round(by+dy); applyMockupTransform(); }
   });
-  const up=e=>{ if(!armed) return; armed=false; if(dragging){ wrap.classList.remove('dragging'); try{wrap.releasePointerCapture(pid);}catch(_){} } dragging=false; };
+  const up=e=>{
+    if(!armed) return; armed=false;
+    if(dragging){ wrap.classList.remove('dragging'); try{wrap.releasePointerCapture(pid);}catch(_){} }
+    else { setImgEdit(onScreen && hasMedia); }  // tap image → adjust mode; tap frame → exit
+    dragging=false;
+  };
   wrap.addEventListener('pointerup', up);
   wrap.addEventListener('pointercancel', up);
 })();
@@ -2827,5 +2852,4 @@ document.addEventListener('keydown', e=>{
 /* ── INIT ── */
 buildImgGrid(); buildGradGrid(); buildSolidSws(); buildBadgeGrid();
 buildDeviceGrid(); buildFinishGrid(); buildFontSelect();
-enableReposition('gadget-screen', ['gadget-img','gadget-video']);  // drag image inside a device to pan/fit it
 requestAnimationFrame(applyCanvasRatio);

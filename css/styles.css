@@ -460,3 +460,13 @@ nav { height:48px; border-bottom:1px solid var(--border); display:flex; align-it
 /* (8) Device custom-color swatch */
 .finish-sw.custom { position:relative; overflow:hidden; background:conic-gradient(#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00); }
 .finish-sw.custom input[type=color]{ position:absolute; inset:-4px; width:calc(100% + 8px); height:calc(100% + 8px); opacity:0; cursor:pointer; border:none; padding:0; }
+
+/* Image-adjust mode: highlight the screen + show a move cursor */
+.gadget-screen.img-editing, .mockup-inner.img-editing, .inst-screen.img-editing { cursor:grab; }
+/* ring drawn on top of the media so it's always visible in adjust mode */
+.gadget-screen.img-editing::after, .mockup-inner.img-editing::after, .inst-screen.img-editing::after {
+  content:''; position:absolute; inset:0; border:2px solid var(--accent);
+  border-radius:inherit; box-shadow:0 0 0 3px rgba(249,115,22,0.22); pointer-events:none; z-index:6;
+}
+.gadget-screen.img-editing.dragging, .mockup-inner.img-editing.dragging, .inst-screen.img-editing.dragging { cursor:grabbing; }
+.mockup-img, .mockup-video, .gadget-media, .inst-screen img, .inst-screen video { -webkit-user-drag:none; user-select:none; }
