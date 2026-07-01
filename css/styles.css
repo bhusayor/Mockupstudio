@@ -475,3 +475,17 @@ nav { height:48px; border-bottom:1px solid var(--border); display:flex; align-it
 
 /* Hide the native file inputs (triggered programmatically) */
 input[type=file]{ position:absolute; width:1px; height:1px; opacity:0; overflow:hidden; pointer-events:none; left:-9999px; }
+
+/* ════════ Round 7: text controls polish ════════ */
+/* Remove up/down spinner arrows on Size / Line height / Spacing */
+.fig-input[type=number]::-webkit-outer-spin-button,
+.fig-input[type=number]::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
+.fig-input[type=number] { -moz-appearance:textfield; appearance:textfield; }
+
+/* Nicer, consistent inputs + dropdowns */
+.fig-input, .fig-select { height:34px; border-radius:9px; font-size:12.5px; transition:border-color .14s, background .14s; }
+.fig-input:hover, .fig-select:hover { border-color:var(--border-h); }
+.fig-input:focus, .fig-select:focus { border-color:var(--accent); background:var(--surface); box-shadow:0 0 0 3px var(--accent-dim); }
+.fig-select { background-position:right 11px center; padding-right:30px; font-weight:500; }
+.fig-select option { background:var(--surface2); color:var(--text); }
+.fig-field > label { margin-bottom:2px; }

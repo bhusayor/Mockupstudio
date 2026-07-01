@@ -2385,7 +2385,7 @@ function ovBBox(o){
   return {left:o.x, top:o.y, w:o.w, h:o.h};
 }
 function ovInnerSVG(o, bb){
-  if(o.kind==='image') return '<img src="'+o.src+'" alt="">';
+  if(o.kind==='image') return '<img src="'+o.src+'" alt="" draggable="false">';
   if(o.kind==='circle'){
     const sw=o.thick||4;
     return '<svg viewBox="0 0 '+o.w+' '+o.h+'" preserveAspectRatio="none"><ellipse cx="'+(o.w/2)+'" cy="'+(o.h/2)+'" rx="'+(o.w/2-sw)+'" ry="'+(o.h/2-sw)+'" fill="none" stroke="'+o.color+'" stroke-width="'+sw+'"/></svg>';
