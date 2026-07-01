@@ -2476,6 +2476,21 @@ function deleteOv(id){ histBefore(); overlays=overlays.filter(o=>o.id!==id); if(
 function deleteSelectedEl(){ if(selectedOvId!=null) deleteOv(selectedOvId); }
 
 /* ---- Drag body + resize handle ---- */
+// Reposition/resize a single overlay element in place (keeps the DOM node,
+// so an active pointer-capture drag isn't interrupted).
+function updateOvEl(el, o, rebuildInner){
+  const bb=ovBBox(o);
+  el.style.left=bb.left+'px'; el.style.top=bb.top+'px';
+  el.style.width=bb.w+'px'; el.style.height=bb.h+'px';
+  el.style.transform = o.rot ? 'rotate('+o.rot+'deg)' : '';
+  if(rebuildInner){                       // shape changed (resize) → redraw contents
+    el.innerHTML = ovInnerSVG(o,bb) + '<div class="ov-handle"></div>';
+    if(o.kind==='arrow'){
+      const hx=o.x+o.w-bb.left, hy=o.y+o.h-bb.top; const hd=el.querySelector('.ov-handle');
+      hd.style.left=(hx-6.5)+'px'; hd.style.top=(hy-6.5)+'px'; hd.style.right='auto'; hd.style.bottom='auto';
+    }
+  }
+}
 function bindOvEl(el, id){
   const handle=el.querySelector('.ov-handle');
   let down=false, resizing=false, sx=0, sy=0, ox=0, oy=0, ow=0, oh=0;
@@ -2502,10 +2517,12 @@ function bindOvEl(el, id){
       const bb=ovBBox(o); const sn=applySnap(bb.left,bb.top,bb.w,bb.h,'ov',id);
       o.x+=Math.round(sn.x-bb.left); o.y+=Math.round(sn.y-bb.top);
     }
-    renderOverlays();
+    // Update THIS element in place — do NOT re-render the whole layer, or we'd
+    // destroy the node holding the pointer capture and the drag would stop.
+    updateOvEl(el, o, resizing);
   });
   const up=e=>{ if(!down)return; down=false; resizing=false; el.classList.remove('dragging'); clearSnap(); try{el.releasePointerCapture(e.pointerId);}catch(_){}
-    if(selectedOvId===id) selectOv(id); };
+    renderOverlays(); if(selectedOvId===id) selectOv(id); };
   el.addEventListener('pointerup', up);
   el.addEventListener('pointercancel', up);
 }
