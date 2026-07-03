@@ -961,7 +961,32 @@ function syncMediaToActiveFrame(src, type) {
   }
 }
 
+// ── UPLOAD GUARDRAILS ──────────────────────────────────────────────
+// Friendly transient warning toast (no spinner) — reuses the export-notice element.
+function flashToast(text, ms){
+  showExportNotice(text);
+  const el=document.getElementById('export-notice');
+  if(el){
+    el.innerHTML='<span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;'
+      +'border-radius:50%;background:#f97316;color:#fff;font-weight:700;font-size:12px;line-height:1;">!</span>'
+      +'<span>'+text+'</span>';
+  }
+  setTimeout(hideExportNotice, ms||2800);
+}
+// Reject wrong-type or oversized files before we ever read them (prevents silent tab hangs).
+const MAX_IMG_MB=25, MAX_VID_MB=100;
+function validateUpload(file, kind){
+  if(!file) return false;
+  const isImg=file.type.startsWith('image/'), isVid=file.type.startsWith('video/');
+  if(kind==='image' && !isImg){ flashToast('Please choose an image file.'); return false; }
+  if(kind==='media' && !isImg && !isVid){ flashToast('Please choose an image or video file.'); return false; }
+  const capMB = isVid ? MAX_VID_MB : MAX_IMG_MB;
+  if(file.size > capMB*1024*1024){ flashToast('That file is too large (max '+capMB+' MB).'); return false; }
+  return true;
+}
+
 function showMedia(file){
+  if(!validateUpload(file,'media')) return;
   if(layoutMode==='dual'){ showMediaDual(file, activeFileSlot); return; }
   isVideo=file.type.startsWith('video/');
   if(isVideo){
@@ -1080,7 +1105,7 @@ function clearMedia(){
 
 document.getElementById('hf').addEventListener('change',function(e){const f=e.target.files[0];if(f)showMedia(f);this.value='';});
 document.getElementById('hbf').addEventListener('change',function(e){
-  const f=e.target.files[0];if(!f)return;
+  const f=e.target.files[0];if(!validateUpload(f,'image')){this.value='';return;}
   applyBgImg(URL.createObjectURL(f));
   document.querySelectorAll('.img-thumb').forEach(t=>t.classList.remove('active'));
 });
@@ -1093,7 +1118,7 @@ document.getElementById('hbf').addEventListener('change',function(e){
   if(!frm)return;
   ['dragenter','dragover'].forEach(e=>frm.addEventListener(e,ev=>{ev.preventDefault();if(dz)dz.classList.add('drag-over');}));
   ['dragleave','drop'].forEach(e=>frm.addEventListener(e,()=>{if(dz)dz.classList.remove('drag-over');}));
-  frm.addEventListener('drop',e=>{e.preventDefault();const f=e.dataTransfer.files[0];if(f&&(f.type.startsWith('image/')||f.type.startsWith('video/')))showMedia(f);});
+  frm.addEventListener('drop',e=>{e.preventDefault();const f=e.dataTransfer.files[0];if(f)showMedia(f);});
 })();
 // Gadget frame — drag over gadget-frame-wrap, highlight overlay
 (()=>{
@@ -1102,7 +1127,7 @@ document.getElementById('hbf').addEventListener('change',function(e){
   if(!frm)return;
   ['dragenter','dragover'].forEach(e=>frm.addEventListener(e,ev=>{ev.preventDefault();if(dz)dz.classList.add('drag-over');}));
   ['dragleave','drop'].forEach(e=>frm.addEventListener(e,()=>{if(dz)dz.classList.remove('drag-over');}));
-  frm.addEventListener('drop',e=>{e.preventDefault();const f=e.dataTransfer.files[0];if(f&&(f.type.startsWith('image/')||f.type.startsWith('video/')))showMedia(f);});
+  frm.addEventListener('drop',e=>{e.preventDefault();const f=e.dataTransfer.files[0];if(f)showMedia(f);});
 })();
 
 /* ── MODALS ── */
@@ -2573,7 +2598,8 @@ function drawOverlaysOnCanvas(ctx, ox, oy, k){
 
 /* Asset upload */
 document.getElementById('haf').addEventListener('change', e=>{
-  const file=e.target.files&&e.target.files[0]; if(!file) return;
+  const file=e.target.files&&e.target.files[0];
+  if(!validateUpload(file,'image')){ e.target.value=''; return; }
   const reader=new FileReader();
   reader.onload=ev=>addImageOverlay(ev.target.result);
   reader.readAsDataURL(file);
