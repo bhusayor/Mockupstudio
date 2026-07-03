@@ -176,19 +176,23 @@ const DEVICES = [
 
   // ═══════════ DESKTOP ═══════════
   {id:'imac', name:'iMac 24"', sub:'Apple Silicon', cat:'desktop',
-   vw:900, vh:640, screen:{x:26,y:24,w:848,h:478}, screenRR:4,
+   vw:900, vh:624, screen:{x:62,y:28,w:776,h:450}, screenRR:3,
    bezel:(c)=>`
-     <rect x="6" y="8" width="888" height="510" rx="14" fill="#e6e6ea"/>
-     <rect x="6" y="8" width="888" height="510" rx="14" fill="none" stroke="#ccc" stroke-width="1.5"/>
-     <rect x="14" y="14" width="872" height="498" rx="10" fill="#0a0a0a"/>
-     <rect x="26" y="24" width="848" height="478" rx="4" fill="${c}"/>
-     <rect x="14" y="502" width="872" height="14" fill="#d4d4d8"/>
-     <!-- chin -->
-     <rect x="14" y="514" width="872" height="36" fill="#e6e6ea"/>
-     <!-- stand -->
-     <path d="M390 550 h120 v52 a4 4 0 0 1 -4 4 h-112 a4 4 0 0 1 -4 -4 z" fill="#dcdce0"/>
-     <rect x="300" y="606" width="300" height="14" rx="7" fill="#d0d0d4"/>`,
-   overlay:()=>`<circle cx="450" cy="34" r="3" fill="#b8b8bc"/>`
+     <!-- body: one rounded panel (screen + chin) -->
+     <rect x="40" y="8" width="820" height="540" rx="22" fill="#eceef2"/>
+     <rect x="40" y="8" width="820" height="540" rx="22" fill="none" stroke="#d2d4da" stroke-width="1.5"/>
+     <!-- black screen frame + screen -->
+     <rect x="56" y="22" width="788" height="462" rx="7" fill="#0b0b0d"/>
+     <rect x="62" y="28" width="776" height="450" rx="3" fill="${c}"/>
+     <!-- chin separation line -->
+     <rect x="40" y="546" width="820" height="2" rx="1" fill="#d7d9df"/>
+     <!-- thin flat neck -->
+     <path d="M418 548 h64 l10 50 h-84 z" fill="#d3d5db"/>
+     <path d="M418 548 h64 l3 15 h-70 z" fill="#c4c6cd"/>
+     <!-- flat foot -->
+     <path d="M348 596 h204 a10 10 0 0 1 10 10 v2 a8 8 0 0 1 -8 8 H346 a8 8 0 0 1 -8 -8 v-2 a10 10 0 0 1 10 -10 z" fill="#cccdd4"/>
+     <rect x="346" y="596" width="208" height="4" rx="2" fill="#dfe0e5"/>`,
+   overlay:()=>`<circle cx="450" cy="25" r="2.2" fill="#2a2a30"/>`
   },
   {id:'studio-display', name:'Studio Display', sub:'5K Retina', cat:'desktop',
    vw:900, vh:600, screen:{x:18,y:16,w:864,h:486}, screenRR:4,
