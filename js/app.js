@@ -3,6 +3,11 @@
    Each device has: id, name, sub, cat, ar (w/h of screen),
    svgFn (function returning SVG string), screenRect (x,y,w,h in SVG coords)
 ══════════════════════════════════════════════════════ */
+// Skin + desk palette for lifestyle "scene" devices. Saturated on purpose so
+// tintBezelSVG() (which only recolors near-grey chassis fills) leaves them alone.
+const _SK='#e6b28c', _SKD='#d59972', _SKL='#efc7a4', _NAIL='#f5d9c2';
+const _DESK='#d9cdbb', _DESK_EDGE='#c6b7a0';
+
 const DEVICES = [
   // ═══════════ PHONES ═══════════
   // Each device: vw/vh = SVG canvas; screen = content rect; screenRR = screen corner radius
@@ -212,6 +217,70 @@ const DEVICES = [
      <rect x="420" y="514" width="60" height="52" fill="#1c1c20"/>
      <path d="M330 566 h240 a4 4 0 0 1 4 4 v8 a4 4 0 0 1 -4 4 H330 a4 4 0 0 1 -4 -4 v-8 a4 4 0 0 1 4 -4 z" fill="#18181c"/>`,
    overlay:()=>`<rect x="436" y="496" width="28" height="6" rx="2" fill="#0a0a0a"/>`
+  },
+
+  // ═══════════ IN HAND / ON DESK (lifestyle scenes) ═══════════
+  // The hand mass sits UNDER the media (bezel); fingers/thumb that cross the
+  // screen are drawn OVER the media (overlay) so they stay on top of the user's
+  // content and keep their skin tone even when the chassis is re-coloured.
+  {id:'phone-in-hand', name:'Phone in hand', sub:'Held · portrait', cat:'scene',
+   vw:556, vh:1120, screen:{x:166,y:60,w:224,h:560}, screenRR:37,
+   bezel:(c)=>`
+     <path d="M150 1120 q-14 -240 26 -372 q18 -60 66 -84 q40 -20 92 -14 q70 8 104 58 q30 44 34 118 l10 300 z" fill="${_SK}"/>
+     <path d="M214 486 q-24 70 -18 190 q6 120 96 150 q-70 -60 -70 -180 q0 -110 40 -170 q-30 40 -48 10 z" fill="${_SKL}" opacity="0.85"/>
+     <rect x="150" y="44" width="256" height="592" rx="50" fill="#1d1d1f"/>
+     <rect x="156" y="50" width="244" height="580" rx="45" fill="#0a0a0a"/>
+     <rect x="166" y="60" width="224" height="560" rx="37" fill="${c}"/>`,
+   overlay:()=>`
+     <rect x="248" y="62" width="60" height="17" rx="8.5" fill="#000"/>
+     <path d="M126 452 q-52 4 -52 30 q0 26 52 30 l74 -4 -2 -52 z" fill="${_SKD}"/>
+     <path d="M120 512 q-56 4 -56 30 q0 26 56 30 l80 -4 -4 -52 z" fill="${_SK}"/>
+     <path d="M122 572 q-54 4 -54 30 q0 26 54 30 l78 -4 -4 -52 z" fill="${_SKL}"/>
+     <path d="M132 632 q-48 4 -48 28 q0 26 48 28 l72 -2 -4 -50 z" fill="${_SKD}"/>
+     <path d="M398 648 q56 -14 66 -92 l16 -150 q4 -42 -34 -46 q-36 -4 -44 34 l-28 158 q-14 74 24 96 z" fill="${_SK}"/>
+     <ellipse cx="452" cy="402" rx="16" ry="22" fill="${_NAIL}"/>`
+  },
+  {id:'tablet-in-hand', name:'Tablet in hand', sub:'Held · portrait', cat:'scene',
+   vw:740, vh:1120, screen:{x:142,y:62,w:456,h:656}, screenRR:16,
+   bezel:(c)=>`
+     <path d="M470 1120 q30 -230 -14 -360 q-20 -60 -74 -80 q-44 -16 -92 -4 q-64 16 -84 78 q-14 44 -6 300 z" fill="${_SK}"/>
+     <path d="M300 560 q-30 70 -22 200 q8 120 92 150 q-64 -66 -60 -190 q4 -110 42 -170 q-28 34 -52 10 z" fill="${_SKL}" opacity="0.8"/>
+     <rect x="120" y="40" width="500" height="700" rx="30" fill="#1d1d1f"/>
+     <rect x="128" y="48" width="484" height="684" rx="24" fill="#0a0a0a"/>
+     <rect x="142" y="62" width="456" height="656" rx="16" fill="${c}"/>`,
+   overlay:()=>`
+     <circle cx="370" cy="52" r="3.5" fill="#2a2a2e"/>
+     <path d="M596 556 q52 4 52 30 q0 26 -52 30 l-76 -4 2 -52 z" fill="${_SKD}"/>
+     <path d="M602 616 q56 4 56 30 q0 26 -56 30 l-80 -4 4 -52 z" fill="${_SK}"/>
+     <path d="M600 676 q54 4 54 30 q0 26 -54 30 l-78 -4 4 -52 z" fill="${_SKL}"/>
+     <path d="M324 748 q-56 -14 -66 -92 l-16 -150 q-4 -42 34 -46 q36 -4 44 34 l28 158 q14 74 -24 96 z" fill="${_SK}"/>`
+  },
+  {id:'laptop-desk', name:'MacBook on desk', sub:'On a surface', cat:'scene',
+   vw:900, vh:656, screen:{x:62,y:24,w:776,h:450}, screenRR:6,
+   bezel:(c)=>`
+     <ellipse cx="450" cy="498" rx="370" ry="30" fill="rgba(0,0,0,0.12)"/>
+     <rect x="0" y="486" width="900" height="170" fill="${_DESK}"/>
+     <rect x="0" y="486" width="900" height="7" fill="${_DESK_EDGE}"/>
+     <rect x="40" y="14" width="820" height="470" rx="14" fill="#1a1a1c"/>
+     <rect x="48" y="20" width="804" height="458" rx="10" fill="#0a0a0a"/>
+     <rect x="62" y="24" width="776" height="450" rx="6" fill="${c}"/>
+     <path d="M8 484 h884 l24 34 a6 6 0 0 1 -6 8 H-10 a6 6 0 0 1 -6 -8 z" fill="#2a2a2c"/>
+     <rect x="0" y="484" width="900" height="6" fill="#141416"/>
+     <rect x="380" y="484" width="140" height="9" rx="4" fill="#141416"/>`,
+   overlay:()=>`<circle cx="450" cy="34" r="3" fill="#1a1a1e"/>`
+  },
+  {id:'monitor-desk', name:'Monitor on desk', sub:'On a surface', cat:'scene',
+   vw:900, vh:708, screen:{x:18,y:16,w:864,h:486}, screenRR:4,
+   bezel:(c)=>`
+     <ellipse cx="450" cy="590" rx="320" ry="24" fill="rgba(0,0,0,0.12)"/>
+     <rect x="0" y="578" width="900" height="130" fill="${_DESK}"/>
+     <rect x="0" y="578" width="900" height="7" fill="${_DESK_EDGE}"/>
+     <rect x="4" y="4" width="892" height="510" rx="14" fill="#1c1c1e"/>
+     <rect x="12" y="10" width="876" height="498" rx="10" fill="#0a0a0a"/>
+     <rect x="18" y="16" width="864" height="486" rx="4" fill="${c}"/>
+     <rect x="410" y="514" width="80" height="64" fill="#2a2a2c"/>
+     <path d="M326 582 h248 a6 6 0 0 1 6 6 v0 H320 a6 6 0 0 1 6 -6 z" fill="#222224"/>`,
+   overlay:()=>`<circle cx="450" cy="30" r="4" fill="#161618"/>`
   },
 ];
 
