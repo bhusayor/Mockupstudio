@@ -24,7 +24,7 @@
   <!-- Favicon (inline, matches the app's logo mark) -->
   <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Crect%20width='32'%20height='32'%20rx='7'%20fill='%230a0a0b'/%3E%3Crect%20x='6.5'%20y='7'%20width='19'%20height='13'%20rx='2'%20fill='none'%20stroke='%23f97316'%20stroke-width='1.8'/%3E%3Cpath%20d='M11%2025h10M16%2020v5'%20fill='none'%20stroke='%23f97316'%20stroke-width='1.8'%20stroke-linecap='round'/%3E%3C/svg%3E">
 
-  <link rel="stylesheet" href="css/styles.css?v=13">
+  <link rel="stylesheet" href="css/styles.css?v=14">
   <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "2852bea934764732b970e19018a51e0b"}'></script><!-- End Cloudflare Web Analytics -->
 </head>
 <body>
@@ -38,7 +38,7 @@
     <div style="margin-top:36px;width:44px;height:2px;background:rgba(249,115,22,0.6);border-radius:2px"></div>
   </div>
 
-  <script src="js/mobile-gate.js?v=13"></script>
+  <script src="js/mobile-gate.js?v=14"></script>
 
 <input type="file" id="hf" accept="image/*,video/*">
 <input type="file" id="hbf" accept="image/*">
@@ -377,13 +377,16 @@
 
     <!-- DEVICE FINISH + GLARE -->
     <div class="prop-panel" id="pp-device">
-      <div class="sec-lbl">Device color</div>
-      <div class="finish-grid" id="finish-grid"></div>
-      <div class="guide-row" style="border-top:1px solid var(--border);margin-top:var(--s2)">
-        <span class="gr-lbl">Screen glare</span>
-        <label class="tgl"><input type="checkbox" id="glare-toggle" onchange="toggleGlare(this.checked)"><span class="tgl-track"></span></label>
+      <div id="device-color-sec">
+        <div class="sec-lbl">Device color</div>
+        <div class="finish-grid" id="finish-grid"></div>
+        <div class="guide-row" style="border-top:1px solid var(--border);margin-top:var(--s2)">
+          <span class="gr-lbl">Screen glare</span>
+          <label class="tgl"><input type="checkbox" id="glare-toggle" onchange="toggleGlare(this.checked)"><span class="tgl-track"></span></label>
+        </div>
+        <p class="prop-note">Pick a device frame from the left panel to use these.</p>
       </div>
-      <p class="prop-note">Pick a device frame from the left panel to use these.</p>
+      <p class="prop-note" id="photo-scene-note" style="display:none">Real-photo scene — your screenshot is fitted onto the screen with true perspective. Use <b>Size</b> &amp; <b>Zoom</b> in the Frame tool to fine-tune, or drag the screen to reposition.</p>
     </div>
 
   </div>
@@ -414,6 +417,8 @@
       </div>
       <!-- gadget frame (shown when device selected) -->
       <div class="gadget-frame-wrap" id="gadget-frame-wrap" style="display:none">
+        <!-- Layer 0: real-photo scene background (photo-scene devices only) -->
+        <img id="scene-photo" alt="" style="display:none">
         <!-- Layer 1: bezel SVG (frame body) — UNDER the media -->
         <svg class="device-svg" id="device-bezel" viewBox="0 0 0 0"></svg>
         <!-- Layer 2: screen content -->
@@ -502,6 +507,7 @@
       <button class="cat-pill" onclick="filterCat(this,'tablet')">Tablets</button>
       <button class="cat-pill" onclick="filterCat(this,'laptop')">Laptops</button>
       <button class="cat-pill" onclick="filterCat(this,'desktop')">Desktop</button>
+      <button class="cat-pill" onclick="filterCat(this,'scene')">In hand / Desk</button>
     </div>
     <div class="device-grid" id="device-grid"></div>
   </div>
@@ -574,6 +580,6 @@
   </div>
 </div>
 
-<script src="js/app.js?v=13"></script>
+<script src="js/app.js?v=14"></script>
 </body>
 </html>
