@@ -217,24 +217,6 @@ const DEVICES = [
      <path d="M330 566 h240 a4 4 0 0 1 4 4 v8 a4 4 0 0 1 -4 4 H330 a4 4 0 0 1 -4 -4 v-8 a4 4 0 0 1 4 -4 z" fill="#18181c"/>`,
    overlay:()=>`<rect x="436" y="496" width="28" height="6" rx="2" fill="#0a0a0a"/>`
   },
-
-  // ═══════════ IN HAND / ON DESK (real-photo scenes) ═══════════
-  // type:'photo' devices composite the user's media into a real photograph by
-  // perspective-warping it onto the screen's 4 corners. `quad` = the screen
-  // corners as fractions of the image (TLx,TLy, TRx,TRy, BRx,BRy, BLx,BLy).
-  // See the photo-scene helpers + sizePhotoScene()/drawWarpedQuad() below.
-  {id:'phone-in-hand', name:'Phone in hand', sub:'Real photo', cat:'scene', type:'photo',
-   img:'assets/scenes/phone-hand.jpg', iw:1024, ih:1024,
-   quad:[0.235,0.115, 0.675,0.05, 0.695,0.815, 0.255,0.87]},
-  {id:'phone-two-hands', name:'Phone, two hands', sub:'Real photo · top view', cat:'scene', type:'photo',
-   img:'assets/scenes/phone-two-hands.jpg', iw:1024, ih:574,
-   quad:[0.383,0.134, 0.591,0.134, 0.591,0.901, 0.383,0.901]},
-  {id:'laptop-desk', name:'Laptop on desk', sub:'Real photo', cat:'scene', type:'photo',
-   img:'assets/scenes/laptop-desk.jpg', iw:960, ih:640,
-   quad:[0.422,0.413, 0.793,0.398, 0.790,0.710, 0.424,0.712]},
-  {id:'monitor-desk', name:'iMac on desk', sub:'Real photo', cat:'scene', type:'photo',
-   img:'assets/scenes/monitor-desk.jpg', iw:1024, ih:683,
-   quad:[0.247,0.075, 0.810,0.072, 0.803,0.552, 0.253,0.548]},
 ];
 
 /* ── DATA ── */
@@ -324,7 +306,6 @@ function onTilt(axis, v){
     if(inst) applyInstanceTransform(inst, selectedSlot);
     return;
   }
-  if(isPhotoScene()) return;   // 3D tilt N/A for real-photo scenes
   if(axis==='x'){ tiltX=v; document.getElementById('vl-tiltx').textContent=v+'°'; }
   else { tiltY=v; document.getElementById('vl-tilty').textContent=v+'°'; }
   applyMockupTransform();
@@ -425,93 +406,6 @@ function drawTiltedMockup(ctx, m, cW, cH, S){
   warpMockup(ctx, m, cW/2+mockOffX, cH/2+mockOffY, tiltX, tiltY, S);
 }
 
-/* ═══════════════════════════════════════════════════════════
-   PHOTO SCENES — real-photo mockups with a perspective screen warp.
-   The user's media is mapped onto the 4 screen corners of a photograph
-   via a homography (CSS matrix3d in preview, texTri grid in export).
-═══════════════════════════════════════════════════════════ */
-function isPhotoScene(dev){ dev = dev || activeDevice; return !!(dev && dev.type==='photo'); }
-
-// --- 3x3 matrix helpers for the projective (homography) mapping ---
-function _adj(m){return [m[4]*m[8]-m[5]*m[7], m[2]*m[7]-m[1]*m[8], m[1]*m[5]-m[2]*m[4],
-  m[5]*m[6]-m[3]*m[8], m[0]*m[8]-m[2]*m[6], m[2]*m[3]-m[0]*m[5],
-  m[3]*m[7]-m[4]*m[6], m[1]*m[6]-m[0]*m[7], m[0]*m[4]-m[1]*m[3]];}
-function _mm(a,b){const c=[];for(let i=0;i<3;i++)for(let j=0;j<3;j++){let s=0;for(let k=0;k<3;k++)s+=a[i*3+k]*b[k*3+j];c[i*3+j]=s;}return c;}
-function _mv(a,b){return [a[0]*b[0]+a[1]*b[1]+a[2]*b[2], a[3]*b[0]+a[4]*b[1]+a[5]*b[2], a[6]*b[0]+a[7]*b[1]+a[8]*b[2]];}
-function _basis(x0,y0,x1,y1,x2,y2,x3,y3){const m=[x0,x1,x2,y0,y1,y2,1,1,1];const v=_mv(_adj(m),[x3,y3,1]);return _mm(m,[v[0],0,0, 0,v[1],0, 0,0,v[2]]);}
-// homography mapping src quad -> dst quad (each is 8 numbers: x0,y0,x1,y1,x2,y2,x3,y3)
-function homography(src,dst){return _mm(_basis(dst[0],dst[1],dst[2],dst[3],dst[4],dst[5],dst[6],dst[7]), _adj(_basis(src[0],src[1],src[2],src[3],src[4],src[5],src[6],src[7])));}
-// CSS matrix3d that maps the rectangle (0,0)-(W,H) onto dst quad
-function quadMatrix3d(W,H,dst){
-  const t=homography([0,0,W,0,W,H,0,H],dst); for(let i=0;i<9;i++) t[i]/=t[8];
-  return `matrix3d(${t[0]},${t[3]},0,${t[6]}, ${t[1]},${t[4]},0,${t[7]}, 0,0,1,0, ${t[2]},${t[5]},0,${t[8]})`;
-}
-// scene screen quad in px: dev.quad fractions × display size, offset by (ox,oy)
-function sceneQuadPx(dev, dw, dh, ox, oy){ ox=ox||0; oy=oy||0; const q=dev.quad, o=[]; for(let i=0;i<8;i+=2){ o.push(ox+q[i]*dw); o.push(oy+q[i+1]*dh); } return o; }
-// base rect (avg edge lengths) that the warp maps FROM — sets the media's working resolution
-function sceneBase(quad){
-  const d=(a,b,c,e)=>Math.hypot(quad[a]-quad[c], quad[b]-quad[e]);
-  const w=(d(0,1,2,3)+d(6,7,4,5))/2, h=(d(0,1,6,7)+d(2,3,4,5))/2;
-  return {w:Math.max(40,Math.round(w)), h:Math.max(40,Math.round(h))};
-}
-// Perspective-draw an offscreen (W×H) source into a dst quad using a subdivided
-// texTri grid. dst points are in the ctx's CSS-px space; S = the ctx pre-scale.
-function drawWarpedQuad(ctx, src, W, H, quad, S){
-  const Hm=homography([0,0,W,0,W,H,0,H], quad);
-  const proj=(x,y)=>{ const d=Hm[6]*x+Hm[7]*y+Hm[8]; return [(Hm[0]*x+Hm[1]*y+Hm[2])/d, (Hm[3]*x+Hm[4]*y+Hm[5])/d]; };
-  const N=22;
-  for(let i=0;i<N;i++) for(let j=0;j<N;j++){
-    const x0=i/N*W, x1=(i+1)/N*W, y0=j/N*H, y1=(j+1)/N*H;
-    const p00=proj(x0,y0), p10=proj(x1,y0), p11=proj(x1,y1), p01=proj(x0,y1);
-    texTri(ctx, src, S, x0,y0, x1,y0, x1,y1, p00,p10,p11);
-    texTri(ctx, src, S, x0,y0, x1,y1, x0,y1, p00,p11,p01);
-  }
-}
-
-// Preview layout for a photo-scene device: size the photo, warp the media into its screen quad.
-function sizePhotoScene(){
-  const dev=activeDevice;
-  const wrap=document.getElementById('canvas-wrap');
-  const cw=parseInt(wrap.style.width)||wrap.clientWidth||800;
-  const ch=parseInt(wrap.style.height)||wrap.clientHeight||500;
-  const p=padPct/100;
-  const maxW=cw*(1-p*2), maxH=ch*(1-p*2);
-  const ar=dev.iw/dev.ih;
-  let dw=maxW, dh=maxW/ar; if(dh>maxH){ dh=maxH; dw=maxH*ar; }
-  dw=Math.round(dw); dh=Math.round(dh);
-
-  const gfw=document.getElementById('gadget-frame-wrap');
-  gfw.style.width=dw+'px'; gfw.style.height=dh+'px'; gfw.style.position='relative'; gfw.style.display='block';
-
-  const ph=document.getElementById('scene-photo');
-  ph.style.cssText='position:absolute;left:0;top:0;width:'+dw+'px;height:'+dh+'px;z-index:1;pointer-events:none;display:block;border-radius:4px;';
-  document.getElementById('device-bezel').style.display='none';
-  document.getElementById('device-overlay').style.display='none';
-
-  const quad=sceneQuadPx(dev, dw, dh);
-  const base=sceneBase(quad);
-  const gs=document.getElementById('gadget-screen');
-  gs.style.cssText='position:absolute;z-index:2;overflow:hidden;background:#000;left:0;top:0;'
-    +'width:'+base.w+'px;height:'+base.h+'px;transform-origin:0 0;transform:'+quadMatrix3d(base.w,base.h,quad)+';';
-
-  const gImg=document.getElementById('gadget-img'), gVid=document.getElementById('gadget-video');
-  [gImg,gVid].forEach(el=>{ if(el) el.style.position='absolute'; });
-  if(hasMedia){ if(isVideo){ gVid.style.display='block'; gImg.style.display='none'; } else { gImg.style.display='block'; gVid.style.display='none'; } }
-  else { gImg.style.display='none'; gVid.style.display='none'; }
-
-  // drop hint over the quad's bounding box while empty
-  const dzo=document.getElementById('drop-zone-g');
-  if(dzo){
-    const xs=[quad[0],quad[2],quad[4],quad[6]], ys=[quad[1],quad[3],quad[5],quad[7]];
-    const l=Math.min(...xs), t=Math.min(...ys), r=Math.max(...xs), b=Math.max(...ys);
-    dzo.style.cssText='position:absolute;z-index:4;display:'+(hasMedia?'none':'flex')
-      +';left:'+l+'px;top:'+t+'px;width:'+(r-l)+'px;height:'+(b-t)+'px;border-radius:6px;'
-      +'flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;'
-      +'background:rgba(0,0,0,0.45);backdrop-filter:blur(2px);';
-  }
-  if(hasMedia) applyMediaTransform();
-}
-
 /* switchTopTab removed — left/right sidebar layout replaces tabs */
 
 /* ── DEVICE GRID ── */
@@ -523,16 +417,11 @@ function buildDeviceGrid() {
     const card = document.createElement('div');
     card.className = 'device-card' + (activeDevice && activeDevice.id===dev.id ? ' active' : '');
     card.dataset.id = dev.id;
-    // Mini preview: a photo thumbnail for photo scenes, else bezel+notch SVG
-    let previewInner;
-    if(isPhotoScene(dev)){
-      previewInner = `<img src="${dev.img}" alt="" style="max-width:100%;max-height:88px;border-radius:5px;display:block;object-fit:contain">`;
-    } else {
-      const pvW = dev.vw >= dev.vh ? 76 : Math.round(76*dev.vw/dev.vh);
-      const pvH = Math.round(pvW*dev.vh/dev.vw);
-      previewInner = `<svg viewBox="0 0 ${dev.vw} ${dev.vh}" width="${pvW}" height="${pvH}" xmlns="http://www.w3.org/2000/svg">${dev.bezel('#3a3a45')}${dev.overlay()}</svg>`;
-    }
-    card.innerHTML = `<div class="device-preview">${previewInner}</div><div class="device-name">${dev.name}</div><div class="device-sub">${dev.sub}</div>`;
+    // Mini SVG preview: bezel with a subtle screen fill + notch overlay
+    const pvW = dev.vw >= dev.vh ? 76 : Math.round(76*dev.vw/dev.vh);
+    const pvH = Math.round(pvW*dev.vh/dev.vw);
+    const previewSVG = `<svg viewBox="0 0 ${dev.vw} ${dev.vh}" width="${pvW}" height="${pvH}" xmlns="http://www.w3.org/2000/svg">${dev.bezel('#3a3a45')}${dev.overlay()}</svg>`;
+    card.innerHTML = `<div class="device-preview">${previewSVG}</div><div class="device-name">${dev.name}</div><div class="device-sub">${dev.sub}</div>`;
     card.onclick = () => selectDevice(dev);
     grid.appendChild(card);
   });
@@ -565,14 +454,8 @@ function selectDevice(dev) {
   }
   activeDevice = dev;
   mediaOffX = 0; mediaOffY = 0;
-  // Device-color controls only make sense for the drawn frames, not real photos
-  const photo = isPhotoScene(dev);
-  if(photo){ tiltX=0; tiltY=0; }   // real photos already carry their own perspective
   buildDeviceGrid();
   applyDevice();
-  const cs=document.getElementById('device-color-sec'), pn=document.getElementById('photo-scene-note');
-  if(cs) cs.style.display = photo ? 'none' : '';
-  if(pn) pn.style.display = photo ? 'block' : 'none';
   if(hasMedia) requestAnimationFrame(applyMediaTransform);
   if(dev && typeof openPanelForTool==='function') openPanelForTool('device');
 }
@@ -586,7 +469,6 @@ function applyDevice() {
   if (!activeDevice) {
     plain.style.display = 'flex';
     gadgetWrap.style.display = 'none';
-    const _sp = document.getElementById('scene-photo'); if (_sp) _sp.style.display = 'none';
     if (mockupCtrls) mockupCtrls.style.display = 'block';
     if (radiusRow) radiusRow.style.display = 'flex';
     // Restore audio to the plain-frame video
@@ -607,23 +489,14 @@ function applyDevice() {
   if (mockupCtrls) mockupCtrls.style.display = 'none';
   if (radiusRow) radiusRow.style.display = 'none'; // device controls its own radius
 
-  // Render bezel (under media) and overlay (notch, over media) separately.
-  // Photo scenes have no SVG bezel — a real photograph is shown instead.
+  // Render bezel (under media) and overlay (notch, over media) separately
   const dev = activeDevice;
   const bezelEl = document.getElementById('device-bezel');
   const overlayEl = document.getElementById('device-overlay');
-  const scenePhoto = document.getElementById('scene-photo');
-  if (isPhotoScene(dev)) {
-    scenePhoto.src = dev.img; scenePhoto.style.display = 'block';
-    bezelEl.style.display = 'none'; overlayEl.style.display = 'none';
-  } else {
-    scenePhoto.style.display = 'none';
-    bezelEl.style.display = ''; overlayEl.style.display = '';
-    bezelEl.setAttribute('viewBox', '0 0 '+dev.vw+' '+dev.vh);
-    bezelEl.innerHTML = tintBezelSVG(dev.bezel('#000'), chassisTint);         // screen area filled black (under media)
-    overlayEl.setAttribute('viewBox', '0 0 '+dev.vw+' '+dev.vh);
-    overlayEl.innerHTML = dev.overlay();           // notch / island / camera
-  }
+  bezelEl.setAttribute('viewBox', '0 0 '+dev.vw+' '+dev.vh);
+  bezelEl.innerHTML = tintBezelSVG(dev.bezel('#000'), chassisTint);         // screen area filled black (under media)
+  overlayEl.setAttribute('viewBox', '0 0 '+dev.vw+' '+dev.vh);
+  overlayEl.innerHTML = dev.overlay();           // notch / island / camera
   const _ss=document.getElementById('sl-shad'); if(_ss) onShadow(_ss.value);  // sync shadow to the device
 
   // Transfer already-loaded media to gadget elements
@@ -653,7 +526,6 @@ function applyDevice() {
 
 function sizeGadget() {
   if (!activeDevice) return;
-  if (isPhotoScene(activeDevice)) { sizePhotoScene(); return; }
   const dev = activeDevice;
   const wrap = document.getElementById('canvas-wrap');
   const cw = parseInt(wrap.style.width) || wrap.clientWidth || 800;
@@ -1598,36 +1470,6 @@ function confirmImgExport(){
   async function draw(bgImg){
     paintExportBackground(ctx, cW, cH, blurPx, bgImg);
 
-    if(activeDevice && isPhotoScene(activeDevice)){
-      // ── Real-photo scene: draw the photo, warp the media onto the screen quad ──
-      const dev = activeDevice;
-      const gfw = document.getElementById('gadget-frame-wrap');
-      const dw = parseInt(gfw.style.width) || fw;
-      const dh = parseInt(gfw.style.height) || fh;
-      const dx = (cW-dw)/2 + mockOffX, dy=(cH-dh)/2 + mockOffY;
-      const _st=shadVal/100;
-      if(_st>0){
-        ctx.save();
-        ctx.shadowColor='rgba(0,0,0,'+(0.25+0.4*_st).toFixed(2)+')';ctx.shadowBlur=(18+70*_st);ctx.shadowOffsetX=shadX;ctx.shadowOffsetY=shadY;
-        ctx.fillStyle='rgba(0,0,0,0.001)'; ctx.fillRect(dx+dw*0.06,dy+dh*0.06,dw*0.88,dh*0.88);
-        ctx.restore();
-      }
-      const ph=document.getElementById('scene-photo');
-      ctx.drawImage(ph, dx, dy, dw, dh);
-      const quad=sceneQuadPx(dev, dw, dh, dx, dy);
-      const base=sceneBase(quad);
-      const mediaEl=document.getElementById('gadget-img');
-      const off=document.createElement('canvas'); off.width=base.w; off.height=base.h;
-      const octx=off.getContext('2d'); octx.imageSmoothingQuality='high';
-      const cover=coverSize(base.w, base.h);
-      const dispW=cover.w*mediaScale, dispH=cover.h*mediaScale;
-      octx.drawImage(mediaEl, (base.w-dispW)/2+mediaOffX, (base.h-dispH)/2+mediaOffY, dispW, dispH);
-      drawWarpedQuad(ctx, off, base.w, base.h, quad, scale);
-      drawOverlaysOnCanvas(ctx); drawTextsOnCanvas(ctx);
-      finish();
-      return;
-    }
-
     if(tiltX!==0 || tiltY!==0){
       // ── 3D tilt: render the flat mockup offscreen, then perspective-warp it ──
       const m = await buildMockupOffscreen(scale);
@@ -1724,27 +1566,13 @@ async function confirmVidExport(){
   const TARGET_LONG={'720':1280,'1080':1920,'1440':2560,'4k':3840}[selectedQ]||1920;
   const QMBPS={'720':10,'1080':22,'1440':45,'4k':90}[selectedQ]||22;
 
-  const photo = activeDevice && isPhotoScene(activeDevice);
-
   // Output canvas dimensions depend on whether a device frame is used
   let outW, outH, cvs, ctx;
   let bezelImg=null, overlayImg=null;          // device layers (pre-rasterized)
   let dx,dy,dw,dh, sx,sy,sw,sh, srr;           // device geometry
   let vx,vy,br;                                // plain-frame geometry
-  let photoQuad, photoBase, photoOff, photoOffCtx, scenePhotoEl;   // photo-scene geometry
 
-  if(photo){
-    const dev=activeDevice;
-    dw = dev.iw; dh = dev.ih;
-    const padFraction = padPct/100;
-    outW = Math.round(dw/(1-2*padFraction)); outH = Math.round(dh/(1-2*padFraction));
-    dx = Math.round((outW-dw)/2); dy = Math.round((outH-dh)/2);
-    photoQuad = sceneQuadPx(dev, dw, dh, dx, dy);
-    photoBase = sceneBase(photoQuad);
-    photoOff = document.createElement('canvas'); photoOff.width=photoBase.w; photoOff.height=photoBase.h;
-    photoOffCtx = photoOff.getContext('2d'); photoOffCtx.imageSmoothingQuality='high';
-    scenePhotoEl = document.getElementById('scene-photo');
-  } else if(activeDevice){
+  if(activeDevice){
     const dev=activeDevice;
     // Scale device so its SCREEN matches the video's native resolution → crisp output
     const screenScale = nativeW / dev.screen.w;
@@ -1785,21 +1613,7 @@ async function confirmVidExport(){
     const bl=blurPx*(outW/1080);
     paintExportBackground(ctx, outW, outH, bl, bgImg);
 
-    if(photo){
-      // real photo + video frame warped onto the screen quad
-      ctx.save();
-      ctx.shadowColor='rgba(0,0,0,0.4)';ctx.shadowBlur=60*(dw/1000);ctx.shadowOffsetY=22*(dw/1000);
-      ctx.fillStyle='rgba(0,0,0,0.001)';ctx.fillRect(dx+dw*0.06,dy+dh*0.06,dw*0.88,dh*0.88);
-      ctx.restore();
-      ctx.drawImage(scenePhotoEl,dx,dy,dw,dh);
-      const pv=activeScreenSize();   // preview base size → convert pan offsets to fractions
-      const cover=coverSize(photoBase.w,photoBase.h);
-      const dispW=cover.w*mediaScale, dispH=cover.h*mediaScale;
-      const offX=(pv.w?mediaOffX/pv.w:0)*photoBase.w, offY=(pv.h?mediaOffY/pv.h:0)*photoBase.h;
-      photoOffCtx.clearRect(0,0,photoBase.w,photoBase.h);
-      photoOffCtx.drawImage(vid,(photoBase.w-dispW)/2+offX,(photoBase.h-dispH)/2+offY,dispW,dispH);
-      drawWarpedQuad(ctx, photoOff, photoBase.w, photoBase.h, photoQuad, qf);
-    } else if(activeDevice){
+    if(activeDevice){
       // shadow under device
       ctx.save();
       ctx.shadowColor='rgba(0,0,0,0.5)';ctx.shadowBlur=70*(dw/600);ctx.shadowOffsetY=26*(dw/600);
@@ -3009,7 +2823,7 @@ function buildFinishGrid(){
 }
 function applyChassisTint(){
   if(layoutMode==='dual'){ renderDualStage(); return; }
-  if(activeDevice && !isPhotoScene(activeDevice)){ const bz=document.getElementById('device-bezel'); if(bz) bz.innerHTML=tintBezelSVG(activeDevice.bezel('#000'), chassisTint); }
+  if(activeDevice){ const bz=document.getElementById('device-bezel'); if(bz) bz.innerHTML=tintBezelSVG(activeDevice.bezel('#000'), chassisTint); }
 }
 function setFinish(i){
   if(layoutMode==='dual'){ if(slots[selectedSlot]) slots[selectedSlot].tint=FINISHES[i].tint; }
