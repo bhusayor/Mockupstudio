@@ -901,6 +901,13 @@ function applyMediaTransform(){
 
 function resetMediaTransform(){ mediaScale=1; mediaOffX=0; mediaOffY=0; mockOffX=0; mockOffY=0; applyMediaTransform(); applyMockupTransform(); }
 
+// Force cover-fill and sync the toggle UI. Called on every new upload so images
+// always fill the frame edge-to-edge (Photoshop-style), no manual zoom/drag needed.
+function resetFitToCover(){
+  fitMode='cover';
+  document.querySelectorAll('#fit-toggle .wt-opt').forEach(b=>b.classList.toggle('active', b.dataset.fit==='cover'));
+}
+
 // Fit whole (contain) vs Fill screen (cover). Resets pan/zoom so the new fit is clean.
 function onFitMode(mode){
   fitMode = (mode==='cover') ? 'cover' : 'contain';
@@ -996,6 +1003,7 @@ function validateUpload(file, kind){
 function showMedia(file){
   if(!validateUpload(file,'media')) return;
   if(layoutMode==='dual'){ showMediaDual(file, activeFileSlot); return; }
+  resetFitToCover();   // new image always starts filled edge-to-edge
   isVideo=file.type.startsWith('video/');
   if(isVideo){
     const url=URL.createObjectURL(file);
@@ -1049,6 +1057,7 @@ function showMedia(file){
 }
 
 function showMediaDual(file, i){
+  resetFitToCover();   // new image always starts filled edge-to-edge
   const isVid = file.type.startsWith('video/');
   const url = URL.createObjectURL(file);
   if(isVid){
@@ -2032,8 +2041,8 @@ function bindInstanceDrag(inst,i){
     if(!slots[i].hasMedia) return;
     e.preventDefault();
     selectSlot(i);
-    const step = e.ctrlKey ? 0.012 : 0.05;
-    const delta = (e.deltaY<0 ? 1 : -1) * step * (e.ctrlKey ? Math.min(6, Math.abs(e.deltaY)) : 1);
+    const step = e.ctrlKey ? 0.005 : 0.02;   // gentler zoom
+    const delta = (e.deltaY<0 ? 1 : -1) * step * (e.ctrlKey ? Math.min(3, Math.abs(e.deltaY)) : 1);
     setSlotZoom(i, (slots[i].scale||1) + delta);
   }, {passive:false});
   // touch pinch
@@ -2053,7 +2062,7 @@ function bindInstanceDrag(inst,i){
   // Safari trackpad pinch
   let gBase=1;
   inst.addEventListener('gesturestart', e=>{ if(slots[i].hasMedia){ e.preventDefault(); selectSlot(i); gBase=slots[i].scale||1; } }, {passive:false});
-  inst.addEventListener('gesturechange', e=>{ if(slots[i].hasMedia){ e.preventDefault(); setSlotZoom(i, gBase*e.scale); } }, {passive:false});
+  inst.addEventListener('gesturechange', e=>{ if(slots[i].hasMedia){ e.preventDefault(); setSlotZoom(i, gBase*(1+(e.scale-1)*0.5)); } }, {passive:false});
   inst.addEventListener('gestureend', e=>{ if(slots[i].hasMedia) e.preventDefault(); }, {passive:false});
 }
 
@@ -3087,8 +3096,8 @@ function setImgEdit(on){
   wrap.addEventListener('wheel', e=>{
     if(!hasMedia || !single()) return;
     e.preventDefault();
-    const step = e.ctrlKey ? 0.012 : 0.05;
-    const delta = (e.deltaY<0 ? 1 : -1) * step * (e.ctrlKey ? Math.min(6, Math.abs(e.deltaY)) : 1);
+    const step = e.ctrlKey ? 0.005 : 0.02;   // gentler zoom
+    const delta = (e.deltaY<0 ? 1 : -1) * step * (e.ctrlKey ? Math.min(3, Math.abs(e.deltaY)) : 1);
     setMediaZoom(mediaScale + delta);
   }, {passive:false});
 
@@ -3107,7 +3116,7 @@ function setImgEdit(on){
   // Zoom: Safari trackpad pinch (fires gesture* events, not wheel)
   let gBase=1;
   wrap.addEventListener('gesturestart', e=>{ if(hasMedia && single()){ e.preventDefault(); gBase=mediaScale; } }, {passive:false});
-  wrap.addEventListener('gesturechange', e=>{ if(hasMedia && single()){ e.preventDefault(); setMediaZoom(gBase * e.scale); } }, {passive:false});
+  wrap.addEventListener('gesturechange', e=>{ if(hasMedia && single()){ e.preventDefault(); setMediaZoom(gBase * (1+(e.scale-1)*0.5)); } }, {passive:false});
   wrap.addEventListener('gestureend', e=>{ if(hasMedia && single()) e.preventDefault(); }, {passive:false});
 })();
 
