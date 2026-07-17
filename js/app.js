@@ -927,64 +927,17 @@ function onZoom(v){
   mediaScale=parseFloat(v); applyMediaTransform();
 }
 
-// Enable drag + scroll-zoom on a screen container
-function enableReposition(containerId, mediaIds){
-  const cont=document.getElementById(containerId);
-  if(!cont || cont.dataset.repoBound) return;
-  cont.dataset.repoBound='1';
-  let dragging=false, startX=0, startY=0, baseX=0, baseY=0;
-
-  cont.addEventListener('pointerdown', e=>{
-    if(!hasMedia) return;
-    // don't start drag if clicking the drop overlay
-    dragging=true; startX=e.clientX; startY=e.clientY; baseX=mediaOffX; baseY=mediaOffY;
-    cont.classList.add('dragging');
-    cont.setPointerCapture(e.pointerId);
-    e.preventDefault();
-  });
-  cont.addEventListener('pointermove', e=>{
-    if(!dragging) return;
-    mediaOffX=baseX+(e.clientX-startX);
-    mediaOffY=baseY+(e.clientY-startY);
-    applyMediaTransform();
-  });
-  const endDrag=e=>{ if(dragging){ dragging=false; cont.classList.remove('dragging'); try{cont.releasePointerCapture(e.pointerId);}catch(_){} } };
-  cont.addEventListener('pointerup', endDrag);
-  cont.addEventListener('pointercancel', endDrag);
-
-  // scroll / trackpad-pinch to zoom (centered). Trackpad pinch arrives as a
-  // wheel event with ctrlKey=true; regular two-finger scroll also zooms here.
-  cont.addEventListener('wheel', e=>{
-    if(!hasMedia) return;
-    e.preventDefault();
-    const step = e.ctrlKey ? 0.012 : 0.05;              // pinch is finer-grained
-    const delta = (e.deltaY<0 ? 1 : -1) * step * (e.ctrlKey ? Math.min(6, Math.abs(e.deltaY)) : 1);
-    mediaScale = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, mediaScale+delta));
-    applyMediaTransform();
-  }, {passive:false});
-
-  // touch pinch to zoom (two fingers)
-  let pinchStart=0, pinchBase=1;
-  cont.addEventListener('touchstart', e=>{
-    if(!hasMedia || e.touches.length!==2) return;
-    pinchStart=touchDist(e.touches); pinchBase=mediaScale;
-  }, {passive:false});
-  cont.addEventListener('touchmove', e=>{
-    if(!hasMedia || e.touches.length!==2 || !pinchStart) return;
-    e.preventDefault();
-    const d=touchDist(e.touches);
-    mediaScale=Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, pinchBase * d/pinchStart));
-    applyMediaTransform();
-  }, {passive:false});
-  const endPinch=()=>{ pinchStart=0; };
-  cont.addEventListener('touchend', endPinch);
-  cont.addEventListener('touchcancel', endPinch);
-}
-
 // Distance between two active touch points (for pinch-zoom)
 function touchDist(touches){
   const dx=touches[0].clientX-touches[1].clientX, dy=touches[0].clientY-touches[1].clientY;
   return Math.hypot(dx,dy);
+}
+
+// Set single-mode image zoom (clamped) and re-render + sync the slider readout
+function setMediaZoom(v){
+  if(!hasMedia) return;
+  mediaScale = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, v));
+  applyMediaTransform();
 }
 
 /* ── MEDIA ── */
@@ -2097,6 +2050,11 @@ function bindInstanceDrag(inst,i){
   const endP=()=>{ pStart=0; };
   inst.addEventListener('touchend', endP);
   inst.addEventListener('touchcancel', endP);
+  // Safari trackpad pinch
+  let gBase=1;
+  inst.addEventListener('gesturestart', e=>{ if(slots[i].hasMedia){ e.preventDefault(); selectSlot(i); gBase=slots[i].scale||1; } }, {passive:false});
+  inst.addEventListener('gesturechange', e=>{ if(slots[i].hasMedia){ e.preventDefault(); setSlotZoom(i, gBase*e.scale); } }, {passive:false});
+  inst.addEventListener('gestureend', e=>{ if(slots[i].hasMedia) e.preventDefault(); }, {passive:false});
 }
 
 // Set a dual-slot's image zoom, clamp, re-render, and sync the slider readout
@@ -3121,6 +3079,45 @@ function setImgEdit(on){
   };
   wrap.addEventListener('pointerup', up);
   wrap.addEventListener('pointercancel', up);
+
+  const single=()=>!(typeof layoutMode!=='undefined' && layoutMode==='dual');
+
+  // Zoom: scroll wheel + trackpad pinch (Chrome/Edge/Firefox send wheel+ctrlKey).
+  // preventDefault stops the browser from page-zooming.
+  wrap.addEventListener('wheel', e=>{
+    if(!hasMedia || !single()) return;
+    e.preventDefault();
+    const step = e.ctrlKey ? 0.012 : 0.05;
+    const delta = (e.deltaY<0 ? 1 : -1) * step * (e.ctrlKey ? Math.min(6, Math.abs(e.deltaY)) : 1);
+    setMediaZoom(mediaScale + delta);
+  }, {passive:false});
+
+  // Zoom: touchscreen two-finger pinch
+  let pStart=0, pBase=1;
+  wrap.addEventListener('touchstart', e=>{
+    if(hasMedia && single() && e.touches.length===2){ pStart=touchDist(e.touches); pBase=mediaScale; }
+  }, {passive:false});
+  wrap.addEventListener('touchmove', e=>{
+    if(hasMedia && single() && e.touches.length===2 && pStart){ e.preventDefault(); setMediaZoom(pBase * touchDist(e.touches)/pStart); }
+  }, {passive:false});
+  const endT=()=>{ pStart=0; };
+  wrap.addEventListener('touchend', endT);
+  wrap.addEventListener('touchcancel', endT);
+
+  // Zoom: Safari trackpad pinch (fires gesture* events, not wheel)
+  let gBase=1;
+  wrap.addEventListener('gesturestart', e=>{ if(hasMedia && single()){ e.preventDefault(); gBase=mediaScale; } }, {passive:false});
+  wrap.addEventListener('gesturechange', e=>{ if(hasMedia && single()){ e.preventDefault(); setMediaZoom(gBase * e.scale); } }, {passive:false});
+  wrap.addEventListener('gestureend', e=>{ if(hasMedia && single()) e.preventDefault(); }, {passive:false});
+})();
+
+// Safety net: block browser page-zoom (trackpad pinch) anywhere over the editor
+// canvas, so a pinch that lands just outside a device never zooms the whole page.
+(function blockCanvasPageZoom(){
+  const wa=document.getElementById('work-area'); if(!wa) return;
+  wa.addEventListener('wheel', e=>{ if(e.ctrlKey) e.preventDefault(); }, {passive:false});
+  wa.addEventListener('gesturestart', e=>e.preventDefault(), {passive:false});
+  wa.addEventListener('gesturechange', e=>e.preventDefault(), {passive:false});
 })();
 
 // Tapping the empty canvas (outside the mockup) commits/exits image-adjust mode (like Esc)
