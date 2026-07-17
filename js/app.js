@@ -284,7 +284,7 @@ let mediaAR = 16/9;
 let mediaScale = 1;        // zoom multiplier, 1 = base-fit
 const MIN_ZOOM = 0.15;     // allow zooming OUT below fill so tall/long images can shrink to fit
 const MAX_ZOOM = 3;
-let fitMode = 'cover';     // 'cover' = fill screen edge-to-edge (crop overflow), 'contain' = fit whole image (letterbox)
+let fitMode = 'contain';   // 'contain' = fit whole image + blurred fill (no crop), 'cover' = fill screen edge-to-edge (crop)
 let mediaOffX = 0;         // horizontal offset in px (screen space), + = move image right
 let mediaOffY = 0;         // vertical offset in px
 let activeDevice = null; // null = plain frame, else device object
@@ -360,7 +360,7 @@ async function buildMockupOffscreen(S){
     const srr=(dev.screenRR||20)/dev.vw*dw;
     const media=document.getElementById('gadget-img');
     mx.save(); roundRect(mx,sx,sy,sw,sh,srr); mx.clip();
-    mx.fillStyle='#000'; mx.fillRect(sx,sy,sw,sh);   // letterbox bg for Fit mode
+    drawScreenFill(mx, media, mediaAR, mediaScale, sx,sy,sw,sh, fitMode==='contain' && !isVideo);
     const liveScreenW=parseFloat(document.getElementById('gadget-screen').style.width)||sw;
     const dr=coverDrawRect(sx,sy,sw,sh,liveScreenW); mx.drawImage(media,dr.mx,dr.my,dr.mw,dr.mh); drawGlare(mx,sx,sy,sw,sh); mx.restore();
     if(overlayImg) mx.drawImage(overlayImg,0,0,dw,dh);
@@ -373,6 +373,7 @@ async function buildMockupOffscreen(S){
     roundRect(mx,0,0,fw0,fh0,br); mx.fillStyle='#111'; mx.fill();
     const src=document.getElementById('mockup-img');
     mx.save(); roundRect(mx,0,0,fw0,fh0,br); mx.clip();
+    drawScreenFill(mx, src, mediaAR, mediaScale, 0,0,fw0,fh0, fitMode==='contain' && !isVideo);
     const liveScreenW=parseFloat(document.getElementById('mockup-frame').style.width)||fw0;
     const dr=coverDrawRect(0,0,fw0,fh0,liveScreenW); mx.drawImage(src,dr.mx,dr.my,dr.mw,dr.mh); drawGlare(mx,0,0,fw0,fh0); mx.restore();
     mx.save(); roundRect(mx,0,0,fw0,fh0,br); mx.strokeStyle='rgba(255,255,255,0.09)'; mx.lineWidth=1; mx.stroke(); mx.restore();
@@ -833,11 +834,15 @@ function activeScreenSize(){
 
 // Cover-fit base: how the image fills the screen at scale=1 (object-fit:cover)
 // Returns the displayed media size that covers the screen.
-function coverSize(screenW, screenH){
+// mode: 'contain' | 'cover' (defaults to global fitMode). vid: videos always fill
+// (cover), since blur-fill only applies to images.
+function coverSize(screenW, screenH, mode, vid){
   const scrAR = screenW/screenH;
+  const useVid = (vid===undefined) ? isVideo : vid;
+  const contain = ((mode||fitMode)==='contain') && !useVid;
   let w,h;
-  if(fitMode==='contain'){
-    // FIT WHOLE: shrink so the entire image is visible inside the screen (letterbox)
+  if(contain){
+    // FIT WHOLE: shrink so the entire image is visible inside the screen
     if(mediaAR > scrAR){ w=screenW; h=screenW/mediaAR; }  // image wider → match width
     else { h=screenH; w=screenH*mediaAR; }                 // image taller → match height
   } else {
@@ -846,6 +851,29 @@ function coverSize(screenW, screenH){
     else { w=screenW; h=screenW/mediaAR; }                 // image taller → match width
   }
   return {w,h};
+}
+
+// Should the current media use a blurred background fill behind it?
+// Only in Fit-whole mode, only for images (videos always fill).
+function usesBlurFill(){ return fitMode==='contain' && !isVideo && hasMedia; }
+
+// Size a blurred background <img> to COVER the screen (+ overscale so the
+// blur's soft edges never reveal a gap). Shown only when usesBlurFill().
+function positionBlurIn(el, sw, sh){
+  if(!el) return;
+  if(!usesBlurFill()){ el.style.display='none'; return; }
+  const base = coverSize(sw, sh, 'cover', false);
+  const over = 1.12;
+  const dispW = base.w * mediaScale * over;
+  const dispH = base.h * mediaScale * over;
+  el.style.display = 'block';
+  el.style.inset = 'auto';
+  el.style.left = ((sw - dispW)/2) + 'px';
+  el.style.top  = ((sh - dispH)/2) + 'px';
+  el.style.width = dispW + 'px';
+  el.style.height = dispH + 'px';
+  el.style.objectFit = 'fill';
+  el.style.transform = 'none';
 }
 
 // Clamp offsets so you can never drag past the image edges (no empty gaps)
@@ -894,6 +922,9 @@ function applyMediaTransform(){
         return { w: parseFloat(gs.style.width)||sw, h: parseFloat(gs.style.height)||sh }; })();
   const others = activeDevice ? ['mockup-img','mockup-video'] : ['gadget-img','gadget-video'];
   others.forEach(id=>{ positionMediaIn(document.getElementById(id), otherSize.w, otherSize.h); });
+  // blur background fill (Fit-whole, images only)
+  positionBlurIn(document.getElementById(activeDevice ? 'gadget-blur' : 'mockup-blur'), sw, sh);
+  positionBlurIn(document.getElementById(activeDevice ? 'mockup-blur' : 'gadget-blur'), otherSize.w, otherSize.h);
   // update zoom slider readout
   const zv=document.getElementById('vl-zoom'); if(zv) zv.textContent=Math.round(mediaScale*100)+'%';
   const zs=document.getElementById('sl-zoom'); if(zs && parseFloat(zs.value)!==mediaScale) zs.value=mediaScale;
@@ -901,11 +932,11 @@ function applyMediaTransform(){
 
 function resetMediaTransform(){ mediaScale=1; mediaOffX=0; mediaOffY=0; mockOffX=0; mockOffY=0; applyMediaTransform(); applyMockupTransform(); }
 
-// Force cover-fill and sync the toggle UI. Called on every new upload so images
-// always fill the frame edge-to-edge (Photoshop-style), no manual zoom/drag needed.
+// Reset to the default fit on every new upload: Fit-whole with blurred fill, so
+// the whole image shows with no crop and no black bars, no manual adjusting.
 function resetFitToCover(){
-  fitMode='cover';
-  document.querySelectorAll('#fit-toggle .wt-opt').forEach(b=>b.classList.toggle('active', b.dataset.fit==='cover'));
+  fitMode='contain';
+  document.querySelectorAll('#fit-toggle .wt-opt').forEach(b=>b.classList.toggle('active', b.dataset.fit==='contain'));
 }
 
 // Fit whole (contain) vs Fill screen (cover). Resets pan/zoom so the new fit is clean.
@@ -951,6 +982,7 @@ function setMediaZoom(v){
 function syncMediaToActiveFrame(src, type) {
   const img=document.getElementById('mockup-img'),vid=document.getElementById('mockup-video');
   const gImg=document.getElementById('gadget-img'),gVid=document.getElementById('gadget-video');
+  const mBlur=document.getElementById('mockup-blur'), gBlur=document.getElementById('gadget-blur');
   // Hide drop zones on both plain and gadget frame
   const dz=document.getElementById('drop-zone');
   const dzg=document.getElementById('drop-zone-g');
@@ -958,6 +990,9 @@ function syncMediaToActiveFrame(src, type) {
   if(dzg) dzg.style.display='none';
   img.style.display='none'; vid.style.display='none';
   gImg.style.display='none'; gVid.style.display='none';
+  // Blur background source (images only); positionBlurIn toggles visibility.
+  if(type==='image'){ if(mBlur) mBlur.src=src; if(gBlur) gBlur.src=src; }
+  else { if(mBlur){ mBlur.style.display='none'; mBlur.removeAttribute('src'); } if(gBlur){ gBlur.style.display='none'; gBlur.removeAttribute('src'); } }
   if(type==='video'){
     vid.src=src; gVid.src=src;
     // The element shown in the ACTIVE frame plays with sound; the hidden one is muted.
@@ -1328,11 +1363,11 @@ async function confirmVidExportDual(){
       const sw=dev.screen.w/dev.vw*dw, sh=dev.screen.h/dev.vh*dh;
       const rr=(dev.screenRR||20)/dev.vw*dw;
       const inst=document.querySelectorAll('.device-instance')[i];
-      const mediaEl=inst ? (slot.type==='video'?inst.querySelector('video'):inst.querySelector('img')) : null;
+      const mediaEl=inst ? (slot.type==='video'?inst.querySelector('video'):inst.querySelector('img:not(.screen-blur)')) : null;
       if(mediaEl){
         ctx.save(); roundRect(ctx,sx,sy,sw,sh,rr); ctx.clip();
-        ctx.fillStyle='#000'; ctx.fillRect(sx,sy,sw,sh);   // letterbox bg for Fit mode
-        const base=coverSizeAR(slot.ar, sw, sh);
+        drawScreenFill(ctx, mediaEl, slot.ar, slot.scale||1, sx,sy,sw,sh, fitMode==='contain' && slot.type!=='video');
+        const base=coverSizeAR(slot.ar, sw, sh, slot.type==='video');
         const mw=base.w*slot.scale, mh=base.h*slot.scale;
         ctx.drawImage(mediaEl, sx+(sw-mw)/2+(slot.offX||0), sy+(sh-mh)/2+(slot.offY||0), mw, mh);
         ctx.restore();
@@ -1383,11 +1418,11 @@ async function compositeSlot(ctx, slot, scale, cW, cH){
   const sx=dev.screen.x/dev.vw*dw, sy=dev.screen.y/dev.vh*dh;
   const sw=dev.screen.w/dev.vw*dw, sh=dev.screen.h/dev.vh*dh, rr=(dev.screenRR||20)/dev.vw*dw;
   const inst=document.querySelectorAll('.device-instance')[slots.indexOf(slot)];
-  const mediaEl=inst ? (slot.type==='video'?inst.querySelector('video'):inst.querySelector('img')) : null;
+  const mediaEl=inst ? (slot.type==='video'?inst.querySelector('video'):inst.querySelector('img:not(.screen-blur)')) : null;
   if(mediaEl){
     mx.save(); roundRect(mx,sx,sy,sw,sh,rr); mx.clip();
-    mx.fillStyle='#000'; mx.fillRect(sx,sy,sw,sh);   // letterbox bg for Fit mode
-    const base=coverSizeAR(slot.ar, sw, sh); const mw=base.w*slot.scale, mh=base.h*slot.scale;
+    drawScreenFill(mx, mediaEl, slot.ar, slot.scale||1, sx,sy,sw,sh, fitMode==='contain' && slot.type!=='video');
+    const base=coverSizeAR(slot.ar, sw, sh, slot.type==='video'); const mw=base.w*slot.scale, mh=base.h*slot.scale;
     mx.drawImage(mediaEl, sx+(sw-mw)/2+(slot.offX||0), sy+(sh-mh)/2+(slot.offY||0), mw, mh);
     mx.restore();
   }
@@ -1530,7 +1565,7 @@ function confirmImgExport(){
       const media = document.getElementById('gadget-img');
       ctx.save();
       roundRect(ctx, sx, sy, sw, sh, srr); ctx.clip();
-      ctx.fillStyle='#000'; ctx.fillRect(sx, sy, sw, sh);   // letterbox bg for Fit mode (matches live #000 screen)
+      drawScreenFill(ctx, media, mediaAR, mediaScale, sx, sy, sw, sh, fitMode==='contain' && !isVideo);
       // cover-fit + zoom + pan (matches live preview). liveScreenW = on-screen screen width
       const liveScreenW = parseFloat(document.getElementById('gadget-screen').style.width)||sw;
       const dr = coverDrawRect(sx, sy, sw, sh, liveScreenW);
@@ -1553,6 +1588,7 @@ function confirmImgExport(){
       ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;
       const src=document.getElementById('mockup-img');
       ctx.save();roundRect(ctx,fx,fy,fw,fh,br);ctx.clip();
+      drawScreenFill(ctx, src, mediaAR, mediaScale, fx, fy, fw, fh, fitMode==='contain' && !isVideo);
       const liveScreenW = parseFloat(document.getElementById('mockup-frame').style.width)||fw;
       const dr = coverDrawRect(fx, fy, fw, fh, liveScreenW);
       ctx.drawImage(src, dr.mx, dr.my, dr.mw, dr.mh);
@@ -1767,7 +1803,8 @@ async function confirmVidExport(){
 function coverDrawRect(tSx,tSy,tSw,tSh, liveScreenW){
   const scrAR=tSw/tSh;
   let bw,bh;                       // base fit size (matches coverSize())
-  if(fitMode==='contain'){
+  const contain = fitMode==='contain' && !isVideo;   // videos always fill
+  if(contain){
     if(mediaAR>scrAR){ bw=tSw; bh=tSw/mediaAR; }
     else { bh=tSh; bw=tSh*mediaAR; }
   } else {
@@ -1921,7 +1958,7 @@ function renderDualStage(){
     const wrap=document.createElement('div'); wrap.className='inst-wrap';
     wrap.innerHTML =
       '<svg class="inst-bezel" viewBox="0 0 '+dev.vw+' '+dev.vh+'">'+tintBezelSVG(dev.bezel('#000'), slot.tint)+'</svg>'+
-      '<div class="inst-screen"><img alt=""><video autoplay loop playsinline></video></div>'+
+      '<div class="inst-screen"><img class="screen-blur inst-blur" alt="" aria-hidden="true"><img alt=""><video autoplay loop playsinline></video></div>'+
       '<svg class="inst-overlay" viewBox="0 0 '+dev.vw+' '+dev.vh+'">'+dev.overlay()+'</svg>'+
       '<div class="inst-drop"><div class="dz-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9l4-4 5 5 4-4 5 5"/><circle cx="8.5" cy="8.5" r="1.5"/></svg></div><div class="dz-title">Upload</div><div class="dz-sub">image / video</div></div>';
     inst.appendChild(wrap);
@@ -1954,17 +1991,31 @@ function sizeInstance(inst,i){
   const rr=Math.round((dev.screenRR||20)/dev.vw*dw);
   const scr=wrap.querySelector('.inst-screen');
   scr.style.cssText='position:absolute;z-index:2;overflow:hidden;background:#000;left:'+sx+'px;top:'+sy+'px;width:'+sw+'px;height:'+sh+'px;border-radius:'+rr+'px;';
-  // media
-  const img=scr.querySelector('img'), vid=scr.querySelector('video');
+  // media (sharp img is the one WITHOUT .screen-blur)
+  const img=scr.querySelector('img:not(.screen-blur)'), vid=scr.querySelector('video');
+  const blur=scr.querySelector('.inst-blur');
   const drop=wrap.querySelector('.inst-drop');
   drop.style.cssText='position:absolute;z-index:4;left:'+sx+'px;top:'+sy+'px;width:'+sw+'px;height:'+sh+'px;border-radius:'+rr+'px;display:'+(slot.hasMedia?'none':'flex')+';flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;background:rgba(0,0,0,0.5);backdrop-filter:blur(2px);';
+  const isVidSlot=slot.type==='video';
   [img,vid].forEach(el=>{
-    const base=coverSizeAR(slot.ar, sw, sh);
+    const base=coverSizeAR(slot.ar, sw, sh, isVidSlot);
     const mw=base.w*slot.scale, mh=base.h*slot.scale;
     el.style.position='absolute';
     el.style.left=((sw-mw)/2 + (slot.offX||0))+'px'; el.style.top=((sh-mh)/2 + (slot.offY||0))+'px';
     el.style.width=mw+'px'; el.style.height=mh+'px'; el.style.objectFit='fill';
   });
+  // blurred background fill (Fit-whole, images only)
+  if(blur){
+    const useBlur = fitMode==='contain' && !isVidSlot && slot.hasMedia;
+    if(useBlur){
+      const cb=coverSizeAR(slot.ar, sw, sh, true); const over=1.14;   // force cover
+      const bw=cb.w*slot.scale*over, bh=cb.h*slot.scale*over;
+      blur.src=slot.src;
+      blur.style.position='absolute'; blur.style.display='block'; blur.style.inset='auto';
+      blur.style.left=((sw-bw)/2)+'px'; blur.style.top=((sh-bh)/2)+'px';
+      blur.style.width=bw+'px'; blur.style.height=bh+'px'; blur.style.objectFit='fill';
+    } else { blur.style.display='none'; }
+  }
   if(slot.hasMedia){
     if(slot.type==='video'){ vid.src=slot.src; vid.style.display='block'; vid.muted=(i!==0); vid.play().catch(()=>{}); img.style.display='none'; }
     else { img.src=slot.src; img.style.display='block'; vid.style.display='none'; }
@@ -1972,14 +2023,33 @@ function sizeInstance(inst,i){
 }
 
 // cover-size with explicit AR (for slots)
-function coverSizeAR(ar, screenW, screenH){
+function coverSizeAR(ar, screenW, screenH, vid){
   const scrAR=screenW/screenH; let w,h;
-  if(fitMode==='contain'){
+  const contain = fitMode==='contain' && !vid;   // videos always fill
+  if(contain){
     if(ar>scrAR){ w=screenW; h=screenW/ar; } else { h=screenH; w=screenH*ar; }
   } else {
     if(ar>scrAR){ h=screenH; w=screenH*ar; } else { w=screenW; h=screenW/ar; }
   }
   return {w,h};
+}
+
+// Fill a screen rect (already clipped) behind the sharp media. In Fit-whole
+// image mode paint a blurred, cover-sized copy of the image; else plain black.
+function drawScreenFill(ctx, media, ar, zoom, sx, sy, sw, sh, blur){
+  if(blur && media){
+    const scrAR=sw/sh; let bw,bh;
+    if(ar>scrAR){ bh=sh; bw=sh*ar; } else { bw=sw; bh=sw/ar; }   // cover
+    const over=1.14;
+    bw*=(zoom||1)*over; bh*=(zoom||1)*over;
+    ctx.save();
+    ctx.filter='blur('+Math.max(6, sw*0.05)+'px) brightness(0.82) saturate(1.05)';
+    try{ ctx.drawImage(media, sx+(sw-bw)/2, sy+(sh-bh)/2, bw, bh); }catch(_){}
+    ctx.restore();
+    ctx.filter='none';
+  } else {
+    ctx.fillStyle='#000'; ctx.fillRect(sx,sy,sw,sh);
+  }
 }
 
 // Drag the FRAME to move an instance; drag the SCREEN to pan its image; click empty screen → upload
@@ -2010,12 +2080,12 @@ function bindInstanceDrag(inst,i){
       const scr=inst.querySelector('.inst-screen');
       if(scr){
         const sw=scr.offsetWidth, sh=scr.offsetHeight;
-        const el0=scr.querySelector(slots[i].type==='video'?'video':'img');
+        const el0=scr.querySelector(slots[i].type==='video'?'video':'img:not(.screen-blur)');
         const w=parseFloat(el0.style.width)||sw, h=parseFloat(el0.style.height)||sh;
         const maxX=Math.max(0,(w-sw)/2), maxY=Math.max(0,(h-sh)/2);   // clamp so no black edges
         slots[i].offX=Math.max(-maxX, Math.min(maxX, bx+dx));
         slots[i].offY=Math.max(-maxY, Math.min(maxY, by+dy));
-        scr.querySelectorAll('img,video').forEach(el=>{
+        scr.querySelectorAll('img:not(.screen-blur),video').forEach(el=>{
           const ww=parseFloat(el.style.width), hh=parseFloat(el.style.height);
           el.style.left=((sw-ww)/2 + slots[i].offX)+'px'; el.style.top=((sh-hh)/2 + slots[i].offY)+'px';
         });

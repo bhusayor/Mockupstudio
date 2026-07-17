@@ -182,6 +182,17 @@ nav { height:48px; border-bottom:1px solid var(--border); display:flex; align-it
   transform-origin:center center;
   will-change:transform;
 }
+/* Blurred background fill (Fit-whole mode): sits behind the sharp media,
+   cover-sized + overscaled so its soft edges never reveal a gap. */
+.screen-blur {
+  position:absolute;
+  z-index:0;                 /* behind the sharp media */
+  display:none;              /* shown by JS only in Fit-whole (image) mode */
+  filter:blur(22px) brightness(.82) saturate(1.05);
+  pointer-events:none;
+  -webkit-user-drag:none;
+  user-select:none;
+}
 .gadget-screen.repositionable { cursor:grab; }
 .gadget-screen.repositionable:active { cursor:grabbing; }
 .gadget-screen.dragging { cursor:grabbing; }
