@@ -24,7 +24,7 @@
   <!-- Favicon (inline, matches the app's logo mark) -->
   <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Crect%20width='32'%20height='32'%20rx='7'%20fill='%230a0a0b'/%3E%3Crect%20x='6.5'%20y='7'%20width='19'%20height='13'%20rx='2'%20fill='none'%20stroke='%23f97316'%20stroke-width='1.8'/%3E%3Cpath%20d='M11%2025h10M16%2020v5'%20fill='none'%20stroke='%23f97316'%20stroke-width='1.8'%20stroke-linecap='round'/%3E%3C/svg%3E">
 
-  <link rel="stylesheet" href="css/styles.css?v=17">
+  <link rel="stylesheet" href="css/styles.css?v=18">
   <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "2852bea934764732b970e19018a51e0b"}'></script><!-- End Cloudflare Web Analytics -->
 </head>
 <body>
@@ -38,7 +38,7 @@
     <div style="margin-top:36px;width:44px;height:2px;background:rgba(249,115,22,0.6);border-radius:2px"></div>
   </div>
 
-  <script src="js/mobile-gate.js?v=17"></script>
+  <script src="js/mobile-gate.js?v=18"></script>
 
 <input type="file" id="hf" accept="image/*,video/*">
 <input type="file" id="hbf" accept="image/*">
@@ -132,7 +132,7 @@
         </div>
         <div class="slider-row" id="zoom-row" style="display:none">
           <span class="slider-lbl">Zoom</span>
-          <input type="range" min="1" max="3" value="1" step="0.01" id="sl-zoom" oninput="onZoom(this.value)">
+          <input type="range" min="0.15" max="3" value="1" step="0.01" id="sl-zoom" oninput="onZoom(this.value)">
           <span class="slider-val" id="vl-zoom">100%</span>
         </div>
         <div class="slider-row" id="row-radius">
@@ -581,6 +581,6 @@
   </div>
 </div>
 
-<script src="js/app.js?v=17"></script>
+<script src="js/app.js?v=18"></script>
 </body>
 </html>

@@ -282,6 +282,8 @@ let padPct = 6;
 let mediaAR = 16/9;
 /* Reposition + zoom state (Option 1: cover-fit + drag + zoom) */
 let mediaScale = 1;        // zoom multiplier, 1 = base-fit
+const MIN_ZOOM = 0.15;     // allow zooming OUT below fill so tall/long images can shrink to fit
+const MAX_ZOOM = 3;
 let fitMode = 'cover';     // 'cover' = fill screen edge-to-edge (crop overflow), 'contain' = fit whole image (letterbox)
 let mediaOffX = 0;         // horizontal offset in px (screen space), + = move image right
 let mediaOffY = 0;         // vertical offset in px
@@ -950,14 +952,39 @@ function enableReposition(containerId, mediaIds){
   cont.addEventListener('pointerup', endDrag);
   cont.addEventListener('pointercancel', endDrag);
 
-  // scroll to zoom (centered)
+  // scroll / trackpad-pinch to zoom (centered). Trackpad pinch arrives as a
+  // wheel event with ctrlKey=true; regular two-finger scroll also zooms here.
   cont.addEventListener('wheel', e=>{
     if(!hasMedia) return;
     e.preventDefault();
-    const delta = e.deltaY<0 ? 0.06 : -0.06;
-    mediaScale = Math.max(1, Math.min(3, mediaScale+delta));
+    const step = e.ctrlKey ? 0.012 : 0.05;              // pinch is finer-grained
+    const delta = (e.deltaY<0 ? 1 : -1) * step * (e.ctrlKey ? Math.min(6, Math.abs(e.deltaY)) : 1);
+    mediaScale = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, mediaScale+delta));
     applyMediaTransform();
   }, {passive:false});
+
+  // touch pinch to zoom (two fingers)
+  let pinchStart=0, pinchBase=1;
+  cont.addEventListener('touchstart', e=>{
+    if(!hasMedia || e.touches.length!==2) return;
+    pinchStart=touchDist(e.touches); pinchBase=mediaScale;
+  }, {passive:false});
+  cont.addEventListener('touchmove', e=>{
+    if(!hasMedia || e.touches.length!==2 || !pinchStart) return;
+    e.preventDefault();
+    const d=touchDist(e.touches);
+    mediaScale=Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, pinchBase * d/pinchStart));
+    applyMediaTransform();
+  }, {passive:false});
+  const endPinch=()=>{ pinchStart=0; };
+  cont.addEventListener('touchend', endPinch);
+  cont.addEventListener('touchcancel', endPinch);
+}
+
+// Distance between two active touch points (for pinch-zoom)
+function touchDist(touches){
+  const dx=touches[0].clientX-touches[1].clientX, dy=touches[0].clientY-touches[1].clientY;
+  return Math.hypot(dx,dy);
 }
 
 /* ── MEDIA ── */
@@ -2046,6 +2073,42 @@ function bindInstanceDrag(inst,i){
   };
   inst.addEventListener('pointerup', up);
   inst.addEventListener('pointercancel', up);
+
+  // zoom this instance's image: scroll / trackpad-pinch
+  inst.addEventListener('wheel', e=>{
+    if(!slots[i].hasMedia) return;
+    e.preventDefault();
+    selectSlot(i);
+    const step = e.ctrlKey ? 0.012 : 0.05;
+    const delta = (e.deltaY<0 ? 1 : -1) * step * (e.ctrlKey ? Math.min(6, Math.abs(e.deltaY)) : 1);
+    setSlotZoom(i, (slots[i].scale||1) + delta);
+  }, {passive:false});
+  // touch pinch
+  let pStart=0, pBase=1;
+  inst.addEventListener('touchstart', e=>{
+    if(!slots[i].hasMedia || e.touches.length!==2) return;
+    pStart=touchDist(e.touches); pBase=slots[i].scale||1;
+  }, {passive:false});
+  inst.addEventListener('touchmove', e=>{
+    if(!slots[i].hasMedia || e.touches.length!==2 || !pStart) return;
+    e.preventDefault();
+    setSlotZoom(i, pBase * touchDist(e.touches)/pStart);
+  }, {passive:false});
+  const endP=()=>{ pStart=0; };
+  inst.addEventListener('touchend', endP);
+  inst.addEventListener('touchcancel', endP);
+}
+
+// Set a dual-slot's image zoom, clamp, re-render, and sync the slider readout
+function setSlotZoom(i, val){
+  const s=Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, val));
+  slots[i].scale=s;
+  const inst=document.querySelectorAll('.device-instance')[i];
+  if(inst) sizeInstance(inst, i);
+  if(i===selectedSlot){
+    const zs=document.getElementById('sl-zoom'); if(zs) zs.value=s;
+    const zv=document.getElementById('vl-zoom'); if(zv) zv.textContent=Math.round(s*100)+'%';
+  }
 }
 
 /* ══════════════════════════════════════════════════════
