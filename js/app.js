@@ -281,7 +281,8 @@ let isVideo = false;
 let padPct = 6;
 let mediaAR = 16/9;
 /* Reposition + zoom state (Option 1: cover-fit + drag + zoom) */
-let mediaScale = 1;        // zoom multiplier, 1 = cover-fit
+let mediaScale = 1;        // zoom multiplier, 1 = base-fit
+let fitMode = 'contain';   // 'contain' = fit whole image (letterbox), 'cover' = fill screen (crop)
 let mediaOffX = 0;         // horizontal offset in px (screen space), + = move image right
 let mediaOffY = 0;         // vertical offset in px
 let activeDevice = null; // null = plain frame, else device object
@@ -357,6 +358,7 @@ async function buildMockupOffscreen(S){
     const srr=(dev.screenRR||20)/dev.vw*dw;
     const media=document.getElementById('gadget-img');
     mx.save(); roundRect(mx,sx,sy,sw,sh,srr); mx.clip();
+    mx.fillStyle='#000'; mx.fillRect(sx,sy,sw,sh);   // letterbox bg for Fit mode
     const liveScreenW=parseFloat(document.getElementById('gadget-screen').style.width)||sw;
     const dr=coverDrawRect(sx,sy,sw,sh,liveScreenW); mx.drawImage(media,dr.mx,dr.my,dr.mw,dr.mh); drawGlare(mx,sx,sy,sw,sh); mx.restore();
     if(overlayImg) mx.drawImage(overlayImg,0,0,dw,dh);
@@ -832,8 +834,15 @@ function activeScreenSize(){
 function coverSize(screenW, screenH){
   const scrAR = screenW/screenH;
   let w,h;
-  if(mediaAR > scrAR){ h=screenH; w=screenH*mediaAR; }  // image wider → match height
-  else { w=screenW; h=screenW/mediaAR; }                 // image taller → match width
+  if(fitMode==='contain'){
+    // FIT WHOLE: shrink so the entire image is visible inside the screen (letterbox)
+    if(mediaAR > scrAR){ w=screenW; h=screenW/mediaAR; }  // image wider → match width
+    else { h=screenH; w=screenH*mediaAR; }                 // image taller → match height
+  } else {
+    // FILL: enlarge so image covers the screen (crop overflow)
+    if(mediaAR > scrAR){ h=screenH; w=screenH*mediaAR; }  // image wider → match height
+    else { w=screenW; h=screenW/mediaAR; }                 // image taller → match width
+  }
   return {w,h};
 }
 
@@ -889,6 +898,21 @@ function applyMediaTransform(){
 }
 
 function resetMediaTransform(){ mediaScale=1; mediaOffX=0; mediaOffY=0; mockOffX=0; mockOffY=0; applyMediaTransform(); applyMockupTransform(); }
+
+// Fit whole (contain) vs Fill screen (cover). Resets pan/zoom so the new fit is clean.
+function onFitMode(mode){
+  fitMode = (mode==='cover') ? 'cover' : 'contain';
+  document.querySelectorAll('#fit-toggle .wt-opt').forEach(b=>b.classList.toggle('active', b.dataset.fit===fitMode));
+  mediaScale=1; mediaOffX=0; mediaOffY=0;
+  if(layoutMode==='dual'){
+    slots.forEach(s=>{ s.scale=1; });
+    document.querySelectorAll('.device-instance').forEach((inst,idx)=>sizeInstance(inst, idx));
+    const zs=document.getElementById('sl-zoom'); if(zs) zs.value=1;
+    const zv=document.getElementById('vl-zoom'); if(zv) zv.textContent='100%';
+  } else {
+    applyMediaTransform();
+  }
+}
 
 function onZoom(v){
   if(layoutMode==='dual'){
@@ -1037,6 +1061,7 @@ function showMedia(file){
   document.getElementById('clear-btn').style.display='flex';
   { const _cb=document.getElementById('change-btn'); if(_cb) _cb.style.display='flex'; }
   const zr=document.getElementById('zoom-row'); if(zr) zr.style.display='flex';
+  const fr=document.getElementById('fit-row'); if(fr) fr.style.display='flex';
   const rb=document.getElementById('reset-pos-btn'); if(rb) rb.style.display='flex';
   // enable drag/zoom on whichever frame is active
   document.getElementById('mockup-inner')?.classList.add('repositionable');
@@ -1091,6 +1116,7 @@ function clearMedia(){
   hasMedia=false;isVideo=false;mediaAR=16/9;
   mediaScale=1;mediaOffX=0;mediaOffY=0;
   const zr=document.getElementById('zoom-row'); if(zr) zr.style.display='none';
+  const fr=document.getElementById('fit-row'); if(fr) fr.style.display='none';
   const rb=document.getElementById('reset-pos-btn'); if(rb) rb.style.display='none';
   ['mockup-img','gadget-img'].forEach(id=>{const e=document.getElementById(id);if(e){e.src='';e.removeAttribute('src');e.style.display='none';}});
   ['mockup-video','gadget-video'].forEach(id=>{const e=document.getElementById(id);if(e){try{e.pause();}catch(_){} e.src='';e.removeAttribute('src');e.load&&e.load();e.style.display='none';}});
@@ -1316,6 +1342,7 @@ async function confirmVidExportDual(){
       const mediaEl=inst ? (slot.type==='video'?inst.querySelector('video'):inst.querySelector('img')) : null;
       if(mediaEl){
         ctx.save(); roundRect(ctx,sx,sy,sw,sh,rr); ctx.clip();
+        ctx.fillStyle='#000'; ctx.fillRect(sx,sy,sw,sh);   // letterbox bg for Fit mode
         const base=coverSizeAR(slot.ar, sw, sh);
         const mw=base.w*slot.scale, mh=base.h*slot.scale;
         ctx.drawImage(mediaEl, sx+(sw-mw)/2+(slot.offX||0), sy+(sh-mh)/2+(slot.offY||0), mw, mh);
@@ -1370,6 +1397,7 @@ async function compositeSlot(ctx, slot, scale, cW, cH){
   const mediaEl=inst ? (slot.type==='video'?inst.querySelector('video'):inst.querySelector('img')) : null;
   if(mediaEl){
     mx.save(); roundRect(mx,sx,sy,sw,sh,rr); mx.clip();
+    mx.fillStyle='#000'; mx.fillRect(sx,sy,sw,sh);   // letterbox bg for Fit mode
     const base=coverSizeAR(slot.ar, sw, sh); const mw=base.w*slot.scale, mh=base.h*slot.scale;
     mx.drawImage(mediaEl, sx+(sw-mw)/2+(slot.offX||0), sy+(sh-mh)/2+(slot.offY||0), mw, mh);
     mx.restore();
@@ -1513,6 +1541,7 @@ function confirmImgExport(){
       const media = document.getElementById('gadget-img');
       ctx.save();
       roundRect(ctx, sx, sy, sw, sh, srr); ctx.clip();
+      ctx.fillStyle='#000'; ctx.fillRect(sx, sy, sw, sh);   // letterbox bg for Fit mode (matches live #000 screen)
       // cover-fit + zoom + pan (matches live preview). liveScreenW = on-screen screen width
       const liveScreenW = parseFloat(document.getElementById('gadget-screen').style.width)||sw;
       const dr = coverDrawRect(sx, sy, sw, sh, liveScreenW);
@@ -1623,6 +1652,7 @@ async function confirmVidExport(){
       if(bezelImg) ctx.drawImage(bezelImg,dx,dy,dw,dh);
       // video clipped to screen (cover fit + zoom + pan)
       ctx.save();roundRect(ctx,sx,sy,sw,sh,srr);ctx.clip();
+      ctx.fillStyle='#000';ctx.fillRect(sx,sy,sw,sh);   // letterbox bg for Fit mode
       const liveScreenW=parseFloat(document.getElementById('gadget-screen').style.width)||sw;
       const dr=coverDrawRect(sx,sy,sw,sh,liveScreenW);
       ctx.drawImage(vid,dr.mx,dr.my,dr.mw,dr.mh);drawGlare(ctx,sx,sy,sw,sh);ctx.restore();
@@ -1747,9 +1777,14 @@ async function confirmVidExport(){
 //   so we can scale the pixel offsets to the export resolution.
 function coverDrawRect(tSx,tSy,tSw,tSh, liveScreenW){
   const scrAR=tSw/tSh;
-  let bw,bh;                       // base cover size
-  if(mediaAR>scrAR){ bh=tSh; bw=tSh*mediaAR; }
-  else { bw=tSw; bh=tSw/mediaAR; }
+  let bw,bh;                       // base fit size (matches coverSize())
+  if(fitMode==='contain'){
+    if(mediaAR>scrAR){ bw=tSw; bh=tSw/mediaAR; }
+    else { bh=tSh; bw=tSh*mediaAR; }
+  } else {
+    if(mediaAR>scrAR){ bh=tSh; bw=tSh*mediaAR; }
+    else { bw=tSw; bh=tSw/mediaAR; }
+  }
   // apply zoom
   const mw=bw*mediaScale, mh=bh*mediaScale;
   // offsets were captured in CSS px relative to the live screen; scale to export px
@@ -1848,6 +1883,8 @@ function selectSlot(i){
   // zoom slider reflects this slot
   const zr=document.getElementById('zoom-row');
   if(zr) zr.style.display = slots[i].hasMedia ? 'flex' : 'none';
+  const fr=document.getElementById('fit-row');
+  if(fr) fr.style.display = slots[i].hasMedia ? 'flex' : 'none';
   const rb=document.getElementById('reset-pos-btn');
   if(rb) rb.style.display = slots[i].hasMedia ? 'flex' : 'none';
   syncControlsToSlot(i);
@@ -1948,7 +1985,11 @@ function sizeInstance(inst,i){
 // cover-size with explicit AR (for slots)
 function coverSizeAR(ar, screenW, screenH){
   const scrAR=screenW/screenH; let w,h;
-  if(ar>scrAR){ h=screenH; w=screenH*ar; } else { w=screenW; h=screenW/ar; }
+  if(fitMode==='contain'){
+    if(ar>scrAR){ w=screenW; h=screenW/ar; } else { h=screenH; w=screenH*ar; }
+  } else {
+    if(ar>scrAR){ h=screenH; w=screenH*ar; } else { w=screenW; h=screenW/ar; }
+  }
   return {w,h};
 }
 
