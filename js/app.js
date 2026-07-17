@@ -1447,7 +1447,8 @@ async function confirmImgExportDual(){
   const cW=parseInt(wrap.style.width)||wrap.clientWidth;
   const cH=parseInt(wrap.style.height)||wrap.clientHeight;
   const [btW,btH]=getTargetSize(); const tgtW=btW*imgScale, tgtH=btH*imgScale;
-  const scale=Math.min(Math.max(tgtW/cW, 1), 14);
+  let scale=Math.min(Math.max(tgtW/cW, 1), 14);
+  scale=boostScaleForSourceDual(scale, cW, cH);   // don't downsample the uploads
   const cvs=document.createElement('canvas'); cvs.width=Math.round(cW*scale); cvs.height=Math.round(cW*scale*tgtH/tgtW);
   const ctx=cvs.getContext('2d'); ctx.scale(scale,scale);
   const blurPx=parseFloat(document.getElementById('sl-blur').value)||0;
@@ -1461,7 +1462,7 @@ async function confirmImgExportDual(){
       const fmtMap={png:'image/png',jpg:'image/jpeg',webp:'image/webp'};
       const link=document.createElement('a');
       link.download='mockup-dual-'+getTargetSize().join('x')+'.'+selectedFmt;
-      link.href=cvs.toDataURL(fmtMap[selectedFmt]||'image/png',0.95); link.click();
+      link.href=cvs.toDataURL(fmtMap[selectedFmt]||'image/png',0.98); link.click();
       showExportDone('Image downloaded');
     }catch(err){ updateExportNotice('Export failed.'); setTimeout(hideExportNotice,2500); }
   }
@@ -1486,6 +1487,58 @@ function svgToImage(svgInner, vw, vh){
 }
 
 /* ── IMAGE EXPORT ── */
+// The screen area (unscaled canvas px) that the media is drawn into.
+function screenRegionSize(fw, fh){
+  if(activeDevice){
+    const gfw=document.getElementById('gadget-frame-wrap');
+    const dw=parseInt(gfw.style.width)||fw, dh=parseInt(gfw.style.height)||fh;
+    return { w: activeDevice.screen.w/activeDevice.vw*dw, h: activeDevice.screen.h/activeDevice.vh*dh };
+  }
+  const mf=document.getElementById('mockup-frame');
+  return { w: parseFloat(mf.style.width)||fw, h: parseFloat(mf.style.height)||fh };
+}
+
+// Quality guard: raise the export scale so the uploaded image is reproduced at
+// (at least) its native resolution inside the screen — never downsampled — up
+// to a cap that keeps the output canvas a sane size.
+function boostScaleForSource(scale, cW, cH, fw, fh){
+  if(!hasMedia || isVideo) return scale;
+  const src=document.getElementById(activeDevice?'gadget-img':'mockup-img');
+  const srcW=(src && src.naturalWidth) || 0, srcH=(src && src.naturalHeight) || 0;
+  if(!srcW || !srcH) return scale;
+  const reg=screenRegionSize(fw, fh);
+  const disp=coverSize(reg.w, reg.h);                     // displayed image box (unscaled)
+  const dispW=disp.w*mediaScale, dispH=disp.h*mediaScale;
+  const need=Math.max(srcW/Math.max(1,dispW), srcH/Math.max(1,dispH));  // scale to hit native res
+  const capLong=7680;                                     // never exceed ~8K long edge
+  const capScale=capLong/Math.max(cW,cH);
+  return Math.min(Math.max(scale, Math.min(need, capScale)), 16);
+}
+
+// Dual-mode version of the quality guard: check every image slot's native
+// resolution against the pixels its screen region gets, boost to the neediest.
+function boostScaleForSourceDual(scale, cW, cH){
+  const canvas=document.getElementById('canvas-wrap');
+  const cw=parseInt(canvas.style.width)||800, ch=parseInt(canvas.style.height)||500;
+  let need=1;
+  slots.forEach((slot,i)=>{
+    if(!slot.device || !slot.hasMedia || slot.type==='video') return;
+    const inst=document.querySelectorAll('.device-instance')[i];
+    const img=inst && inst.querySelector('img:not(.screen-blur)');
+    const srcW=(img&&img.naturalWidth)||0, srcH=(img&&img.naturalHeight)||0;
+    if(!srcW||!srcH) return;
+    const dev=slot.device;
+    const targetH=Math.min(ch*0.62, cw*0.42*dev.vh/dev.vw)*(slot.frameScale||1);
+    const dh=Math.round(targetH), dw=Math.round(dh*dev.vw/dev.vh);
+    const sw=dev.screen.w/dev.vw*dw, sh=dev.screen.h/dev.vh*dh;
+    const base=coverSizeAR(slot.ar, sw, sh, false);
+    const dispW=base.w*(slot.scale||1), dispH=base.h*(slot.scale||1);
+    need=Math.max(need, srcW/Math.max(1,dispW), srcH/Math.max(1,dispH));
+  });
+  const capScale=7680/Math.max(cW,cH);
+  return Math.min(Math.max(scale, Math.min(need, capScale)), 16);
+}
+
 function confirmImgExport(){
   closeModal('img-modal');
   if(layoutMode==='dual'){ confirmImgExportDual(); return; }
@@ -1496,7 +1549,8 @@ function confirmImgExport(){
   const cH=parseInt(wrap.style.height)||wrap.clientHeight;
   // Export at the exact chosen pixel size (scale derived from target width)
   const [btW,btH]=getTargetSize(); const tgtW=btW*imgScale, tgtH=btH*imgScale;
-  const scale=Math.min(Math.max(tgtW/cW, 1), 14);   // clamp to avoid extreme canvases
+  let scale=Math.min(Math.max(tgtW/cW, 1), 14);   // clamp to avoid extreme canvases
+  scale=boostScaleForSource(scale, cW, cH, fw, fh);   // don't downsample the upload
   const cvs=document.createElement('canvas');
   cvs.width=Math.round(cW*scale);cvs.height=Math.round(cW*scale*tgtH/tgtW);
   const ctx=cvs.getContext('2d');
@@ -1510,7 +1564,7 @@ function confirmImgExport(){
       const fmtMap={png:'image/png',jpg:'image/jpeg',webp:'image/webp'};
       const link=document.createElement('a');
       link.download='mockup-'+Math.round(tgtW)+'x'+Math.round(tgtH)+(imgScale>1?'@'+imgScale+'x':'')+'.'+selectedFmt;
-      link.href=cvs.toDataURL(fmtMap[selectedFmt]||'image/png',0.95);link.click();
+      link.href=cvs.toDataURL(fmtMap[selectedFmt]||'image/png',0.98);link.click();
       showExportDone('Image downloaded');
     }catch(err){
       console.error('Export failed:', err);
