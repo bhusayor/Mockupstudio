@@ -282,7 +282,7 @@ let padPct = 6;
 let mediaAR = 16/9;
 /* Reposition + zoom state (Option 1: cover-fit + drag + zoom) */
 let mediaScale = 1;        // zoom multiplier, 1 = base-fit
-let fitMode = 'contain';   // 'contain' = fit whole image (letterbox), 'cover' = fill screen (crop)
+let fitMode = 'cover';     // 'cover' = fill screen edge-to-edge (crop overflow), 'contain' = fit whole image (letterbox)
 let mediaOffX = 0;         // horizontal offset in px (screen space), + = move image right
 let mediaOffY = 0;         // vertical offset in px
 let activeDevice = null; // null = plain frame, else device object
